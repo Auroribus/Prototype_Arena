@@ -13,13 +13,15 @@ public class Hero : MonoBehaviour {
     private Transform selection_ring;
     private Transform targeting_ring;
 
+    public bool isTargeted = false;
+
     public GameObject BloodSplashPrefab;
 
-    public int x_position_grid = 0;
-    public int y_position_grid = 0;
+    [System.NonSerialized] public int x_position_grid = 0;
+    [System.NonSerialized] public int y_position_grid = 0;
 
-    public bool move_hero = false;
-    public Vector2 target_position;
+    [System.NonSerialized] public bool move_hero = false;
+    [System.NonSerialized] public Vector2 target_position;
 
     public float movement_speed = 2f;
 
@@ -46,6 +48,7 @@ public class Hero : MonoBehaviour {
     public void SetTargeted(bool is_targeted)
     {
         targeting_ring.gameObject.SetActive(is_targeted);
+        isTargeted = is_targeted;
     }
 
     private void Update()

@@ -53,6 +53,8 @@ public class GameManager : MonoBehaviour {
 
     //temp reference to hero prefab
     public GameObject ArcherPrefab;
+    public GameObject KnightPrefab;
+    public GameObject MagePrefab;
 
     //Lists of all the hero units per player that are on the board
     [System.NonSerialized] public List<GameObject> HeroList_P1 = new List<GameObject>();
@@ -77,6 +79,9 @@ public class GameManager : MonoBehaviour {
         Player2 = GameObject.Find("Player2");
 
         Grid_P2 = GameObject.Find("GridParent P2").GetComponent<GridParent>();
+        //flip grid parent 2, so that the lane orientation is the same as grid p1
+        Grid_P2.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+
         Grid_P1 = GameObject.Find("GridParent P1").GetComponent<GridParent>();
 
         phase_text = GameObject.Find("Phase").GetComponent<Text>();
@@ -120,7 +125,20 @@ public class GameManager : MonoBehaviour {
                 hero_spawnpoint = Grid_P1.Grid[random_x, random_y].transform.position;
 
                 //hero gets added to the list for P1
-                HeroList_P1.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                int random = Random.Range(0, 3);
+                switch(random)
+                {
+                    case 0:
+                        HeroList_P1.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                        break;
+                    case 1:
+                        HeroList_P1.Add(Instantiate(KnightPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                        break;
+                    case 2:
+                        HeroList_P1.Add(Instantiate(MagePrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                        break;
+                }
+
                 //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                 Grid_P1.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied = true;
 
@@ -142,20 +160,34 @@ public class GameManager : MonoBehaviour {
             if (!Grid_P2.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied)
             {
                 hero_spawnpoint = Grid_P2.Grid[random_x, random_y].transform.position;
+                
+                int random = Random.Range(0, 3);
+                switch (random)
+                {
+                    case 0:
+                        HeroList_P2.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                        break;
+                    case 1:
+                        HeroList_P2.Add(Instantiate(KnightPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                        break;
+                    case 2:
+                        HeroList_P2.Add(Instantiate(MagePrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                        break;
+                }
 
-                HeroList_P2.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
                 Grid_P2.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied = true;
 
                 HeroList_P2[HeroList_P2.Count - 1].GetComponent<Hero>().x_position_grid = random_x;
                 HeroList_P2[HeroList_P2.Count - 1].GetComponent<Hero>().y_position_grid = random_y;
 
                 //Player specific
-                //Flip each sprite and color red for 
+                //Flip each sprite and color red for p2
                 HeroList_P2[HeroList_P2.Count - 1].GetComponent<SpriteRenderer>().flipX = true;
                 HeroList_P2[HeroList_P2.Count - 1].GetComponent<SpriteRenderer>().color = Color.red;
                 HeroList_P2[HeroList_P2.Count - 1].tag = "HeroP2";
             }
         }
+
     }
 
     private void StartGame()

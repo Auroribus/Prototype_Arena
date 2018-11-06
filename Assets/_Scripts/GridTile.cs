@@ -13,10 +13,26 @@ public class GridTile : MonoBehaviour {
 
     public int pos_grid_x, pos_grid_y;
 
+    private BoxCollider2D box_collider;
+
     private void Awake()
     {
         movement_ring = transform.Find("MovementRing");
         movement_ring.gameObject.SetActive(false);
+
+        box_collider = GetComponent<BoxCollider2D>();
+    }
+
+    private void Update()
+    {
+        if(isOccupied && box_collider.enabled)
+        {
+            box_collider.enabled = false;
+        }
+        else if(!isOccupied && !box_collider.enabled)
+        {
+            box_collider.enabled = true;
+        }
     }
 
     //public function to set the rings attached to the tile
