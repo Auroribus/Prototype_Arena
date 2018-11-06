@@ -164,6 +164,7 @@ public class Player : MonoBehaviour {
 
                             //set new tile as occupied
                             hit.transform.GetComponent<GridTile>().isOccupied = true;
+                            hit.transform.GetComponent<GridTile>().SetMovementRing(false);
                         }
                     }
                 }
