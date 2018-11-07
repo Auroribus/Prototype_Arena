@@ -185,7 +185,7 @@ public class GameManager : MonoBehaviour {
                 hero.Healthpoints = Heroes[lane_number].HealthPoints;
                 hero.Damage = Heroes[lane_number].Damage;
                 hero.Initiative = Heroes[lane_number].Initiative;
-                hero.GetComponent<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
                 hero.main_class = Heroes[lane_number].Main_class;
                 //set sub class once sub classes are implemented
                 
@@ -197,7 +197,7 @@ public class GameManager : MonoBehaviour {
 
                 //Player specific   
                 //color each sprite blue for P1
-                HeroList_P1[HeroList_P1.Count - 1].GetComponent<SpriteRenderer>().color = Color.blue;
+                HeroList_P1[HeroList_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.blue;
                 HeroList_P1[HeroList_P1.Count - 1].tag = "HeroP1";
             }
         }
@@ -261,7 +261,7 @@ public class GameManager : MonoBehaviour {
                 hero.Healthpoints = Heroes[lane_number].HealthPoints;
                 hero.Damage = Heroes[lane_number].Damage;
                 hero.Initiative = Heroes[lane_number].Initiative;
-                hero.GetComponent<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
                 hero.main_class = Heroes[lane_number].Main_class;
                 //set sub class once sub classes are implemented
                 
@@ -272,8 +272,8 @@ public class GameManager : MonoBehaviour {
 
                 //Player specific
                 //Flip each sprite and color red for p2
-                HeroList_P2[HeroList_P2.Count - 1].GetComponent<SpriteRenderer>().flipX = true;
-                HeroList_P2[HeroList_P2.Count - 1].GetComponent<SpriteRenderer>().color = Color.red;
+                HeroList_P2[HeroList_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
+                HeroList_P2[HeroList_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
                 HeroList_P2[HeroList_P2.Count - 1].tag = "HeroP2";
             }
         }

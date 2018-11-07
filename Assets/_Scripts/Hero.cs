@@ -17,6 +17,7 @@ public class Hero : MonoBehaviour {
     public bool isTargeted = false;
 
     public GameObject BloodSplashPrefab;
+    public GameObject BloodParticles;
 
     //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
@@ -99,5 +100,6 @@ public class Hero : MonoBehaviour {
     {
         Healthpoints -= damage_value;
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
+        Instantiate(BloodParticles, transform.position, Quaternion.identity);
     }
 }
