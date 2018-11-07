@@ -24,11 +24,24 @@ public enum PlayerTurn
     Player2
 }
 
-public enum HeroType
+public enum MainClass
 {
-    Melee,
-    Ranged,
-    Magic
+    Warrior,
+    Scout,
+    Mage
+}
+
+public enum SubClass
+{
+    Scout1,
+    Scout2,
+    Scout3,
+    Warrior1,
+    Warrior2,
+    Warrior3,
+    Mage1,
+    Mage2,
+    Mage3
 }
 
 public class GameManager : MonoBehaviour {
@@ -52,9 +65,7 @@ public class GameManager : MonoBehaviour {
     public int max_amount_units = 5;
 
     //temp reference to hero prefab
-    public GameObject ArcherPrefab;
-    public GameObject KnightPrefab;
-    public GameObject MagePrefab;
+    public GameObject HeroPrefab;
 
     //Lists of all the hero units per player that are on the board
     [System.NonSerialized] public List<GameObject> HeroList_P1 = new List<GameObject>();
@@ -65,6 +76,8 @@ public class GameManager : MonoBehaviour {
 
     private Text phase_text;
     private Text turn_text;
+
+    public List<HeroBase> Heroes = new List<HeroBase>();
 
     private void Awake()
     {
@@ -124,21 +137,58 @@ public class GameManager : MonoBehaviour {
                 //set the hero spawn point equal to the grid tile
                 hero_spawnpoint = Grid_P1.Grid[random_x, random_y].transform.position;
 
-                //hero gets added to the list for P1
-                int random = Random.Range(0, 3);
-                switch(random)
+                //base the unit that gets spawned, on which lane has been selected to spawn a unit on
+
+                int warrior = 0;
+                int mage = 0;
+                int scout = 0;
+
+                //random_x = the lane
+                //need to find the index of the hero type for each lane from the Heroes list, this will be changed later when we
+                //change to the proper picking of the heroes
+                foreach (HeroBase h in Heroes)
                 {
-                    case 0:
-                        HeroList_P1.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                    if (h.Main_class == MainClass.Warrior)
+                    {
+                        warrior = Heroes.IndexOf(h);
+                    }
+                    else if (h.Main_class == MainClass.Scout)
+                    {
+                        scout = Heroes.IndexOf(h);
+                    }
+                    else if (h.Main_class == MainClass.Mage)
+                    {
+                        mage = Heroes.IndexOf(h);
+                    }
+                }
+
+                //lane number is the lane in which the unit gets spawned, which determines which type of unit will be spawned
+                int lane_number = 0;
+
+                switch (random_x)
+                {
+                    case 0: //mage
+                        lane_number = mage;
                         break;
-                    case 1:
-                        HeroList_P1.Add(Instantiate(KnightPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                    case 1: //scout
+                        lane_number = scout;
                         break;
-                    case 2:
-                        HeroList_P1.Add(Instantiate(MagePrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                    case 2: //warrior
+                        lane_number = warrior;
                         break;
                 }
 
+                HeroList_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, Grid_P1.transform));
+                Hero hero = HeroList_P1[HeroList_P1.Count - 1].GetComponent<Hero>();
+
+                //assisgn hero specifics based on the hero base presets
+                hero.Healthpoints = Heroes[lane_number].HealthPoints;
+                hero.Damage = Heroes[lane_number].Damage;
+                hero.Initiative = Heroes[lane_number].Initiative;
+                hero.GetComponent<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
+                hero.main_class = Heroes[lane_number].Main_class;
+                //set sub class once sub classes are implemented
+                
                 //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                 Grid_P1.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied = true;
 
@@ -160,21 +210,61 @@ public class GameManager : MonoBehaviour {
             if (!Grid_P2.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied)
             {
                 hero_spawnpoint = Grid_P2.Grid[random_x, random_y].transform.position;
+
+                //lanes
+                //2 = front/warrior
+                //1 = middle/scout
+                //0 = back/mage
+
+                int warrior = 0;
+                int mage = 0;
+                int scout = 0;
                 
-                int random = Random.Range(0, 3);
-                switch (random)
+                //random_x = the lane
+                //need to find the index of the hero type for each lane
+                foreach(HeroBase h in Heroes)
                 {
-                    case 0:
-                        HeroList_P2.Add(Instantiate(ArcherPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                    if(h.Main_class == MainClass.Warrior)
+                    {
+                        warrior = Heroes.IndexOf(h);
+                    }
+                    else if(h.Main_class == MainClass.Scout)
+                    {
+                        scout = Heroes.IndexOf(h);
+                    }
+                    else if(h.Main_class == MainClass.Mage)
+                    {
+                        mage = Heroes.IndexOf(h);
+                    }
+                }
+                
+                int lane_number = 0;
+
+                switch (random_x)
+                {
+                    case 0: //mage
+                        lane_number = mage;
                         break;
-                    case 1:
-                        HeroList_P2.Add(Instantiate(KnightPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                    case 1: //scout
+                        lane_number = scout;
                         break;
-                    case 2:
-                        HeroList_P2.Add(Instantiate(MagePrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                    case 2: //warrior
+                        lane_number = warrior;
                         break;
                 }
+                
+                //instantiate hero
+                HeroList_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, Grid_P2.transform));
+                Hero hero = HeroList_P2[HeroList_P2.Count - 1].GetComponent<Hero>();
 
+                //assisgn hero specifics based on the hero base presets
+                hero.Healthpoints = Heroes[lane_number].HealthPoints;
+                hero.Damage = Heroes[lane_number].Damage;
+                hero.Initiative = Heroes[lane_number].Initiative;
+                hero.GetComponent<SpriteRenderer>().sprite = Heroes[lane_number].Hero_sprite;
+                hero.main_class = Heroes[lane_number].Main_class;
+                //set sub class once sub classes are implemented
+                
                 Grid_P2.Grid[random_x, random_y].GetComponent<GridTile>().isOccupied = true;
 
                 HeroList_P2[HeroList_P2.Count - 1].GetComponent<Hero>().x_position_grid = random_x;
@@ -290,4 +380,16 @@ public class GameManager : MonoBehaviour {
         HeroList_P1.RemoveAll(item => item == null);
         HeroList_P2.RemoveAll(item => item == null);
     }
+}
+
+[System.Serializable]
+public class HeroBase
+{
+    public string Hero_name;
+    public int HealthPoints;
+    public int Damage;
+    public int Initiative;
+    public MainClass Main_class;
+    public SubClass Sub_clas;
+    public Sprite Hero_sprite;
 }

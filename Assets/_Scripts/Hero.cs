@@ -8,23 +8,34 @@ public class Hero : MonoBehaviour {
     public int Defense = 1;
     public int Initiative = 1;
 
-    public HeroType hero_type = HeroType.Ranged;
+    public MainClass main_class = MainClass.Scout;
 
     private Transform selection_ring;
     private Transform targeting_ring;
 
+    //used for when the hero can be targeted by an enemy hero
     public bool isTargeted = false;
 
     public GameObject BloodSplashPrefab;
 
+    //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
     [System.NonSerialized] public int y_position_grid = 0;
 
+    //bool for moving the hero from tile to tile
     [System.NonSerialized] public bool move_hero = false;
+    //end position for the movement of the hero
     [System.NonSerialized] public Vector2 target_position;
 
+    //speed the characters move at from tile to tile
     public float movement_speed = 2f;
 
+    //reference to text meshes
+    private Transform UiText;
+    private TextMesh health_text;
+    private TextMesh damage_text;
+    private TextMesh initiative_text;
+    
     private void Awake()
     {
         selection_ring = transform.Find("SelectionRing");
@@ -32,6 +43,12 @@ public class Hero : MonoBehaviour {
 
         targeting_ring = transform.Find("TargetingRing");
         targeting_ring.gameObject.SetActive(false);
+
+        UiText = transform.Find("UI Text");
+
+        health_text = UiText.Find("HealthText").GetComponent<TextMesh>();
+        damage_text = UiText.Find("DamageText").GetComponent<TextMesh>();
+        initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
     }
 
     public void SetSelected(bool is_selected)
@@ -57,7 +74,13 @@ public class Hero : MonoBehaviour {
         {
             Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
             Destroy(gameObject);
-        }        
+        }    
+        else
+        {
+            health_text.text = Healthpoints.ToString();
+            damage_text.text = Damage.ToString();
+            initiative_text.text = Initiative.ToString();
+        }
 
         if(move_hero)
         {
@@ -70,5 +93,11 @@ public class Hero : MonoBehaviour {
                 move_hero = false;
             }
         }
+    }
+
+    public void TakeDamage(int damage_value)
+    {
+        Healthpoints -= damage_value;
+        Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
     }
 }

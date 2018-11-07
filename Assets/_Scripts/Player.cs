@@ -13,13 +13,13 @@ public class Player : MonoBehaviour {
     List<GameObject> enemy_list;
     GridParent player_grid;
     int melee_range = 2;
-
+    
     // Update is called once per frame
     void Update () {
         MouseControl();
 	}
 
-    public void SetPlayerTurn()
+    private void SetPlayerTurn()
     {
         switch (GameManager.instance.CurrentTurn)
         {
@@ -73,10 +73,10 @@ public class Player : MonoBehaviour {
                         hero.GetComponent<Hero>().SetTargeted(false);
                     }
 
-                    HeroType hero_type = selected_hero.hero_type;
+                    MainClass main_class = selected_hero.main_class;
 
                     //set target on all player 2 heros for ranged
-                    if (hero_type == HeroType.Ranged)
+                    if (main_class == MainClass.Scout)
                     {
                         //ranged can hit any of the enemies heroes
                         foreach (GameObject hero in enemy_list)
@@ -84,7 +84,7 @@ public class Player : MonoBehaviour {
                             hero.GetComponent<Hero>().SetTargeted(true);
                         }
                     }
-                    else if (hero_type == HeroType.Melee)
+                    else if (main_class == MainClass.Warrior)
                     {
                         //temp list to get the lanes from the hero's
                         List<int> _max_list = new List<int>();
@@ -105,7 +105,7 @@ public class Player : MonoBehaviour {
                                 hero.GetComponent<Hero>().SetTargeted(true);
                         }
                     }
-                    else if(hero_type == HeroType.Magic)
+                    else if(main_class == MainClass.Mage)
                     {
                         //hit a whole lane in a straight line, horizontaly
                         foreach (GameObject hero in enemy_list)
@@ -126,18 +126,20 @@ public class Player : MonoBehaviour {
                     if (hit.transform.GetComponent<Hero>().isTargeted)
                     {
                         //non magical attacks that only target one hero
-                        if (SelectedHero.GetComponent<Hero>().hero_type != HeroType.Magic)
+                        if (SelectedHero.GetComponent<Hero>().main_class != MainClass.Mage)
                         {
-                            hit.transform.GetComponent<Hero>().Healthpoints -= SelectedHero.GetComponent<Hero>().Damage;
+                            hit.transform.GetComponent<Hero>().TakeDamage(SelectedHero.GetComponent<Hero>().Damage);
                         }
                         //magical attacks that target a whole row of heros
-                        else if (SelectedHero.GetComponent<Hero>().hero_type == HeroType.Magic)
+                        else if (SelectedHero.GetComponent<Hero>().main_class == MainClass.Mage)
                         {
+                            GameManager.instance.CleanLists();
+
                             foreach (GameObject hero in enemy_list)
                             {
                                 if (hit.transform.GetComponent<Hero>().y_position_grid == hero.GetComponent<Hero>().y_position_grid)
                                 {
-                                    hero.GetComponent<Hero>().Healthpoints -= SelectedHero.GetComponent<Hero>().Damage;
+                                    hero.GetComponent<Hero>().TakeDamage(SelectedHero.GetComponent<Hero>().Damage);
                                 }
                             }
                         }
