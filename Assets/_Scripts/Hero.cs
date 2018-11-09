@@ -1,17 +1,23 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class Hero : MonoBehaviour {
+
+    #region variables
 
     //hero stats, values set in the inspector
     public int Healthpoints = 1;
     public int Damage = 1;
     public int Defense = 1;
     public int Initiative = 1;
-
+    
     public MainClass main_class = MainClass.Scout;
 
     private Transform selection_ring;
     private Transform targeting_ring;
+    private Transform IsDrafted;
+
+    public bool isDrafted = false;
 
     //used for when the hero can be targeted by an enemy hero
     public bool isTargeted = false;
@@ -32,11 +38,16 @@ public class Hero : MonoBehaviour {
     public float movement_speed = 2f;
 
     //reference to text meshes
-    private Transform UiText;
+    [System.NonSerialized] public Transform UiText;
+    [System.NonSerialized] public Transform UiImages;
+
     private TextMesh health_text;
     private TextMesh damage_text;
     private TextMesh initiative_text;
-    
+        
+
+    #endregion
+
     private void Awake()
     {
         selection_ring = transform.Find("SelectionRing");
@@ -46,6 +57,11 @@ public class Hero : MonoBehaviour {
         targeting_ring.gameObject.SetActive(false);
 
         UiText = transform.Find("UI Text");
+        UiImages = transform.Find("UI Images");
+        SetUI(false);
+
+        IsDrafted = transform.Find("IsDrafted");
+        IsDrafted.gameObject.SetActive(false);
 
         health_text = UiText.Find("HealthText").GetComponent<TextMesh>();
         damage_text = UiText.Find("DamageText").GetComponent<TextMesh>();
@@ -67,6 +83,18 @@ public class Hero : MonoBehaviour {
     {
         targeting_ring.gameObject.SetActive(is_targeted);
         isTargeted = is_targeted;
+    }
+
+    public void SetDrafted(bool is_drafted)
+    {
+        IsDrafted.gameObject.SetActive(is_drafted);
+        isDrafted = is_drafted;
+    }
+
+    public void SetUI(bool show)
+    {
+        UiText.gameObject.SetActive(show);
+        UiImages.gameObject.SetActive(show);
     }
 
     private void Update()
@@ -102,4 +130,22 @@ public class Hero : MonoBehaviour {
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
     }
+}
+
+[System.Serializable]
+public class StatBuff
+{
+    //buff for hp, dmg or initative
+    int buff_value;
+    int turns;
+
+    //updates each turn
+    //if turns == 0, destroy object
+}
+
+[System.Serializable]
+public class StatMultiplier
+{
+    float multiplier;
+    int turns;
 }

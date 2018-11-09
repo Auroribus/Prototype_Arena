@@ -2,6 +2,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+#region enums
+
 public enum GameState
 {
     Menu,
@@ -13,7 +15,7 @@ public enum GameState
 public enum Phase
 {
     IdlePhase,
-    SpawnPhase,
+    DraftPhase,
     ActionPhase,
     ResolvePhase
 }
@@ -44,14 +46,18 @@ public enum SubClass
     Mage3
 }
 
+#endregion
+
 public class GameManager : MonoBehaviour {
+
+    #region Variables
 
     //static reference which can be accessed in all other scripts by calling GameManager.instance
     public static GameManager instance;
 
     //References to enums
     public GameState CurrentState = GameState.Game;
-    public Phase CurrentPhase = Phase.SpawnPhase;
+    public Phase CurrentPhase = Phase.DraftPhase;
     public PlayerTurn CurrentTurn = PlayerTurn.Player1;
 
     //Reference to each player
@@ -71,6 +77,9 @@ public class GameManager : MonoBehaviour {
     [System.NonSerialized] public List<GameObject> HeroList_P1 = new List<GameObject>();
     [System.NonSerialized] public List<GameObject> HeroList_P2 = new List<GameObject>();
 
+    [System.NonSerialized] public List<GameObject> HeroPool_P1 = new List<GameObject>();
+    [System.NonSerialized] public List<GameObject> HeroPool_P2 = new List<GameObject>();
+
     //temp spawn point for randomly spawning heros
     private Vector2 hero_spawnpoint;
 
@@ -86,6 +95,13 @@ public class GameManager : MonoBehaviour {
             instance = this;
     }
 
+    public int Current_Turn = 0;
+
+    private Transform DraftP1;
+    private Transform DraftP2;
+
+    #endregion
+
     // Use this for initialization
     void Start () {
         Player1 = GameObject.Find("Player1");
@@ -99,6 +115,9 @@ public class GameManager : MonoBehaviour {
 
         phase_text = GameObject.Find("Phase").GetComponent<Text>();
         turn_text = GameObject.Find("Turn").GetComponent<Text>();
+
+        DraftP1 = GameObject.Find("DraftP1").transform;
+        DraftP2 = GameObject.Find("DraftP2").transform;
 	}
 	
 	// Update is called once per frame
@@ -112,17 +131,27 @@ public class GameManager : MonoBehaviour {
     {
         if(Input.GetKeyDown(KeyCode.Space))
         {
-            StartGame();
+            DraftHeroUnits();
+        }
+
+        if(Input.GetKeyDown(KeyCode.Return))
+        {
+            PlaceDraftedUnits();
         }
 
         if (Input.GetKeyDown(KeyCode.R))
         {
             ResetGame();
         }
+
+        if(Input.GetKeyDown(KeyCode.A))
+        {
+            StartCoroutine(Player.instance.ResolveActions());
+        }
     }
 
     //Function that randomly spawns 5 units for each player
-    private void SpawnHeroUnits()
+    private void RandomlySpawnHeroUnits()
     {
         //if the hero count is lower than the spawn amount, spawn unit
         while(HeroList_P1.Count < max_amount_units)
@@ -277,7 +306,186 @@ public class GameManager : MonoBehaviour {
                 HeroList_P2[HeroList_P2.Count - 1].tag = "HeroP2";
             }
         }
+    }
 
+    //Function for handling the players drafting heroes
+    private void DraftHeroUnits()
+    {
+        //spawn 10 random heroes for player 1
+        for (int j = 0; j < 2; j++)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                hero_spawnpoint.x = i * 1.2f + DraftP1.transform.position.x;
+                hero_spawnpoint.y = j * 1.2f + DraftP1.transform.position.y;
+
+                int random = Random.Range(0, Heroes.Count);
+                HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP1));
+                Hero hero = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<Hero>();
+
+                //assisgn hero specifics based on the hero base presets
+                hero.Healthpoints = Heroes[random].HealthPoints;
+                hero.Damage = Heroes[random].Damage;
+                hero.Initiative = Heroes[random].Initiative;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
+                hero.main_class = Heroes[random].Main_class;
+
+                HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.blue;
+                HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
+            }
+        }
+
+        //spawn 10 random heroes for player 2
+        for (int j = 0; j < 2; j++)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                hero_spawnpoint.x = i * 1.2f + DraftP2.transform.position.x;
+                hero_spawnpoint.y = j * 1.2f + DraftP2.transform.position.y;
+
+                int random = Random.Range(0, Heroes.Count);
+                HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP2));
+                Hero hero = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<Hero>();
+
+                //assisgn hero specifics based on the hero base presets
+                hero.Healthpoints = Heroes[random].HealthPoints;
+                hero.Damage = Heroes[random].Damage;
+                hero.Initiative = Heroes[random].Initiative;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
+                hero.main_class = Heroes[random].Main_class;
+
+                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
+            }
+        }
+    }
+
+    private void PlaceDraftedUnits()
+    {
+        int lane = 0;
+
+        //instantiate heroes in the hero list in the grid system
+        for (int i = 0; i < HeroList_P1.Count; i++)
+        {
+            //check the class and select the lane
+            switch(HeroList_P1[i].GetComponent<Hero>().main_class)
+            {
+                case MainClass.Warrior:
+                    lane = 2;
+                    break;
+                case MainClass.Scout:
+                    lane = 1;
+                    break;
+                case MainClass.Mage:
+                    lane = 0;
+                    break;
+            }
+
+            foreach(GameObject tile in Grid_P1.Grid)
+            {
+                int tile_x = tile.GetComponent<GridTile>().pos_grid_x;
+                int tile_y = tile.GetComponent<GridTile>().pos_grid_y;
+
+                //check only tiles in specified lane
+                if (tile_x == lane)
+                {
+                    //check if tile is not occupied
+                    if (!tile.GetComponent<GridTile>().isOccupied)
+                    {
+                        //remove unit from pool list                                                                      
+                        HeroPool_P1.Remove(HeroList_P1[i]);
+
+                        //place unit and set spawnpoint
+                        hero_spawnpoint = Grid_P1.Grid[tile_x, tile_y].transform.position;
+                        HeroList_P1[i].transform.position = hero_spawnpoint;
+
+                        //disable drafted visual
+                        HeroList_P1[i].GetComponent<Hero>().SetDrafted(false);
+
+                        //enable ui text and images
+
+                        //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
+                        Grid_P1.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
+
+                        HeroList_P1[i].GetComponent<Hero>().x_position_grid = tile_x;
+                        HeroList_P1[i].GetComponent<Hero>().y_position_grid = tile_y;
+
+                        HeroList_P1[i].GetComponent<Hero>().SetUI(true);
+
+                        break;
+                    }
+                }                
+            }
+        }
+
+        for (int i = 0; i < HeroList_P2.Count; i++)
+        {
+            //check the class and select the lane
+            switch (HeroList_P2[i].GetComponent<Hero>().main_class)
+            {
+                case MainClass.Warrior:
+                    lane = 2;
+                    break;
+                case MainClass.Scout:
+                    lane = 1;
+                    break;
+                case MainClass.Mage:
+                    lane = 0;
+                    break;
+            }
+
+            foreach (GameObject tile in Grid_P2.Grid)
+            {
+                int tile_x = tile.GetComponent<GridTile>().pos_grid_x;
+                int tile_y = tile.GetComponent<GridTile>().pos_grid_y;
+
+                //check only tiles in specified lane
+                if (tile_x == lane)
+                {
+                    //check if tile is not occupied
+                    if (!tile.GetComponent<GridTile>().isOccupied)
+                    {
+                        //remove unit from pool list                                                                      
+                        HeroPool_P2.Remove(HeroList_P2[i]);
+
+                        //place unit and set spawnpoint
+                        hero_spawnpoint = Grid_P2.Grid[tile_x, tile_y].transform.position;
+                        HeroList_P2[i].transform.position = hero_spawnpoint;
+
+                        //disable drafted visual
+                        HeroList_P2[i].GetComponent<Hero>().SetDrafted(false);
+
+                        //enable ui text and images
+
+                        //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
+                        Grid_P2.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
+
+                        HeroList_P2[i].GetComponent<Hero>().x_position_grid = tile_x;
+                        HeroList_P2[i].GetComponent<Hero>().y_position_grid = tile_y;
+
+                        HeroList_P2[i].GetComponent<Hero>().SetUI(true);
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        //destroy pool lists
+        foreach(GameObject g in HeroPool_P1)
+        {
+            Destroy(g);
+        }
+        foreach (GameObject g in HeroPool_P2)
+        {
+            Destroy(g);
+        }
+
+        HeroPool_P1.Clear();
+        HeroPool_P2.Clear();
+
+        //set phase to action phase
+        SetCurrentPhase(Phase.ActionPhase);
     }
 
     private void StartGame()
@@ -287,13 +495,15 @@ public class GameManager : MonoBehaviour {
         else
             SetPlayerTurn(PlayerTurn.Player2);
 
-        SpawnHeroUnits();
-        
+        RandomlySpawnHeroUnits();        
         SetCurrentPhase(Phase.ActionPhase);
     }
 
     private void ResetGame()
     {
+        //set phase back to draft phase
+        SetCurrentPhase(Phase.DraftPhase);
+
         //destroy all heros
         foreach (GameObject g in HeroList_P1)
         {
@@ -363,7 +573,7 @@ public class GameManager : MonoBehaviour {
         {
             case Phase.IdlePhase:
                 break;
-            case Phase.SpawnPhase:
+            case Phase.DraftPhase:
                 phase_text.text = "Spawn Phase";
                 break;
             case Phase.ActionPhase:

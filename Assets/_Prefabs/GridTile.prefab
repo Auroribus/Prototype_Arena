@@ -1033,30 +1033,30 @@ ParticleSystem:
         m_Curve:
         - serializedVersion: 3
           time: 0
-          value: 0.7127609
-          inSlope: 1.3177233
-          outSlope: 1.3177233
+          value: 0.80845416
+          inSlope: 0.6059173
+          outSlope: 0.6059173
           tangentMode: 0
           weightedMode: 0
           inWeight: 0.33333334
-          outWeight: 0.40622956
+          outWeight: 0.33740017
         - serializedVersion: 3
           time: 0.49226403
           value: 1
-          inSlope: -0.08973918
-          outSlope: -0.08973918
+          inSlope: 0
+          outSlope: 0
           tangentMode: 0
           weightedMode: 0
           inWeight: 0.4460506
-          outWeight: 0.47122517
+          outWeight: 0.30487266
         - serializedVersion: 3
           time: 1
-          value: 0.5319148
-          inSlope: -1.7052568
-          outSlope: -1.7052568
+          value: 0.8189936
+          inSlope: -0.6055377
+          outSlope: -0.6055377
           tangentMode: 0
           weightedMode: 0
-          inWeight: 0.30717415
+          inWeight: 0.2930439
           outWeight: 0.33333334
         m_PreInfinity: 2
         m_PostInfinity: 2
@@ -1363,9 +1363,9 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0, g: 1, b: 0.0095694065, a: 0}
-        key1: {r: 0, g: 1, b: 0.025510311, a: 1}
-        key2: {r: 0.048309207, g: 1, b: 0, a: 0}
+        key0: {r: 1, g: 1, b: 1, a: 0.21568628}
+        key1: {r: 1, g: 1, b: 1, a: 1}
+        key2: {r: 1, g: 1, b: 1, a: 0.21568628}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
         key5: {r: 0, g: 0, b: 0, a: 0}
@@ -1420,7 +1420,7 @@ ParticleSystem:
         m_NumColorKeys: 2
         m_NumAlphaKeys: 2
   UVModule:
-    enabled: 0
+    enabled: 1
     mode: 0
     frameOverTime:
       serializedVersion: 2
@@ -1528,11 +1528,11 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    tilesX: 1
+    tilesX: 4
     tilesY: 1
-    animationType: 0
+    animationType: 1
     rowIndex: 0
-    cycles: 1
+    cycles: 4
     uvChannelMask: -1
     flipU: 0
     flipV: 0
@@ -4701,7 +4701,7 @@ ParticleSystemRenderer:
   m_ReflectionProbeUsage: 0
   m_RenderingLayerMask: 4294967295
   m_Materials:
-  - {fileID: 2100000, guid: ebddb9e6c4537744d8588b127b23fbab, type: 2}
+  - {fileID: 2100000, guid: b5e718c2313a6a2479be8bb3b3dcc07d, type: 2}
   - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
