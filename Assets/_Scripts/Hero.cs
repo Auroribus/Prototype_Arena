@@ -19,6 +19,8 @@ public class Hero : MonoBehaviour {
 
     public bool isDrafted = false;
 
+    public bool hasAction = false;
+
     //used for when the hero can be targeted by an enemy hero
     public bool isTargeted = false;
 
@@ -91,6 +93,12 @@ public class Hero : MonoBehaviour {
         isDrafted = is_drafted;
     }
 
+    public void SetAction(bool has_action)
+    {
+        IsDrafted.gameObject.SetActive(has_action);
+        hasAction = has_action;
+    }
+
     public void SetUI(bool show)
     {
         UiText.gameObject.SetActive(show);
@@ -101,8 +109,8 @@ public class Hero : MonoBehaviour {
     {
         if(Healthpoints <= 0)
         {
-            Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
-            Destroy(gameObject);
+            //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
+            //Destroy(gameObject);
         }    
         else
         {
@@ -129,6 +137,28 @@ public class Hero : MonoBehaviour {
         Healthpoints -= damage_value;
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
+
+        if (Healthpoints <= 0)
+        {
+            //blood/hit effect
+            Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
+
+            //update gridtile to no longer be occupied
+            switch(gameObject.tag)
+            {
+                case "HeroP1":
+                    GameManager.instance.Grid_P1.Grid[x_position_grid, y_position_grid]
+                        .GetComponent<GridTile>().isOccupied = false;
+                    break;
+                case "HeroP2":
+                    GameManager.instance.Grid_P2.Grid[x_position_grid, y_position_grid]
+                        .GetComponent<GridTile>().isOccupied = false;
+                    break;
+            }
+
+            //destroy gameobject
+            Destroy(gameObject);
+        }
     }
 }
 

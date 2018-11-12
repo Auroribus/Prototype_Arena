@@ -5,33 +5,44 @@ using UnityEngine;
 
 public class Player : MonoBehaviour {
 
+    #region variables
+
     public static Player instance;
 
     public int PlayerNumber = 1;
-    public int ActionsLeft = 3;
 
     [System.NonSerialized] public GameObject SelectedHero;
 
-    string target_tag = "";
-    string own_tag = "";
-    List<GameObject> enemy_list;
-    GridParent player_grid;
-    int melee_range = 2;
+    //player specific variables that chance depending on the turn
+    private string target_tag = "";
+    private string own_tag = "";
+    private List<GameObject> enemy_list;
+    private GridParent player_grid;
+    private int player_actions = 0;
 
-    private int max_actions = 3;
+    //action based variables
+    public int max_actions = 3;
     public int p1_actions = 0;
     public int p2_actions = 0;
 
     public List<Action> list_of_actions = new List<Action>();
 
+    private GameObject Plan_list;
+    public GameObject action_icon_prefab;
+    public List<Sprite> action_icon_sprites = new List<Sprite>();
+    private List<GameObject> action_icons_list = new List<GameObject>();
+
+    #endregion
+
     private void Awake()
     {
         if (instance == null)
             instance = this;
-    }
 
-    // Update is called once per frame
-    void Update () {
+        Plan_list = GameObject.Find("Plan List");
+    }
+    
+    private void Update () {
         MouseControl();
 	}
         
@@ -50,9 +61,9 @@ public class Player : MonoBehaviour {
                     case Phase.DraftPhase:
                         DraftPhase(hit);
                         break;
-                    case Phase.ActionPhase:
+                    case Phase.PlanPhase:
                         SetPlayerTurnActionPhase();
-                        ActionPhase(hit);
+                        PlanPhase(hit);
                         break;
                 }
             }
@@ -79,6 +90,7 @@ public class Player : MonoBehaviour {
                     {
                         hit.transform.gameObject.GetComponent<Hero>().SetDrafted(true);
                         GameManager.instance.HeroList_P1.Add(hit.transform.gameObject);
+                        GameManager.instance.P1_drafted.text = "Drafted: " + GameManager.instance.HeroList_P1.Count + "/" + GameManager.instance.max_amount_units;
                     }
                 }
             }
@@ -86,7 +98,8 @@ public class Player : MonoBehaviour {
             {
                 hit.transform.GetComponent<Hero>().SetDrafted(false);
                 GameManager.instance.HeroList_P1.Remove(hit.transform.gameObject);
-            }            
+                GameManager.instance.P1_drafted.text = "Drafted: " + GameManager.instance.HeroList_P1.Count + "/" + GameManager.instance.max_amount_units;
+            }
         }
         else if(hit.collider.tag == "HeroP2")
         {
@@ -106,6 +119,7 @@ public class Player : MonoBehaviour {
                     {
                         hit.transform.GetComponent<Hero>().SetDrafted(true);
                         GameManager.instance.HeroList_P2.Add(hit.transform.gameObject);
+                        GameManager.instance.P2_drafted.text = "Drafted: " + GameManager.instance.HeroList_P2.Count + "/" + GameManager.instance.max_amount_units;
                     }
                 }
             }
@@ -113,15 +127,17 @@ public class Player : MonoBehaviour {
             {
                 hit.transform.GetComponent<Hero>().SetDrafted(false);
                 GameManager.instance.HeroList_P2.Remove(hit.transform.gameObject);
+                GameManager.instance.P2_drafted.text = "Drafted: " + GameManager.instance.HeroList_P2.Count + "/" + GameManager.instance.max_amount_units;
             }
         }
     }
 
-    private void ActionPhase(RaycastHit2D hit)
+    private void PlanPhase(RaycastHit2D hit)
     {
         //Debug.Log("turn: " + GameManager.instance.CurrentTurn);
         //see if hit is a unit belonging to this player
-        if (hit.collider.tag == own_tag)
+        //check if the unit already performing an action
+        if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction)
         {
             if (SelectedHero != null)
                 SelectedHero.GetComponent<Hero>().SetSelected(false);
@@ -162,10 +178,10 @@ public class Player : MonoBehaviour {
                 //get the max value, meaning the closest lane that has a unit on it
                 int _max = Mathf.Max(_max_list.ToArray());
 
-                //melee can only hit the closest lane of enemies
+                //melee can only hit the closest enemy in the same lane
                 foreach (GameObject hero in enemy_list)
                 {
-                    if (hero.GetComponent<Hero>().x_position_grid == _max )//&& hero.GetComponent<Hero>().y_position_grid == selected_hero.GetComponent<Hero>().y_position_grid)
+                    if (hero.GetComponent<Hero>().x_position_grid == _max && hero.GetComponent<Hero>().y_position_grid == selected_hero.GetComponent<Hero>().y_position_grid)
                         hero.GetComponent<Hero>().SetTargeted(true);
                 }
             }
@@ -185,7 +201,7 @@ public class Player : MonoBehaviour {
             player_grid.SetMovementRings(x, y);
         }
         //attacking
-        else if (SelectedHero != null && hit.collider.tag == target_tag)
+        else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions)
         {
             if (hit.transform.GetComponent<Hero>().isTargeted)
             {
@@ -201,16 +217,11 @@ public class Player : MonoBehaviour {
                             hit.transform.gameObject
                         ));
 
-                    //unselect selected hero
-                    SelectedHero.GetComponent<Hero>().SetSelected(false);
-                    SelectedHero = null;
+                    //increment attack
+                    IncrementActions(+1);
 
-                    GameManager.instance.CleanLists();
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        hero.GetComponent<Hero>().SetTargeted(false);
-                    }
-                    player_grid.SetMovementRings(-1,-1);
+                    //unselect selected hero
+                    UnselectHero();
                 }
                 //magical attacks that target a whole row of heros
                 else if (SelectedHero.GetComponent<Hero>().main_class == MainClass.Mage)
@@ -227,6 +238,7 @@ public class Player : MonoBehaviour {
                         }
                     }
 
+                    //add action to the list
                     list_of_actions.Add(new Action(
                                     SelectedHero,
                                     GameManager.instance.CurrentTurn,
@@ -234,41 +246,34 @@ public class Player : MonoBehaviour {
                                     target_heroes
                                 ));
 
-                    //unselect selected hero
-                    SelectedHero.GetComponent<Hero>().SetSelected(false);
-                    SelectedHero = null;
+                    //increment attack
+                    IncrementActions(+1);
 
-                    GameManager.instance.CleanLists();
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        hero.GetComponent<Hero>().SetTargeted(false);
-                    }
-                    player_grid.SetMovementRings(-1, -1);
+                    //unselect selected hero
+                    UnselectHero();
                 }
             }
         }
         //moving
-        else if (SelectedHero != null && hit.collider.tag == "Tile")
+        else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions)
         {
             if (hit.transform.GetComponent<GridTile>().can_move_here)
             {
                 if (!SelectedHero.GetComponent<Hero>().move_hero)
                 {
-                    //set old occupied tile to no longer occupied
-                    player_grid.Grid[SelectedHero.GetComponent<Hero>().x_position_grid, SelectedHero.GetComponent<Hero>().y_position_grid]
-                        .GetComponent<GridTile>().isOccupied = false;
+                    //add movement action to the list
+                    list_of_actions.Add(new Action(
+                                    SelectedHero,
+                                    GameManager.instance.CurrentTurn,
+                                    ActionType.movement,
+                                    hit.transform.gameObject
+                                ));
 
-                    //move hero
-                    SelectedHero.GetComponent<Hero>().target_position = hit.transform.position;
-                    SelectedHero.GetComponent<Hero>().move_hero = true;
+                    //increment attack
+                    IncrementActions(+1);
 
-                    //update heros position on grid
-                    SelectedHero.GetComponent<Hero>().x_position_grid = hit.transform.GetComponent<GridTile>().pos_grid_x;
-                    SelectedHero.GetComponent<Hero>().y_position_grid = hit.transform.GetComponent<GridTile>().pos_grid_y;
-
-                    //set new tile as occupied
-                    hit.transform.GetComponent<GridTile>().isOccupied = true;
-                    hit.transform.GetComponent<GridTile>().SetMovementRing(false);
+                    //deselect hero
+                    UnselectHero();
                 }
             }
         }
@@ -280,34 +285,29 @@ public class Player : MonoBehaviour {
         switch (GameManager.instance.CurrentTurn)
         {
             case PlayerTurn.Player1:
-                PlayerNumber = 1;
                 own_tag = "HeroP1";
                 target_tag = "HeroP2";
                 enemy_list = GameManager.instance.HeroList_P2;
                 player_grid = GameManager.instance.Grid_P1;
+                player_actions = p1_actions;
                 break;
             case PlayerTurn.Player2:
-                PlayerNumber = 2;
                 own_tag = "HeroP2";
                 target_tag = "HeroP1";
                 enemy_list = GameManager.instance.HeroList_P1;
                 player_grid = GameManager.instance.Grid_P2;
+                player_actions = p2_actions;
                 break;
         }
     }
 
     public IEnumerator ResolveActions()
     {
-        //sort actions list by initiative descending
-        list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
-
         foreach(Action action in list_of_actions)
         {
             //check if the hero doing the action is still alive
             if(action.selected_hero != null)
             {
-                Debug.Log("initiative: " + action.initiative);
-
                 switch (action.action_type)
                 {
                     case ActionType.attack:
@@ -318,7 +318,28 @@ public class Player : MonoBehaviour {
                         {
                             //check if target is alive and hero that is doing the action is alive
                             if (action.single_target != null)
-                                action.single_target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                            {
+                                //check if hero is warrior and target not is warrior for double damage
+                                if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Warrior && action.single_target.GetComponent<Hero>().main_class != MainClass.Warrior)
+                                {
+                                    int damage = action.selected_hero.GetComponent<Hero>().Damage * 2;
+                                    action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                }
+                                //otherwise normal damage applies
+                                else
+                                {
+                                    action.single_target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                }
+                                
+                                //set checkmark to green on action prefab                            
+                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                            }
+                            //else the target is already dead
+                            else
+                            {
+                                //set checkmark to red on action prefab                            
+                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                            }
 
                             yield return new WaitForSeconds(1f);
                         }
@@ -326,27 +347,184 @@ public class Player : MonoBehaviour {
                         {
                             foreach (GameObject target in action.targets)
                             {
-                                if (target != null)
-                                    target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                //if main class is mage, check if the targeted enemy hasn't moved
+                                if (action.selected_hero.GetComponent<Hero>().main_class == MainClass.Mage)
+                                {
+                                    //check if target is alive and in the same row
+                                    if (target != null && target.GetComponent<Hero>().y_position_grid == action.selected_hero.GetComponent<Hero>().y_position_grid)
+                                    {
+                                        target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                    }
+                                }
+                                else
+                                {
+                                    if (target != null)
+                                    {
+                                        target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                    }
+                                }
                             }
 
+                            //set checkmark to green on action prefab
+                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                            yield return new WaitForSeconds(1f);
+                        }
+                        else
+                        {
+                            //set checkmark to red on action prefab
+                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                            
                             yield return new WaitForSeconds(1f);
                         }
                         break;
                     case ActionType.ability:
                         break;
                     case ActionType.movement:
+                        
+                        //set old occupied tile to no longer occupied
+                        switch(action.player)
+                        {
+                            case PlayerTurn.Player1:
+                                GameManager.instance.Grid_P1.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
+                                    action.selected_hero.GetComponent<Hero>().y_position_grid]
+                                    .GetComponent<GridTile>().isOccupied = false;
+                                break;
+                            case PlayerTurn.Player2:
+                                GameManager.instance.Grid_P2.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
+                                    action.selected_hero.GetComponent<Hero>().y_position_grid]
+                                    .GetComponent<GridTile>().isOccupied = false;
+                                break;
+                        }
+
+                        //move hero
+                        action.selected_hero.GetComponent<Hero>().target_position = action.single_target.transform.position;
+                        action.selected_hero.GetComponent<Hero>().move_hero = true;
+
+                        //update heros position on grid
+                        action.selected_hero.GetComponent<Hero>().x_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_x;
+                        action.selected_hero.GetComponent<Hero>().y_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_y;
+
+                        //set new tile as occupied
+                        action.single_target.transform.GetComponent<GridTile>().isOccupied = true;
+                        action.single_target.transform.GetComponent<GridTile>().SetMovementRing(false);
+
+                        //set checkmark to green on action prefab
+                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                        yield return new WaitForSeconds(1f);
+
                         break;
                 }
             }
             else
             {
-                //remove action from the list
+                //set checkmark to green on action prefab
+                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+
+                yield return new WaitForSeconds(1f);
             }
         }
 
         //clear list of actions after all actions have been resolved
         list_of_actions.Clear();
+    }
+
+    private void IncrementActions(int value)
+    {
+        switch (GameManager.instance.CurrentTurn)
+        {
+            case PlayerTurn.Player1:
+                p1_actions += value;
+                GameManager.instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions;
+
+                break;
+
+            case PlayerTurn.Player2:
+                p2_actions += value;
+                GameManager.instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
+
+                break;
+        }
+
+        DisplayActionList();
+    }
+
+    private void UnselectHero()
+    {
+        //unselect selected hero
+        SelectedHero.GetComponent<Hero>().SetSelected(false);
+        SelectedHero = null;
+
+        GameManager.instance.CleanLists();
+        foreach (GameObject hero in enemy_list)
+        {
+            hero.GetComponent<Hero>().SetTargeted(false);
+        }
+        player_grid.SetMovementRings(-1, -1);
+    }
+
+    private void DisplayActionList()
+    {
+        //sort actions list by initiative descending
+        list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+
+        ClearActionIcons();
+
+        int position_y = 0;
+
+        foreach(Action action in list_of_actions)
+        {
+            Debug.Log(position_y);
+
+            //set instance position
+            Vector2 icon_position = new Vector2();
+            icon_position.x = Plan_list.transform.position.x;
+            icon_position.y = Plan_list.transform.position.y - position_y;
+
+            //instance action prefab
+            action_icons_list.Add(Instantiate(action_icon_prefab, icon_position, Quaternion.identity, Plan_list.transform));
+            
+            //increment position y
+            position_y++;
+
+            SpriteRenderer sRend = action_icons_list[action_icons_list.Count - 1].GetComponent<SpriteRenderer>();
+
+            //set sprite icon
+            switch (action.action_type)
+            {
+                case ActionType.attack:
+                    sRend.sprite = action_icon_sprites[0];
+                    break;
+                case ActionType.ability:
+                    sRend.sprite = action_icon_sprites[1];
+                    break;
+                case ActionType.movement:
+                    sRend.sprite = action_icon_sprites[2];
+                    break;
+            }
+
+            //set sprite icon color
+            switch(action.player)
+            {
+                case PlayerTurn.Player1:
+                    sRend.color = Color.blue;
+                    break;
+                case PlayerTurn.Player2:
+                    sRend.color = Color.red;
+                    break;
+            }
+            
+        }
+    }
+
+    public void ClearActionIcons()
+    {
+        foreach (GameObject action in action_icons_list)
+        {
+            Destroy(action);
+        }
+        action_icons_list.Clear();
     }
 }
 
@@ -368,7 +546,7 @@ public class Action
     public GameObject selected_hero;
     public GameObject single_target;
     public List<GameObject> targets = new List<GameObject>();
-
+   
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
     {
         selected_hero = _selected_hero;
@@ -376,6 +554,9 @@ public class Action
         action_type = _action;
         initiative = selected_hero.GetComponent<Hero>().Initiative;
         single_target = _single_target;
+
+        //set hero has action to true
+        selected_hero.GetComponent<Hero>().SetAction(true);
     }
 
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets)
@@ -385,5 +566,8 @@ public class Action
         action_type = _action;
         initiative = selected_hero.GetComponent<Hero>().Initiative;
         targets = _targets;
+
+        //set hero has action to true
+        selected_hero.GetComponent<Hero>().SetAction(true);
     }
 }

@@ -21,18 +21,11 @@ public class GridTile : MonoBehaviour {
         movement_ring.gameObject.SetActive(false);
 
         box_collider = GetComponent<BoxCollider2D>();
+        box_collider.gameObject.SetActive(false);
     }
 
     private void Update()
     {
-        if(isOccupied && box_collider.enabled)
-        {
-            box_collider.enabled = false;
-        }
-        else if(!isOccupied && !box_collider.enabled)
-        {
-            box_collider.enabled = true;
-        }
     }
 
     //public function to set the rings attached to the tile
@@ -42,6 +35,7 @@ public class GridTile : MonoBehaviour {
         {
             movement_ring.gameObject.SetActive(is_active);
             can_move_here = is_active;
+            box_collider.gameObject.SetActive(is_active);
         }
     }
     
