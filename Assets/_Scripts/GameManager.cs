@@ -86,16 +86,10 @@ public class GameManager : MonoBehaviour {
     private Text phase_text;
     private Text player_turn_text;
     private Text turn_number_text;
+    private Text Winner_playername_text;
 
     public List<HeroBase> Heroes = new List<HeroBase>();
-
-    private void Awake()
-    {
-        //check if no instance already exists of game manager
-        if (instance == null)
-            instance = this;
-    }
-
+    
     public int Current_turn_number = 0;
 
     private Transform DraftP1;
@@ -109,7 +103,16 @@ public class GameManager : MonoBehaviour {
 
     private GameObject ResolveUI;
 
+    private GameObject EndUI;
+
     #endregion
+
+    private void Awake()
+    {
+        //check if no instance already exists of game manager
+        if (instance == null)
+            instance = this;
+    }
 
     // Use this for initialization
     void Start () {
@@ -139,10 +142,16 @@ public class GameManager : MonoBehaviour {
 
         ResolveUI = GameObject.Find("Resolve UI");
 
+        EndUI = GameObject.Find("End UI");
+        //Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
+        //EndUI.SetActive(false);
+
         PlanUI.SetActive(false);
         DraftUI.SetActive(false);
         ResolveUI.SetActive(false);
-        SetCurrentPhase(Phase.DraftPhase);
+
+        //set first state
+        SetCurrentGameState(GameState.Game);
     }
 	
 	// Update is called once per frame
@@ -351,7 +360,8 @@ public class GameManager : MonoBehaviour {
     
     private void ResetGame()
     {
-        //set phase back to draft phase
+        //reset enums
+        SetCurrentGameState(GameState.Game);
         SetCurrentPhase(Phase.IdlePhase);
         SetPlayerTurn(PlayerTurn.Player1);
 
@@ -394,7 +404,8 @@ public class GameManager : MonoBehaviour {
         //reset text
         P1_drafted.text = "Drafted: 0/5";
         P2_drafted.text = "Drafted: 0/5";
-        DraftUI.gameObject.SetActive(false);
+        DraftUI.SetActive(false);
+        PlanUI.SetActive(false);
     }
 
     private void SetPlayerTurn(PlayerTurn active_turn)
@@ -423,10 +434,12 @@ public class GameManager : MonoBehaviour {
             case GameState.Menu:
                 break;
             case GameState.Game:
+                SetCurrentPhase(Phase.DraftPhase);
                 break;
             case GameState.Paused:
                 break;
             case GameState.Ended:
+                SetEndScreen();
                 break;
         }
     }
@@ -501,8 +514,6 @@ public class GameManager : MonoBehaviour {
                 //enable resolve ui
                 ResolveUI.SetActive(true);
 
-                //disable plan ui
-                PlanUI.SetActive(false);
                 phase_text.text = "Resolve Phase";
                 StartCoroutine(Player.instance.ResolveActions());
                 break;
@@ -512,10 +523,47 @@ public class GameManager : MonoBehaviour {
         CurrentPhase = active_phase;
     }
 
+    public void ClearKilledHeroes()
+    {
+        foreach(GameObject hero in HeroList_P1)
+        {
+            if(hero.GetComponent<Hero>().Healthpoints <= 0)
+            {
+                Destroy(hero);
+            }
+        }
+
+        foreach(GameObject hero in HeroList_P2)
+        {
+            if (hero.GetComponent<Hero>().Healthpoints <= 0)
+            {
+                Destroy(hero);
+            }
+        }
+    }
+
     public void CleanLists()
     {
         HeroList_P1.RemoveAll(item => item == null);
         HeroList_P2.RemoveAll(item => item == null);
+    }
+
+    private void SetEndScreen()
+    {
+        //enable end ui
+        EndUI.SetActive(true);
+
+        //set winners name
+        if(HeroList_P1.Count == 0)
+        {
+            Winner_playername_text.text = "Player 1";
+            Winner_playername_text.color = Color.blue;
+        }
+        else if(HeroList_P2.Count == 0)
+        {
+            Winner_playername_text.text = "Player 2";
+            Winner_playername_text.color = Color.red;
+        }
     }
 
     public void OnDraftReady()
@@ -556,6 +604,11 @@ public class GameManager : MonoBehaviour {
 
         //reset visual plan list
         Player.instance.ClearActionIcons();
+    }
+
+    public void OnRestart()
+    {
+        ResetGame();
     }
 }
 

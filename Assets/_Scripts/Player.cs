@@ -54,8 +54,6 @@ public class Player : MonoBehaviour {
 
             if (hit.collider != null)
             {
-                //Debug.Log(hit.collider.tag);
-
                 switch (GameManager.instance.CurrentPhase)
                 {
                     case Phase.DraftPhase:
@@ -134,7 +132,6 @@ public class Player : MonoBehaviour {
 
     private void PlanPhase(RaycastHit2D hit)
     {
-        //Debug.Log("turn: " + GameManager.instance.CurrentTurn);
         //see if hit is a unit belonging to this player
         //check if the unit already performing an action
         if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction)
@@ -306,7 +303,7 @@ public class Player : MonoBehaviour {
         foreach(Action action in list_of_actions)
         {
             //check if the hero doing the action is still alive
-            if(action.selected_hero != null)
+            if(action.selected_hero != null && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
             {
                 switch (action.action_type)
                 {
@@ -324,6 +321,12 @@ public class Player : MonoBehaviour {
                                 {
                                     int damage = action.selected_hero.GetComponent<Hero>().Damage * 2;
                                     action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                }
+                                //scout attack
+                                else if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Scout)
+                                {
+                                    //instance arrow from hero to target
+                                    action.selected_hero.GetComponent<Hero>().LaunchProjectile(action.single_target, action.selected_hero.GetComponent<Hero>().Damage, action.player);
                                 }
                                 //otherwise normal damage applies
                                 else
@@ -381,39 +384,50 @@ public class Player : MonoBehaviour {
                     case ActionType.ability:
                         break;
                     case ActionType.movement:
-                        
-                        //set old occupied tile to no longer occupied
-                        switch(action.player)
+
+                        //check if target tile is not occupied by other movement
+                        if (!action.single_target.GetComponent<GridTile>().isOccupied)
                         {
-                            case PlayerTurn.Player1:
-                                GameManager.instance.Grid_P1.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
-                                    action.selected_hero.GetComponent<Hero>().y_position_grid]
-                                    .GetComponent<GridTile>().isOccupied = false;
-                                break;
-                            case PlayerTurn.Player2:
-                                GameManager.instance.Grid_P2.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
-                                    action.selected_hero.GetComponent<Hero>().y_position_grid]
-                                    .GetComponent<GridTile>().isOccupied = false;
-                                break;
+                            //set old occupied tile to no longer occupied
+                            switch (action.player)
+                            {
+                                case PlayerTurn.Player1:
+                                    GameManager.instance.Grid_P1.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
+                                        action.selected_hero.GetComponent<Hero>().y_position_grid]
+                                        .GetComponent<GridTile>().isOccupied = false;
+                                    break;
+                                case PlayerTurn.Player2:
+                                    GameManager.instance.Grid_P2.Grid[action.selected_hero.GetComponent<Hero>().x_position_grid,
+                                        action.selected_hero.GetComponent<Hero>().y_position_grid]
+                                        .GetComponent<GridTile>().isOccupied = false;
+                                    break;
+                            }
+
+                            //move hero
+                            action.selected_hero.GetComponent<Hero>().target_position = action.single_target.transform.position;
+                            action.selected_hero.GetComponent<Hero>().move_hero = true;
+
+                            //update heros position on grid
+                            action.selected_hero.GetComponent<Hero>().x_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_x;
+                            action.selected_hero.GetComponent<Hero>().y_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_y;
+
+                            //set new tile as occupied
+                            action.single_target.transform.GetComponent<GridTile>().isOccupied = true;
+                            action.single_target.transform.GetComponent<GridTile>().SetMovementRing(false);
+
+                            //set checkmark to green on action prefab
+                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                            yield return new WaitForSeconds(1f);
                         }
+                        //tile already occupied
+                        else
+                        {
+                            //set checkmark to red on action prefab
+                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
-                        //move hero
-                        action.selected_hero.GetComponent<Hero>().target_position = action.single_target.transform.position;
-                        action.selected_hero.GetComponent<Hero>().move_hero = true;
-
-                        //update heros position on grid
-                        action.selected_hero.GetComponent<Hero>().x_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_x;
-                        action.selected_hero.GetComponent<Hero>().y_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_y;
-
-                        //set new tile as occupied
-                        action.single_target.transform.GetComponent<GridTile>().isOccupied = true;
-                        action.single_target.transform.GetComponent<GridTile>().SetMovementRing(false);
-
-                        //set checkmark to green on action prefab
-                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-
-                        yield return new WaitForSeconds(1f);
-
+                            yield return new WaitForSeconds(1f);
+                        }
                         break;
                 }
             }
@@ -428,6 +442,8 @@ public class Player : MonoBehaviour {
 
         //clear list of actions after all actions have been resolved
         list_of_actions.Clear();
+
+        GameManager.instance.ClearKilledHeroes();
     }
 
     private void IncrementActions(int value)
@@ -475,8 +491,6 @@ public class Player : MonoBehaviour {
 
         foreach(Action action in list_of_actions)
         {
-            Debug.Log(position_y);
-
             //set instance position
             Vector2 icon_position = new Vector2();
             icon_position.x = Plan_list.transform.position.x;

@@ -10,7 +10,7 @@ public class Hero : MonoBehaviour {
     public int Damage = 1;
     public int Defense = 1;
     public int Initiative = 1;
-    
+
     public MainClass main_class = MainClass.Scout;
 
     private Transform selection_ring;
@@ -26,6 +26,8 @@ public class Hero : MonoBehaviour {
 
     public GameObject BloodSplashPrefab;
     public GameObject BloodParticles;
+
+    public GameObject ArrowPrefab;
 
     //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
@@ -46,7 +48,8 @@ public class Hero : MonoBehaviour {
     private TextMesh health_text;
     private TextMesh damage_text;
     private TextMesh initiative_text;
-        
+
+    public GameObject DamageTextPrefab;
 
     #endregion
 
@@ -107,25 +110,17 @@ public class Hero : MonoBehaviour {
 
     private void Update()
     {
-        if(Healthpoints <= 0)
-        {
-            //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
-            //Destroy(gameObject);
-        }    
-        else
-        {
-            health_text.text = Healthpoints.ToString();
-            damage_text.text = Damage.ToString();
-            initiative_text.text = Initiative.ToString();
-        }
+        health_text.text = Healthpoints.ToString();
+        damage_text.text = Damage.ToString();
+        initiative_text.text = Initiative.ToString();
 
-        if(move_hero)
+        if (move_hero)
         {
             transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime);
 
             float distance = Vector2.Distance(transform.position, target_position);
 
-            if(distance == 0)
+            if (distance == 0)
             {
                 move_hero = false;
             }
@@ -138,13 +133,16 @@ public class Hero : MonoBehaviour {
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
 
+        GameObject damage_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
+        damage_text.GetComponent<DamageText>().SetText("-" + damage_value, Color.red);
+
         if (Healthpoints <= 0)
         {
             //blood/hit effect
             Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
 
             //update gridtile to no longer be occupied
-            switch(gameObject.tag)
+            switch (gameObject.tag)
             {
                 case "HeroP1":
                     GameManager.instance.Grid_P1.Grid[x_position_grid, y_position_grid]
@@ -155,10 +153,22 @@ public class Hero : MonoBehaviour {
                         .GetComponent<GridTile>().isOccupied = false;
                     break;
             }
-
-            //destroy gameobject
-            Destroy(gameObject);
         }
+    }
+
+    public void LaunchProjectile(GameObject target, int damage, PlayerTurn player)
+    {
+        GameObject projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
+        projectile.GetComponent<Projectile>().target = target;
+        projectile.GetComponent<Projectile>().damage = damage;
+
+        if (player == PlayerTurn.Player1)
+            projectile.GetComponent<Projectile>().FlipSprite(true);
+    }
+
+    private void DestroyAfterTime(float seconds)
+    {
+        Destroy(gameObject, seconds);
     }
 }
 
