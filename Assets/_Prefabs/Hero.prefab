@@ -680,6 +680,8 @@ MonoBehaviour:
     type: 2}
   ArrowPrefab: {fileID: 1372553168175888, guid: fddf3d957f1dd504793ed60515ac5ec1,
     type: 2}
+  SpellPrefab: {fileID: 1365418853927694, guid: 78220d2f462a676428d4e89237a4f3fc,
+    type: 2}
   movement_speed: 10
   DamageTextPrefab: {fileID: 1882126085640910, guid: 7ef389cc6925b2140a4d485c1798b533,
     type: 2}

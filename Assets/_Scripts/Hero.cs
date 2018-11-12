@@ -28,6 +28,7 @@ public class Hero : MonoBehaviour {
     public GameObject BloodParticles;
 
     public GameObject ArrowPrefab;
+    public GameObject SpellPrefab;
 
     //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
@@ -37,6 +38,9 @@ public class Hero : MonoBehaviour {
     [System.NonSerialized] public bool move_hero = false;
     //end position for the movement of the hero
     [System.NonSerialized] public Vector2 target_position;
+
+    [System.NonSerialized] public bool attack_move_hero = false;
+    [System.NonSerialized] public Vector2 original_position;
 
     //speed the characters move at from tile to tile
     public float movement_speed = 2f;
@@ -50,6 +54,9 @@ public class Hero : MonoBehaviour {
     private TextMesh initiative_text;
 
     public GameObject DamageTextPrefab;
+
+    private GameObject target_enemy;
+    private int current_damage;
 
     #endregion
 
@@ -125,6 +132,23 @@ public class Hero : MonoBehaviour {
                 move_hero = false;
             }
         }
+        else if(attack_move_hero)
+        {
+            transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime * 2);
+
+            float distance = Vector2.Distance(transform.position, target_position);
+
+            if (distance == 0)
+            {
+                attack_move_hero = false;
+
+                //apply damage to target
+                target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
+
+                target_position = original_position;
+                move_hero = true;
+            }
+        }
     }
 
     public void TakeDamage(int damage_value)
@@ -156,14 +180,40 @@ public class Hero : MonoBehaviour {
         }
     }
 
-    public void LaunchProjectile(GameObject target, int damage, PlayerTurn player)
-    {
-        GameObject projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
+    GameObject projectile;
+
+    public void RangedAttack(GameObject target, int damage)
+    {        
+        switch (main_class)
+        {
+            case MainClass.Scout:
+                projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
+                break;
+            case MainClass.Mage:
+                projectile = Instantiate(SpellPrefab, transform.position, Quaternion.identity);
+                break;
+        }
+
         projectile.GetComponent<Projectile>().target = target;
         projectile.GetComponent<Projectile>().damage = damage;
+    }
 
-        if (player == PlayerTurn.Player1)
-            projectile.GetComponent<Projectile>().FlipSprite(true);
+    public void MeleeAttack(GameObject _target, int _damage)
+    {
+        //save original position
+        original_position = transform.position;
+
+        //set enemy target
+        target_enemy = _target;
+
+        //set current damage
+        current_damage = _damage;
+
+        //make unit tackle enemy and then move back
+        attack_move_hero = true;
+
+        //set target position
+        target_position = _target.transform.position;
     }
 
     private void DestroyAfterTime(float seconds)

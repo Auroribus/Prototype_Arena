@@ -5,14 +5,8 @@ public class Projectile : MonoBehaviour {
     public GameObject target;
     public float movement_speed = 1f;
     public int damage;
-
-    private Transform sprite;
-
-    private void Awake()
-    {
-        sprite = transform.Find("Sprite");
-    }
-
+    public float rotation_correction = 180f;
+    
     // Update is called once per frame
     void Update () {
 		if(target != null)
@@ -28,15 +22,10 @@ public class Projectile : MonoBehaviour {
         }
 	}
 
-    public void FlipSprite(bool flip)
-    {
-        //sprite.GetComponent<SpriteRenderer>().flipY = flip;
-    }
-
     private void RotateTowardsPlayer()
     {
         var dir = target.transform.position - transform.position;
         var angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.AngleAxis(angle - 180, Vector3.forward); // - 90
+        transform.rotation = Quaternion.AngleAxis(angle - rotation_correction, Vector3.forward); // - 90
     }
 }

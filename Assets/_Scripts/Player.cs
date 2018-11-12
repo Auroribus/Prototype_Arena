@@ -317,21 +317,22 @@ public class Player : MonoBehaviour {
                             if (action.single_target != null)
                             {
                                 //check if hero is warrior and target not is warrior for double damage
-                                if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Warrior && action.single_target.GetComponent<Hero>().main_class != MainClass.Warrior)
+                                if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Warrior)
                                 {
-                                    int damage = action.selected_hero.GetComponent<Hero>().Damage * 2;
-                                    action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                    int damage;
+
+                                    if (action.single_target.GetComponent<Hero>().main_class != MainClass.Warrior)
+                                        damage = action.selected_hero.GetComponent<Hero>().Damage * 2;
+                                    else
+                                        damage = action.selected_hero.GetComponent<Hero>().Damage;
+                                    //action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                    action.selected_hero.GetComponent<Hero>().MeleeAttack(action.single_target, damage);
                                 }
                                 //scout attack
                                 else if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Scout)
                                 {
                                     //instance arrow from hero to target
-                                    action.selected_hero.GetComponent<Hero>().LaunchProjectile(action.single_target, action.selected_hero.GetComponent<Hero>().Damage, action.player);
-                                }
-                                //otherwise normal damage applies
-                                else
-                                {
-                                    action.single_target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                    action.selected_hero.GetComponent<Hero>().RangedAttack(action.single_target, action.selected_hero.GetComponent<Hero>().Damage);
                                 }
                                 
                                 //set checkmark to green on action prefab                            
@@ -356,14 +357,9 @@ public class Player : MonoBehaviour {
                                     //check if target is alive and in the same row
                                     if (target != null && target.GetComponent<Hero>().y_position_grid == action.selected_hero.GetComponent<Hero>().y_position_grid)
                                     {
-                                        target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
-                                    }
-                                }
-                                else
-                                {
-                                    if (target != null)
-                                    {
-                                        target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                        //target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
+                                        //instance arrow from hero to target
+                                        action.selected_hero.GetComponent<Hero>().RangedAttack(target, action.selected_hero.GetComponent<Hero>().Damage);
                                     }
                                 }
                             }
