@@ -6,12 +6,15 @@ public class Projectile : MonoBehaviour {
     public float movement_speed = 1f;
     public int damage;
     public float rotation_correction = 180f;
+    public bool rotate_towards_target = false;
     
     // Update is called once per frame
     void Update () {
 		if(target != null)
         {
-            RotateTowardsPlayer();
+            if(rotate_towards_target)
+                RotateTowardsTarget();
+
             transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
 
             if(Vector2.Distance(transform.position, target.transform.position) == 0)
@@ -22,7 +25,7 @@ public class Projectile : MonoBehaviour {
         }
 	}
 
-    private void RotateTowardsPlayer()
+    private void RotateTowardsTarget()
     {
         var dir = target.transform.position - transform.position;
         var angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;

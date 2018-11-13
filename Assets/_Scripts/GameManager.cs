@@ -97,6 +97,12 @@ public class GameManager : MonoBehaviour {
 
     private GameObject DraftUI;
     [System.NonSerialized] public Text P1_drafted, P2_drafted;
+    private Transform p1_draft_panel, p2_draft_panel;
+    private Text p1_hero_name, p2_hero_name;
+    private Text p1_hero_hp, p2_hero_hp;
+    private Text p1_hero_dmg, p2_hero_dmg;
+    private Text p1_hero_init, p2_hero_init;
+    private Text p1_hero_abil, p2_hero_abil;
 
     private GameObject PlanUI;
     [System.NonSerialized] public Text P1_actions, P2_actions;
@@ -104,6 +110,7 @@ public class GameManager : MonoBehaviour {
     private GameObject ResolveUI;
 
     private GameObject EndUI;
+
 
     #endregion
 
@@ -135,6 +142,20 @@ public class GameManager : MonoBehaviour {
         DraftUI = GameObject.Find("Draft UI");
         P1_drafted = DraftUI.transform.Find("P1_drafted").GetComponent<Text>();
         P2_drafted = DraftUI.transform.Find("P2_drafted").GetComponent<Text>();
+        p1_draft_panel = DraftUI.transform.Find("P1_draft_panel");
+        p2_draft_panel = DraftUI.transform.Find("P2_draft_panel");
+
+        p1_hero_name = p1_draft_panel.Find("Hero_name").GetComponent<Text>();
+        p1_hero_hp = p1_draft_panel.Find("HP_value").GetComponent<Text>();
+        p1_hero_dmg = p1_draft_panel.Find("DMG_value").GetComponent<Text>();
+        p1_hero_init = p1_draft_panel.Find("INIT_value").GetComponent<Text>();
+        p1_hero_abil = p1_draft_panel.Find("ABIL_name").GetComponent<Text>();
+
+        p2_hero_name = p2_draft_panel.Find("Hero_name").GetComponent<Text>();
+        p2_hero_hp = p2_draft_panel.Find("HP_value").GetComponent<Text>();
+        p2_hero_dmg = p2_draft_panel.Find("DMG_value").GetComponent<Text>();
+        p2_hero_init = p2_draft_panel.Find("INIT_value").GetComponent<Text>();
+        p2_hero_abil = p2_draft_panel.Find("ABIL_name").GetComponent<Text>();
 
         PlanUI = GameObject.Find("Plan UI");
         P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
@@ -185,9 +206,9 @@ public class GameManager : MonoBehaviour {
     private void DraftHeroUnits()
     {
         //spawn 10 random heroes for player 1
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < 5; j++)
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 2; i++)
             {
                 hero_spawnpoint.x = i * 1.2f + DraftP1.transform.position.x;
                 hero_spawnpoint.y = j * 1.2f + DraftP1.transform.position.y;
@@ -209,9 +230,9 @@ public class GameManager : MonoBehaviour {
         }
 
         //spawn 10 random heroes for player 2
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < 5; j++)
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 2; i++)
             {
                 hero_spawnpoint.x = i * 1.2f + DraftP2.transform.position.x;
                 hero_spawnpoint.y = j * 1.2f + DraftP2.transform.position.y;
@@ -230,6 +251,42 @@ public class GameManager : MonoBehaviour {
                 HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
                 HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
             }
+        }
+    }
+
+    public void SetDraftHeroStats(int player_number ,MainClass main_class, int hp, int damage, int init, string ability_name)
+    {
+        string hero_name = "";
+
+        switch(main_class)
+        {
+            case MainClass.Scout:
+                hero_name = "Scout";
+                break;
+            case MainClass.Warrior:
+                hero_name = "Warrior";
+                break;
+            case MainClass.Mage:
+                hero_name = "Mage";
+                break;
+        }
+
+        switch(player_number)
+        {
+            case 1:
+                p1_hero_name.text = hero_name;
+                p1_hero_hp.text = hp.ToString();
+                p1_hero_dmg.text = damage.ToString();
+                p1_hero_init.text = init.ToString();
+                p1_hero_abil.text = ability_name;
+                break;
+            case 2:
+                p2_hero_name.text = hero_name;
+                p2_hero_hp.text = hp.ToString();
+                p2_hero_dmg.text = damage.ToString();
+                p2_hero_init.text = init.ToString();
+                p2_hero_abil.text = ability_name;
+                break;
         }
     }
 
@@ -571,8 +628,10 @@ public class GameManager : MonoBehaviour {
         //check if both players selected the max amount of units to continue to planning phase
         if (HeroList_P1.Count == max_amount_units && HeroList_P2.Count == max_amount_units)
         {
-            SetCurrentPhase(Phase.PlanPhase);
+            //temp SetCurrentPhase(Phase.PlanPhase);
         }
+
+        SetCurrentPhase(Phase.PlanPhase);
     }
 
     public void OnPlanReady()

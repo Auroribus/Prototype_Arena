@@ -76,19 +76,23 @@ public class Player : MonoBehaviour {
             {
                 if (GameManager.instance.HeroList_P1.Count < GameManager.instance.max_amount_units)
                 {
+                    Hero _hero = hit.transform.gameObject.GetComponent<Hero>();
+
                     int amount_of_class = 0;
                     //check if not already 3 of main class
                     foreach(GameObject hero in GameManager.instance.HeroList_P1)
                     {
-                        if (hero.GetComponent<Hero>().main_class == hit.transform.GetComponent<Hero>().main_class)
+                        if (hero.GetComponent<Hero>().main_class == _hero.main_class)
                             amount_of_class++;
                     }
 
                     if (amount_of_class < 3)
                     {
-                        hit.transform.gameObject.GetComponent<Hero>().SetDrafted(true);
-                        GameManager.instance.HeroList_P1.Add(hit.transform.gameObject);
+                        _hero.SetDrafted(true);
+                        GameManager.instance.HeroList_P1.Add(_hero.transform.gameObject);
                         GameManager.instance.P1_drafted.text = "Drafted: " + GameManager.instance.HeroList_P1.Count + "/" + GameManager.instance.max_amount_units;
+
+                        GameManager.instance.SetDraftHeroStats(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, "Holy Touch");
                     }
                 }
             }
@@ -105,19 +109,23 @@ public class Player : MonoBehaviour {
             {
                 if (GameManager.instance.HeroList_P2.Count < GameManager.instance.max_amount_units)
                 {
+                    Hero _hero = hit.transform.gameObject.GetComponent<Hero>();
+
                     int amount_of_class = 0;
                     //check if not already 3 of main class
                     foreach (GameObject hero in GameManager.instance.HeroList_P2)
                     {
-                        if (hero.GetComponent<Hero>().main_class == hit.transform.GetComponent<Hero>().main_class)
+                        if (hero.GetComponent<Hero>().main_class == _hero.main_class)
                             amount_of_class++;
                     }
 
                     if (amount_of_class < 3)
                     {
-                        hit.transform.GetComponent<Hero>().SetDrafted(true);
-                        GameManager.instance.HeroList_P2.Add(hit.transform.gameObject);
+                        _hero.SetDrafted(true);
+                        GameManager.instance.HeroList_P2.Add(_hero.transform.gameObject);
                         GameManager.instance.P2_drafted.text = "Drafted: " + GameManager.instance.HeroList_P2.Count + "/" + GameManager.instance.max_amount_units;
+
+                        GameManager.instance.SetDraftHeroStats(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, "Holy Touch");
                     }
                 }
             }
@@ -152,44 +160,58 @@ public class Player : MonoBehaviour {
 
             MainClass main_class = selected_hero.main_class;
 
-            //set target on all player 2 heros for ranged
-            if (main_class == MainClass.Scout)
+            switch(main_class)
             {
-                //ranged can hit any of the enemies heroes
-                foreach (GameObject hero in enemy_list)
-                {
-                    hero.GetComponent<Hero>().SetTargeted(true);
-                }
-            }
-            else if (main_class == MainClass.Warrior)
-            {
-                //temp list to get the lanes from the hero's
-                List<int> _max_list = new List<int>();
+                case MainClass.Scout:
 
-                //put all int values into the max list
-                foreach (GameObject hero in enemy_list)
-                {
-                    _max_list.Add(hero.GetComponent<Hero>().x_position_grid);
-                }
-
-                //get the max value, meaning the closest lane that has a unit on it
-                int _max = Mathf.Max(_max_list.ToArray());
-
-                //melee can only hit the closest enemy in the same lane
-                foreach (GameObject hero in enemy_list)
-                {
-                    if (hero.GetComponent<Hero>().x_position_grid == _max && hero.GetComponent<Hero>().y_position_grid == selected_hero.GetComponent<Hero>().y_position_grid)
+                    //ranged can hit any of the enemies heroes
+                    foreach (GameObject hero in enemy_list)
+                    {
                         hero.GetComponent<Hero>().SetTargeted(true);
-                }
-            }
-            else if (main_class == MainClass.Mage)
-            {
-                //hit a whole lane in a straight line, horizontaly
-                foreach (GameObject hero in enemy_list)
-                {
-                    if (hero.GetComponent<Hero>().y_position_grid == selected_hero.y_position_grid)
-                        hero.GetComponent<Hero>().SetTargeted(true);
-                }
+                    }
+
+                    break;
+
+                case MainClass.Warrior:
+
+                    //temp list to get the lanes from the hero's
+                    List<int> _max_list = new List<int>();
+
+                    //put all int values into the max list if the hero is on the same row
+                    foreach (GameObject hero in enemy_list)
+                    {
+                        Hero _hero = hero.GetComponent<Hero>();
+
+                        if(_hero.y_position_grid == selected_hero.y_position_grid)
+                            _max_list.Add(hero.GetComponent<Hero>().x_position_grid);
+                    }
+
+                    //get the max value, meaning the closest lane that has a unit on it
+                    int _max = Mathf.Max(_max_list.ToArray());
+
+                    //melee can only hit the closest enemy in the same lane
+                    foreach (GameObject hero in enemy_list)
+                    {
+                        Hero _hero = hero.GetComponent<Hero>();
+
+                        if (_hero.x_position_grid == _max && _hero.y_position_grid == selected_hero.y_position_grid)
+                            _hero.SetTargeted(true);
+                    }
+
+                    break;
+
+                case MainClass.Mage:
+
+                    //hit a whole lane in a straight line, horizontaly
+                    foreach (GameObject hero in enemy_list)
+                    {
+                        Hero _hero = hero.GetComponent<Hero>();
+
+                        if (_hero.y_position_grid == selected_hero.y_position_grid)
+                            _hero.SetTargeted(true);
+                    }
+
+                    break;
             }
 
             //set movement ring on tiles in same lane to active
@@ -205,7 +227,6 @@ public class Player : MonoBehaviour {
                 //non magical attacks that only target one hero
                 if (SelectedHero.GetComponent<Hero>().main_class != MainClass.Mage)
                 {
-                    //hit.transform.GetComponent<Hero>().TakeDamage(SelectedHero.GetComponent<Hero>().Damage);
                     //add action to list
                     list_of_actions.Add(new Action(
                             SelectedHero,
@@ -227,9 +248,10 @@ public class Player : MonoBehaviour {
                     List<GameObject> target_heroes = new List<GameObject>();
                     foreach (GameObject hero in enemy_list)
                     {
-                        if (hit.transform.GetComponent<Hero>().y_position_grid == hero.GetComponent<Hero>().y_position_grid)
+                        Hero _hero = hero.GetComponent<Hero>();
+
+                        if (hit.transform.GetComponent<Hero>().y_position_grid == _hero.y_position_grid)
                         {
-                            //hero.GetComponent<Hero>().TakeDamage(SelectedHero.GetComponent<Hero>().Damage);
                             //add hero to list
                             target_heroes.Add(hero);
                         }
@@ -302,73 +324,83 @@ public class Player : MonoBehaviour {
     {
         foreach(Action action in list_of_actions)
         {
-            //check if the hero doing the action is still alive
-            if(action.selected_hero != null && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
+            //check if the hero doing the action is still alive and the target is still alive
+            //single target actions
+            if(action.selected_hero != null && action.single_target != null && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
             {
+                Hero _hero = action.selected_hero.GetComponent<Hero>();
+                Hero _target = action.single_target.GetComponent<Hero>();
+
                 switch (action.action_type)
                 {
                     case ActionType.attack:
                         //deal damage to target
                         //amount of damage determined by seleted hero
                         //difference between one target and multiple
+                        //see if target is still alive
                         if (action.single_target != null)
                         {
-                            //check if target is alive and hero that is doing the action is alive
-                            if (action.single_target != null)
+                            switch(_hero.main_class)
                             {
-                                //check if hero is warrior and target not is warrior for double damage
-                                if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Warrior)
-                                {
-                                    int damage;
+                                case MainClass.Scout:
 
-                                    if (action.single_target.GetComponent<Hero>().main_class != MainClass.Warrior)
-                                        damage = action.selected_hero.GetComponent<Hero>().Damage * 2;
-                                    else
-                                        damage = action.selected_hero.GetComponent<Hero>().Damage;
-                                    //action.single_target.GetComponent<Hero>().TakeDamage(damage);
-                                    action.selected_hero.GetComponent<Hero>().MeleeAttack(action.single_target, damage);
-                                }
-                                //scout attack
-                                else if(action.selected_hero.GetComponent<Hero>().main_class == MainClass.Scout)
-                                {
                                     //instance arrow from hero to target
-                                    action.selected_hero.GetComponent<Hero>().RangedAttack(action.single_target, action.selected_hero.GetComponent<Hero>().Damage);
-                                }
-                                
-                                //set checkmark to green on action prefab                            
-                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-                            }
-                            //else the target is already dead
-                            else
-                            {
-                                //set checkmark to red on action prefab                            
-                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
-                            }
+                                    _hero.RangedAttack(action.single_target, _hero.Damage);
 
-                            yield return new WaitForSeconds(1f);
-                        }
-                        else if (action.targets.Count > 0)
-                        {
-                            foreach (GameObject target in action.targets)
-                            {
-                                //if main class is mage, check if the targeted enemy hasn't moved
-                                if (action.selected_hero.GetComponent<Hero>().main_class == MainClass.Mage)
-                                {
-                                    //check if target is alive and in the same row
-                                    if (target != null && target.GetComponent<Hero>().y_position_grid == action.selected_hero.GetComponent<Hero>().y_position_grid)
+                                    //set checkmark to green on action prefab                            
+                                    action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                                    break;
+
+                                case MainClass.Warrior:
+
+                                    //check if the target isnt being protected by a new enemy that moved in front                                    
+                                    //send a raycast from hero to target
+                                    //if another hero is in the way, new target
+
+                                    var direction = _target.transform.position - _hero.transform.position;
+                                    RaycastHit2D[] hit = Physics2D.RaycastAll(_hero.transform.position, direction, 10f);
+
+                                    if (hit != null)
                                     {
-                                        //target.GetComponent<Hero>().TakeDamage(action.selected_hero.GetComponent<Hero>().Damage);
-                                        //instance arrow from hero to target
-                                        action.selected_hero.GetComponent<Hero>().RangedAttack(target, action.selected_hero.GetComponent<Hero>().Damage);
+                                        foreach (RaycastHit2D _hit in hit)
+                                        {
+                                            //see if they have the same collider tag
+                                            if (_hit.collider.tag == _target.tag)
+                                            {
+                                                //not target, set new target
+                                                _target = _hit.transform.GetComponent<Hero>();
+                                                break;
+                                            }
+                                        }
                                     }
-                                }
-                            }
+                                    //check if target is still on same row
+                                    if (_target.y_position_grid == _hero.y_position_grid)
+                                    {
+                                        int damage;
 
-                            //set checkmark to green on action prefab
-                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                                        if (_target.main_class != MainClass.Warrior)
+                                            damage = _hero.Damage * 2;
+                                        else
+                                            damage = _hero.Damage;
+                                        //action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                        _hero.MeleeAttack(_target.gameObject, damage);
 
+                                        //set checkmark to green on action prefab                            
+                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                                    }
+                                    else //action fails
+                                    {
+                                        //set checkmark to red on action prefab                            
+                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                                    }
+
+                                    break;
+                            }                            
+                            
                             yield return new WaitForSeconds(1f);
                         }
+                        
                         else
                         {
                             //set checkmark to red on action prefab
@@ -377,8 +409,11 @@ public class Player : MonoBehaviour {
                             yield return new WaitForSeconds(1f);
                         }
                         break;
+
                     case ActionType.ability:
+
                         break;
+
                     case ActionType.movement:
 
                         //check if target tile is not occupied by other movement
@@ -427,9 +462,48 @@ public class Player : MonoBehaviour {
                         break;
                 }
             }
+            //multiple targets actions
+            else if(action.selected_hero != null && action.targets.Count > 0 && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
+            {
+                Hero _hero = action.selected_hero.GetComponent<Hero>();
+                
+                switch(action.action_type)
+                {
+                    case ActionType.attack:
+                        
+                        foreach (GameObject target in action.targets)
+                        {
+                            //if main class is mage, check if the targeted enemy hasn't moved
+                            if (_hero.main_class == MainClass.Mage)
+                            {
+                                //check if target is alive and in the same row
+                                if (target != null && target.GetComponent<Hero>().y_position_grid == _hero.y_position_grid)
+                                {
+                                    //instance arrow from hero to target
+                                    _hero.RangedAttack(target, _hero.Damage);
+                                }
+                            }
+                        }
+
+                        break;
+
+                    case ActionType.ability:
+
+                        break;
+
+                    case ActionType.movement:
+
+                        break;
+                }
+
+                //set checkmark to green on action prefab
+                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                yield return new WaitForSeconds(1f);
+            }
             else
             {
-                //set checkmark to green on action prefab
+                //set checkmark to red on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
                 yield return new WaitForSeconds(1f);
@@ -556,6 +630,7 @@ public class Action
     public GameObject selected_hero;
     public GameObject single_target;
     public List<GameObject> targets = new List<GameObject>();
+    public int lasts_for_turns;
    
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
     {

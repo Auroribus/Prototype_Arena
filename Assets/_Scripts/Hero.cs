@@ -134,17 +134,18 @@ public class Hero : MonoBehaviour {
         }
         else if(attack_move_hero)
         {
-            transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime * 2);
+            transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime * 3);
 
             float distance = Vector2.Distance(transform.position, target_position);
 
-            if (distance == 0)
+            if (distance <= 1)
             {
                 attack_move_hero = false;
 
                 //apply damage to target
                 target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
 
+                //set target position back to original, so the hero can move back
                 target_position = original_position;
                 move_hero = true;
             }
