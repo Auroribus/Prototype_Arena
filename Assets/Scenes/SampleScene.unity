@@ -2731,7 +2731,7 @@ MonoBehaviour:
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
     m_Font: {fileID: 12800000, guid: 2c86d4ed23b471f4bad18e39689244f7, type: 3}
-    m_FontSize: 32
+    m_FontSize: 27
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 3
@@ -4372,7 +4372,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1927043426
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4687,6 +4687,7 @@ MonoBehaviour:
     Sub_clas: 6
     Hero_sprite: {fileID: 21300000, guid: 91b03dece7b11444c8767af64d38badd, type: 3}
   Current_turn_number: 0
+  action_ended: 1
 --- !u!4 &1985359873
 Transform:
   m_ObjectHideFlags: 0

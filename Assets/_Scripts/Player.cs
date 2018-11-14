@@ -519,7 +519,11 @@ public class Player : MonoBehaviour {
         //clear list of actions after all actions have been resolved
         list_of_actions.Clear();
 
-        GameManager.instance.ClearKilledHeroes();
+        //build in wait buffer for heroes hp
+        yield return new WaitForSeconds(.5f);
+
+        //clear the field
+        StartCoroutine(GameManager.instance.ClearKilledHeroes());
     }
 
     private void IncrementActions(int value)

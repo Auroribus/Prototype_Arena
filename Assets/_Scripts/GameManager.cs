@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -112,7 +113,7 @@ public class GameManager : MonoBehaviour {
     private GameObject EndUI;
 
     //bool to keep track if an action has ended so that resolving can continue
-    public bool action_ended = false;
+    public bool action_ended = true;
 
     #endregion
 
@@ -166,8 +167,8 @@ public class GameManager : MonoBehaviour {
         ResolveUI = GameObject.Find("Resolve UI");
 
         EndUI = GameObject.Find("End UI");
-        //Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
-        //EndUI.SetActive(false);
+        Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
+        EndUI.SetActive(false);
 
         PlanUI.SetActive(false);
         DraftUI.SetActive(false);
@@ -187,7 +188,6 @@ public class GameManager : MonoBehaviour {
     {
         if(Input.GetKeyDown(KeyCode.Alpha1))
         {
-            ResetGame();
             SetCurrentPhase(Phase.DraftPhase);
         }
         else if(Input.GetKeyDown(KeyCode.Alpha2))
@@ -419,11 +419,6 @@ public class GameManager : MonoBehaviour {
     
     private void ResetGame()
     {
-        //reset enums
-        SetCurrentGameState(GameState.Game);
-        SetCurrentPhase(Phase.IdlePhase);
-        SetPlayerTurn(PlayerTurn.Player1);
-
         //destroy all heros
         foreach (GameObject g in HeroList_P1)
         {
@@ -459,12 +454,11 @@ public class GameManager : MonoBehaviour {
         //clear lists
         HeroList_P1.Clear();
         HeroList_P2.Clear();
-
-        //reset text
-        P1_drafted.text = "Drafted: 0/5";
-        P2_drafted.text = "Drafted: 0/5";
-        DraftUI.SetActive(false);
-        PlanUI.SetActive(false);
+        Player.instance.ClearActionIcons();
+                
+        //reset enums
+        SetCurrentGameState(GameState.Game);
+        SetPlayerTurn(PlayerTurn.Player1);
     }
 
     private void SetPlayerTurn(PlayerTurn active_turn)
@@ -493,6 +487,7 @@ public class GameManager : MonoBehaviour {
             case GameState.Menu:
                 break;
             case GameState.Game:
+                EndUI.SetActive(false);
                 SetCurrentPhase(Phase.DraftPhase);
                 break;
             case GameState.Paused:
@@ -524,14 +519,16 @@ public class GameManager : MonoBehaviour {
                 //reset draft text
                 P1_drafted.text = "Drafted: 0/5";
                 P2_drafted.text = "Drafted: 0/5";
+                
+                //disable plan ui
+                PlanUI.SetActive(false);
 
                 DraftHeroUnits();
 
                 break;
 
             case Phase.PlanPhase:
-
-
+                
                 CleanLists();
 
                 //check if turn is player 1s turn
@@ -582,7 +579,7 @@ public class GameManager : MonoBehaviour {
         CurrentPhase = active_phase;
     }
 
-    public void ClearKilledHeroes()
+    public IEnumerator ClearKilledHeroes()
     {
         foreach(GameObject hero in HeroList_P1)
         {
@@ -599,6 +596,17 @@ public class GameManager : MonoBehaviour {
                 Destroy(hero);
             }
         }
+
+        yield return new WaitForSeconds(1f);
+        //clean up lists, need small waiting buffer to see if heroes have died or not, could also check if still heroes in list, their hp is 0 or less
+        CleanLists();
+
+        //check if either player has no more heroes
+        Debug.Log(HeroList_P2.Count);
+        if(HeroList_P1.Count == 0 || HeroList_P2.Count == 0)
+        {
+            SetCurrentGameState(GameState.Ended);
+        }
     }
 
     public void CleanLists()
@@ -613,12 +621,12 @@ public class GameManager : MonoBehaviour {
         EndUI.SetActive(true);
 
         //set winners name
-        if(HeroList_P1.Count == 0)
+        if(HeroList_P2.Count == 0)
         {
             Winner_playername_text.text = "Player 1";
             Winner_playername_text.color = Color.blue;
         }
-        else if(HeroList_P2.Count == 0)
+        else if(HeroList_P1.Count == 0)
         {
             Winner_playername_text.text = "Player 2";
             Winner_playername_text.color = Color.red;
