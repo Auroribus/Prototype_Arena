@@ -20,6 +20,10 @@ public class Projectile : MonoBehaviour {
             if(Vector2.Distance(transform.position, target.transform.position) == 0)
             {
                 target.GetComponent<Hero>().TakeDamage(damage);
+
+                //projectile hit, action ends
+                GameManager.instance.action_ended = true; 
+
                 Destroy(gameObject);
             }
         }

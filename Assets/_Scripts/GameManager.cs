@@ -111,6 +111,8 @@ public class GameManager : MonoBehaviour {
 
     private GameObject EndUI;
 
+    //bool to keep track if an action has ended so that resolving can continue
+    public bool action_ended = false;
 
     #endregion
 

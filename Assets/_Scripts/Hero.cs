@@ -130,6 +130,8 @@ public class Hero : MonoBehaviour {
             if (distance == 0)
             {
                 move_hero = false;
+
+                GameManager.instance.action_ended = true;
             }
         }
         else if(attack_move_hero)

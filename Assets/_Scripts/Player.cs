@@ -324,6 +324,12 @@ public class Player : MonoBehaviour {
     {
         foreach(Action action in list_of_actions)
         {
+            //yield return new WaitForSeconds(1f);
+            //wait till action is finished
+            yield return new WaitUntil(() => GameManager.instance.action_ended == true);
+            //set action ended to false
+            GameManager.instance.action_ended = false;
+
             //check if the hero doing the action is still alive and the target is still alive
             //single target actions
             if(action.selected_hero != null && action.single_target != null && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
@@ -398,7 +404,7 @@ public class Player : MonoBehaviour {
                                     break;
                             }                            
                             
-                            yield return new WaitForSeconds(1f);
+                            //yield return new WaitForSeconds(1f);
                         }
                         
                         else
@@ -406,7 +412,7 @@ public class Player : MonoBehaviour {
                             //set checkmark to red on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
                             
-                            yield return new WaitForSeconds(1f);
+                            //yield return new WaitForSeconds(1f);
                         }
                         break;
 
@@ -449,7 +455,7 @@ public class Player : MonoBehaviour {
                             //set checkmark to green on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
 
-                            yield return new WaitForSeconds(1f);
+                            //yield return new WaitForSeconds(1f);
                         }
                         //tile already occupied
                         else
@@ -457,7 +463,7 @@ public class Player : MonoBehaviour {
                             //set checkmark to red on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
-                            yield return new WaitForSeconds(1f);
+                            //yield return new WaitForSeconds(1f);
                         }
                         break;
                 }
@@ -499,14 +505,14 @@ public class Player : MonoBehaviour {
                 //set checkmark to green on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
 
-                yield return new WaitForSeconds(1f);
+                //yield return new WaitForSeconds(1f);
             }
             else
             {
                 //set checkmark to red on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
-                yield return new WaitForSeconds(1f);
+                //yield return new WaitForSeconds(1f);
             }
         }
 
