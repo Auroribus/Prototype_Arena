@@ -330,6 +330,8 @@ public class Player : MonoBehaviour {
             //set action ended to false
             GameManager.instance.action_ended = false;
 
+            yield return new WaitForSeconds(.5f);
+
             //check if the hero doing the action is still alive and the target is still alive
             //single target actions
             if(action.selected_hero != null && action.single_target != null && action.selected_hero.GetComponent<Hero>().Healthpoints > 0)
@@ -399,6 +401,8 @@ public class Player : MonoBehaviour {
                                     {
                                         //set checkmark to red on action prefab                            
                                         action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+
+                                        GameManager.instance.action_ended = true;
                                     }
 
                                     break;
@@ -411,6 +415,8 @@ public class Player : MonoBehaviour {
                         {
                             //set checkmark to red on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+
+                            GameManager.instance.action_ended = true;
                             
                             //yield return new WaitForSeconds(1f);
                         }
@@ -463,6 +469,7 @@ public class Player : MonoBehaviour {
                             //set checkmark to red on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
+                            GameManager.instance.action_ended = true;
                             //yield return new WaitForSeconds(1f);
                         }
                         break;
@@ -512,6 +519,7 @@ public class Player : MonoBehaviour {
                 //set checkmark to red on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
+                GameManager.instance.action_ended = true;
                 //yield return new WaitForSeconds(1f);
             }
         }

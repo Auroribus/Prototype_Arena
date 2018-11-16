@@ -4687,7 +4687,7 @@ MonoBehaviour:
     Sub_clas: 6
     Hero_sprite: {fileID: 21300000, guid: 91b03dece7b11444c8767af64d38badd, type: 3}
   Current_turn_number: 0
-  action_ended: 1
+  action_ended: 0
 --- !u!4 &1985359873
 Transform:
   m_ObjectHideFlags: 0

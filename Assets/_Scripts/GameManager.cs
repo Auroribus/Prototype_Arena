@@ -130,7 +130,7 @@ public class GameManager : MonoBehaviour {
         Player2 = GameObject.Find("Player2");
 
         Grid_P2 = GameObject.Find("GridParent P2").GetComponent<GridParent>();
-        //flip grid parent 2, so that the lane orientation is the same as grid p1
+        //flip grid parent 2, so that the column orientation is the same as grid p1
         Grid_P2.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
         Grid_P1 = GameObject.Find("GridParent P1").GetComponent<GridParent>();
@@ -179,7 +179,13 @@ public class GameManager : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update () {        
+	void Update () {     
+        
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+
         DebugKeyboard();		
 	}
 
@@ -294,111 +300,115 @@ public class GameManager : MonoBehaviour {
 
     private void PlaceDraftedUnits()
     {
-        int lane = 0;
+        int column = 0;
 
         //instantiate heroes in the hero list in the grid system
         for (int i = 0; i < HeroList_P1.Count; i++)
         {
-            //check the class and select the lane
-            switch(HeroList_P1[i].GetComponent<Hero>().main_class)
+            Hero _hero = HeroList_P1[i].GetComponent<Hero>();
+
+            //check the class and select the column
+            switch (_hero.main_class)
             {
                 case MainClass.Warrior:
-                    lane = 2;
+                    column = 2;
                     break;
                 case MainClass.Scout:
-                    lane = 1;
+                    column = 1;
                     break;
                 case MainClass.Mage:
-                    lane = 0;
+                    column = 0;
                     break;
             }
 
-            foreach(GameObject tile in Grid_P1.Grid)
+            //put character on random tile in set column
+            //loop till no longer drafted
+            while (_hero.isDrafted)
             {
-                int tile_x = tile.GetComponent<GridTile>().pos_grid_x;
-                int tile_y = tile.GetComponent<GridTile>().pos_grid_y;
+                //select random y
+                int random_y = Random.Range(0, 3);
 
-                //check only tiles in specified lane
-                if (tile_x == lane)
+                GridTile _tile = Grid_P1.Grid[column, random_y].GetComponent<GridTile>();
+
+                if (!_tile.isOccupied)
                 {
-                    //check if tile is not occupied
-                    if (!tile.GetComponent<GridTile>().isOccupied)
-                    {
-                        //remove unit from pool list                                                                      
-                        HeroPool_P1.Remove(HeroList_P1[i]);
+                    int tile_x = _tile.pos_grid_x;
+                    int tile_y = _tile.pos_grid_y;
 
-                        //place unit and set spawnpoint
-                        hero_spawnpoint = Grid_P1.Grid[tile_x, tile_y].transform.position;
-                        HeroList_P1[i].transform.position = hero_spawnpoint;
+                    //remove unit from pool list                                                                      
+                    HeroPool_P1.Remove(HeroList_P1[i]);
 
-                        //disable drafted visual
-                        HeroList_P1[i].GetComponent<Hero>().SetDrafted(false);
+                    //place unit and set spawnpoint
+                    hero_spawnpoint = Grid_P1.Grid[tile_x, tile_y].transform.position;
+                    HeroList_P1[i].transform.position = hero_spawnpoint;
 
-                        //enable ui text and images
+                    //disable drafted visual
+                    _hero.SetDrafted(false);
 
-                        //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
-                        Grid_P1.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
+                    //enable ui text and images
 
-                        HeroList_P1[i].GetComponent<Hero>().x_position_grid = tile_x;
-                        HeroList_P1[i].GetComponent<Hero>().y_position_grid = tile_y;
+                    //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
+                    Grid_P1.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        HeroList_P1[i].GetComponent<Hero>().SetUI(true);
+                    _hero.x_position_grid = tile_x;
+                    _hero.y_position_grid = tile_y;
 
-                        break;
-                    }
+                    _hero.SetUI(true);
                 }                
-            }
+            }            
         }
 
         for (int i = 0; i < HeroList_P2.Count; i++)
         {
-            //check the class and select the lane
-            switch (HeroList_P2[i].GetComponent<Hero>().main_class)
+            Hero _hero = HeroList_P2[i].GetComponent<Hero>();
+
+            //check the class and select the column
+            switch (_hero.main_class)
             {
                 case MainClass.Warrior:
-                    lane = 2;
+                    column = 2;
                     break;
                 case MainClass.Scout:
-                    lane = 1;
+                    column = 1;
                     break;
                 case MainClass.Mage:
-                    lane = 0;
+                    column = 0;
                     break;
             }
 
-            foreach (GameObject tile in Grid_P2.Grid)
+            //put character on random tile in set column
+            //loop till no longer drafted
+            while (_hero.isDrafted)
             {
-                int tile_x = tile.GetComponent<GridTile>().pos_grid_x;
-                int tile_y = tile.GetComponent<GridTile>().pos_grid_y;
+                //select random y
+                int random_y = Random.Range(0, 3);
 
-                //check only tiles in specified lane
-                if (tile_x == lane)
+                GridTile _tile = Grid_P2.Grid[column, random_y].GetComponent<GridTile>();
+
+                if (!_tile.isOccupied)
                 {
-                    //check if tile is not occupied
-                    if (!tile.GetComponent<GridTile>().isOccupied)
-                    {
-                        //remove unit from pool list                                                                      
-                        HeroPool_P2.Remove(HeroList_P2[i]);
+                    int tile_x = _tile.pos_grid_x;
+                    int tile_y = _tile.pos_grid_y;
 
-                        //place unit and set spawnpoint
-                        hero_spawnpoint = Grid_P2.Grid[tile_x, tile_y].transform.position;
-                        HeroList_P2[i].transform.position = hero_spawnpoint;
+                    //remove unit from pool list                                                                      
+                    HeroPool_P2.Remove(HeroList_P2[i]);
 
-                        //disable drafted visual
-                        HeroList_P2[i].GetComponent<Hero>().SetDrafted(false);
+                    //place unit and set spawnpoint
+                    hero_spawnpoint = Grid_P2.Grid[tile_x, tile_y].transform.position;
+                    HeroList_P2[i].transform.position = hero_spawnpoint;
 
-                        //enable ui text and images
+                    //disable drafted visual
+                    _hero.SetDrafted(false);
 
-                        //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
-                        Grid_P2.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
+                    //enable ui text and images
 
-                        HeroList_P2[i].GetComponent<Hero>().x_position_grid = tile_x;
-                        HeroList_P2[i].GetComponent<Hero>().y_position_grid = tile_y;
+                    //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
+                    Grid_P2.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        HeroList_P2[i].GetComponent<Hero>().SetUI(true);
+                    _hero.x_position_grid = tile_x;
+                    _hero.y_position_grid = tile_y;
 
-                        break;
-                    }
+                    _hero.SetUI(true);
                 }
             }
         }
@@ -569,6 +579,8 @@ public class GameManager : MonoBehaviour {
 
                 //enable resolve ui
                 ResolveUI.SetActive(true);
+
+                action_ended = true;
 
                 phase_text.text = "Resolve Phase";
                 StartCoroutine(Player.instance.ResolveActions());
