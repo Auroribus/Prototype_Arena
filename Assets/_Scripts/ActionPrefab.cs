@@ -4,6 +4,7 @@ public class ActionPrefab : MonoBehaviour {
 
     public Transform Checkmark;
     public SpriteRenderer check_sprite;
+    public PlayerTurn player;
 
 	// Use this for initialization
 	void Start () {

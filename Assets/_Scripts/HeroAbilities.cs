@@ -173,8 +173,10 @@ public class HeroAbilities : MonoBehaviour {
     //cost
 
     //used for generating a random ability
-    public void GenerateAbility(string seed)
+    public AbilityBase GenerateAbility(string seed)
     {
+        AbilityBase ability = new AbilityBase();
+
         //make sure that it is all uppercase
         seed = seed.ToLower();
 
@@ -220,7 +222,7 @@ public class HeroAbilities : MonoBehaviour {
                 }
             }
 
-            AbilityBase ability = new AbilityBase(
+            ability = new AbilityBase(
                 Ability_effect,
                 Ability_target,
                 Ability_aoe,
@@ -229,7 +231,7 @@ public class HeroAbilities : MonoBehaviour {
                 delay
                 );
 
-            Debug.Log(
+           /* Debug.Log(
                 "Effect: " + ability.Ability_effect + "\n" +
                 "Target: " + ability.Ability_target + "\n" +
                 "AoE: " + ability.Ability_aoe + "\n" +
@@ -237,14 +239,17 @@ public class HeroAbilities : MonoBehaviour {
                 "Duration: " + ability.duration + "\n" +
                 "Delay: " + ability.delay
                 );
+                */
         }
+
+        return ability;
     }
 
-    private string GenerateSeed()
+    public string GenerateSeed()
     {
         //effect; damage, heal 2 
-        //target; any, row, lane, all 4
-        //area; single, chain, row, lane, all 5
+        //target; any, row, column, all 4
+        //area; single, chain, row, column, all 5
         //strength; 0 - 9 10
         //duration; 0-9 10
         //delay; 0-9 10
@@ -398,7 +403,7 @@ public enum AbilityTarget
 {
     any = 1,
     row = 2,
-    lane = 3,
+    column = 3,
     all = 4
 }
 
@@ -407,15 +412,15 @@ public enum AbilityAOE
     single = 1,
     chain = 2,
     row = 3,
-    lane = 4,
+    column = 4,
     all = 5
 }
 
 public class AbilityBase
 {
     //effect; damage, heal
-    //target; any, row, lane, all
-    //area; single, chain, row, lane, all
+    //target; any, row, column, all
+    //area; single, chain, row, column, all
     //strength; 0 - 9
     //duration; 0-9
     //delay; 0-9
@@ -430,6 +435,10 @@ public class AbilityBase
     //cost hp 0-10
     //cost stun 0-9
 
+    //empty constructor
+    public AbilityBase() { }
+
+    //constructor with overload
     public AbilityBase(AbilityEffect _abil_effect, AbilityTarget _abil_target, AbilityAOE _abil_aoe, int _str, int _duration, int _delay)
     {
         Ability_effect = _abil_effect;

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
-
+    
     #region variables
 
     public static Player instance;
@@ -17,6 +17,7 @@ public class Player : MonoBehaviour {
     private string target_tag = "";
     private string own_tag = "";
     private List<GameObject> enemy_list;
+    private List<GameObject> allies_list;
     private GridParent player_grid;
     private int player_actions = 0;
 
@@ -66,6 +67,8 @@ public class Player : MonoBehaviour {
                 }
             }
         }
+
+        UseAbility();
     }
     
     private void DraftPhase(RaycastHit2D hit)
@@ -92,7 +95,17 @@ public class Player : MonoBehaviour {
                         GameManager.instance.HeroList_P1.Add(_hero.transform.gameObject);
                         GameManager.instance.P1_drafted.text = "Drafted: " + GameManager.instance.HeroList_P1.Count + "/" + GameManager.instance.max_amount_units;
 
-                        GameManager.instance.SetDraftHeroStats(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, "Holy Touch");
+                        AbilityBase ability = _hero.HeroAbility;
+
+                        string ability_text = 
+                            "Effect: " + ability.Ability_effect + "\n" +
+                            "Target: " + ability.Ability_target + "\n" +
+                            "AoE: " + ability.Ability_aoe + "\n" +
+                            "Strength: " + ability.strength + "\n" +
+                            "Duration: " + ability.duration + "\n" +
+                            "Delay: " + ability.delay;
+
+                        GameManager.instance.SetDraftHeroStats(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
                     }
                 }
             }
@@ -125,7 +138,17 @@ public class Player : MonoBehaviour {
                         GameManager.instance.HeroList_P2.Add(_hero.transform.gameObject);
                         GameManager.instance.P2_drafted.text = "Drafted: " + GameManager.instance.HeroList_P2.Count + "/" + GameManager.instance.max_amount_units;
 
-                        GameManager.instance.SetDraftHeroStats(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, "Holy Touch");
+                        AbilityBase ability = _hero.HeroAbility;
+
+                        string ability_text =
+                            "Effect: " + ability.Ability_effect + "\n" +
+                            "Target: " + ability.Ability_target + "\n" +
+                            "AoE: " + ability.Ability_aoe + "\n" +
+                            "Strength: " + ability.strength + "\n" +
+                            "Duration: " + ability.duration + "\n" +
+                            "Delay: " + ability.delay;
+
+                        GameManager.instance.SetDraftHeroStats(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
                     }
                 }
             }
@@ -142,7 +165,7 @@ public class Player : MonoBehaviour {
     {
         //see if hit is a unit belonging to this player
         //check if the unit already performing an action
-        if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction)
+        if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction && !hit.transform.GetComponent<Hero>().isUsingAbility)
         {
             if (SelectedHero != null)
                 SelectedHero.GetComponent<Hero>().SetSelected(false);
@@ -153,11 +176,18 @@ public class Player : MonoBehaviour {
             Hero selected_hero = SelectedHero.GetComponent<Hero>();
 
             GameManager.instance.CleanLists();
+
+            //deselect all previously selected heroes
+            foreach(GameObject hero in allies_list)
+            {
+                hero.GetComponent<Hero>().SetTargeted(false);
+            }
             foreach (GameObject hero in enemy_list)
             {
                 hero.GetComponent<Hero>().SetTargeted(false);
             }
 
+            //local var for main class
             MainClass main_class = selected_hero.main_class;
 
             switch(main_class)
@@ -218,9 +248,10 @@ public class Player : MonoBehaviour {
             int x = selected_hero.x_position_grid;
             int y = selected_hero.y_position_grid;
             player_grid.SetMovementRings(x, y);
+            
         }
-        //attacking
-        else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions)
+        //attacking, check if not null, not using ability, not at max actions
+        else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
         {
             if (hit.transform.GetComponent<Hero>().isTargeted)
             {
@@ -273,8 +304,8 @@ public class Player : MonoBehaviour {
                 }
             }
         }
-        //moving
-        else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions)
+        //moving, check if not null, hit is tile, less than max actions, not using ability
+        else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
         {
             if (hit.transform.GetComponent<GridTile>().can_move_here)
             {
@@ -296,7 +327,109 @@ public class Player : MonoBehaviour {
                 }
             }
         }
+        //ability, check if not null, less than max actions and is using ability
+        else if(SelectedHero != null && player_actions < max_actions && SelectedHero.GetComponent<Hero>().isUsingAbility)
+        {
+            //target allies
 
+            //target enemies
+        }
+    }
+
+    private void UseAbility()
+    {        
+        //activate ability
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if(SelectedHero != null)
+            {
+                Hero selected_hero = SelectedHero.GetComponent<Hero>();
+
+                if(!selected_hero.isUsingAbility)
+                {
+                    //ability
+                    AbilityBase ability = selected_hero.HeroAbility;
+
+                    //deselect all previously targeted heroes
+                    foreach (GameObject g in GameManager.instance.HeroList_P1)
+                    {
+                        Hero _h = g.GetComponent<Hero>();
+
+                        if (_h.isTargeted)
+                            _h.SetTargeted(false);
+                    }
+                    foreach (GameObject g in GameManager.instance.HeroList_P2)
+                    {
+                        Hero _h = g.GetComponent<Hero>();
+
+                        if (_h.isTargeted)
+                            _h.SetTargeted(false);
+                    }
+
+                    //local list of targets
+                    List<GameObject> targets = new List<GameObject>();
+
+                    //set bool to true on using ability
+                    selected_hero.isUsingAbility = true;
+
+                    //based on heal or damage, target enemies or allies
+                    switch (ability.Ability_effect)
+                    {
+                        case AbilityEffect.damage:
+                            //target enemies
+                            targets = enemy_list;
+                            break;
+                        case AbilityEffect.heal:
+                            //target allies
+                            targets = allies_list;
+                            break;
+                    }
+
+                    //highlight targets based on the heroes ability
+                    switch (ability.Ability_target)
+                    {
+                        case AbilityTarget.all:
+                            foreach (GameObject target in targets)
+                            {
+                                Hero _hero = target.GetComponent<Hero>();
+
+                                _hero.SetTargeted(true);
+                            }
+                            break;
+                        case AbilityTarget.row:
+                            foreach (GameObject target in targets)
+                            {
+                                Hero _hero = target.GetComponent<Hero>();
+
+                                if (_hero.x_position_grid == selected_hero.x_position_grid)
+                                {
+                                    _hero.SetTargeted(true);
+                                }
+                            }
+                            break;
+                        case AbilityTarget.column:
+                            foreach (GameObject target in targets)
+                            {
+                                Hero _hero = target.GetComponent<Hero>();
+
+                                if (_hero.y_position_grid == selected_hero.y_position_grid)
+                                {
+                                    _hero.SetTargeted(true);
+                                }
+                            }
+                            break;
+                        case AbilityTarget.any:
+                            foreach (GameObject target in targets)
+                            {
+                                Hero _hero = target.GetComponent<Hero>();
+
+                                _hero.SetTargeted(true);
+                            }
+                            break;
+                    }
+                }
+            }            
+        }
     }
 
     private void SetPlayerTurnActionPhase()
@@ -307,6 +440,7 @@ public class Player : MonoBehaviour {
                 own_tag = "HeroP1";
                 target_tag = "HeroP2";
                 enemy_list = GameManager.instance.HeroList_P2;
+                allies_list = GameManager.instance.HeroList_P1;
                 player_grid = GameManager.instance.Grid_P1;
                 player_actions = p1_actions;
                 break;
@@ -314,6 +448,7 @@ public class Player : MonoBehaviour {
                 own_tag = "HeroP2";
                 target_tag = "HeroP1";
                 enemy_list = GameManager.instance.HeroList_P1;
+                allies_list = GameManager.instance.HeroList_P2;
                 player_grid = GameManager.instance.Grid_P2;
                 player_actions = p2_actions;
                 break;
@@ -322,7 +457,10 @@ public class Player : MonoBehaviour {
 
     public IEnumerator ResolveActions()
     {
-        foreach(Action action in list_of_actions)
+        //sort actions list by initiative descending
+        list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+
+        foreach (Action action in list_of_actions)
         {
             //yield return new WaitForSeconds(1f);
             //wait till action is finished
@@ -346,80 +484,66 @@ public class Player : MonoBehaviour {
                         //amount of damage determined by seleted hero
                         //difference between one target and multiple
                         //see if target is still alive
-                        if (action.single_target != null)
+                        switch (_hero.main_class)
                         {
-                            switch(_hero.main_class)
-                            {
-                                case MainClass.Scout:
+                            case MainClass.Scout:
 
-                                    //instance arrow from hero to target
-                                    _hero.RangedAttack(action.single_target, _hero.Damage);
+                                //instance arrow from hero to target
+                                _hero.RangedAttack(action.single_target, _hero.Damage);
+
+                                //set checkmark to green on action prefab                            
+                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+
+                                break;
+
+                            case MainClass.Warrior:
+
+                                //check if the target isnt being protected by a new enemy that moved in front                                    
+                                //send a raycast from hero to target
+                                //if another hero is in the way, new target
+
+                                var direction = _target.transform.position - _hero.transform.position;
+                                RaycastHit2D[] hit = Physics2D.RaycastAll(_hero.transform.position, direction, 10f);
+
+                                if (hit != null)
+                                {
+                                    foreach (RaycastHit2D _hit in hit)
+                                    {
+                                        //see if they have the same collider tag
+                                        if (_hit.collider.tag == _target.tag)
+                                        {
+                                            //not target, set new target
+                                            _target = _hit.transform.GetComponent<Hero>();
+                                            break;
+                                        }
+                                    }
+                                }
+                                //check if target is still on same row
+                                if (_target.y_position_grid == _hero.y_position_grid)
+                                {
+                                    int damage;
+
+                                    if (_target.main_class != MainClass.Warrior)
+                                        damage = _hero.Damage * 2;
+                                    else
+                                        damage = _hero.Damage;
+                                    //action.single_target.GetComponent<Hero>().TakeDamage(damage);
+                                    _hero.MeleeAttack(_target.gameObject, damage);
 
                                     //set checkmark to green on action prefab                            
                                     action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                                }
+                                else //action fails
+                                {
+                                    //set checkmark to red on action prefab                            
+                                    action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
-                                    break;
+                                    GameManager.instance.action_ended = true;
+                                }
 
-                                case MainClass.Warrior:
-
-                                    //check if the target isnt being protected by a new enemy that moved in front                                    
-                                    //send a raycast from hero to target
-                                    //if another hero is in the way, new target
-
-                                    var direction = _target.transform.position - _hero.transform.position;
-                                    RaycastHit2D[] hit = Physics2D.RaycastAll(_hero.transform.position, direction, 10f);
-
-                                    if (hit != null)
-                                    {
-                                        foreach (RaycastHit2D _hit in hit)
-                                        {
-                                            //see if they have the same collider tag
-                                            if (_hit.collider.tag == _target.tag)
-                                            {
-                                                //not target, set new target
-                                                _target = _hit.transform.GetComponent<Hero>();
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    //check if target is still on same row
-                                    if (_target.y_position_grid == _hero.y_position_grid)
-                                    {
-                                        int damage;
-
-                                        if (_target.main_class != MainClass.Warrior)
-                                            damage = _hero.Damage * 2;
-                                        else
-                                            damage = _hero.Damage;
-                                        //action.single_target.GetComponent<Hero>().TakeDamage(damage);
-                                        _hero.MeleeAttack(_target.gameObject, damage);
-
-                                        //set checkmark to green on action prefab                            
-                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-                                    }
-                                    else //action fails
-                                    {
-                                        //set checkmark to red on action prefab                            
-                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
-
-                                        GameManager.instance.action_ended = true;
-                                    }
-
-                                    break;
-                            }                            
-                            
-                            //yield return new WaitForSeconds(1f);
-                        }
+                                break;
+                        }  
                         
-                        else
-                        {
-                            //set checkmark to red on action prefab
-                            action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
-
-                            GameManager.instance.action_ended = true;
-                            
-                            //yield return new WaitForSeconds(1f);
-                        }
                         break;
 
                     case ActionType.ability:
@@ -460,8 +584,7 @@ public class Player : MonoBehaviour {
 
                             //set checkmark to green on action prefab
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-
-                            //yield return new WaitForSeconds(1f);
+                            
                         }
                         //tile already occupied
                         else
@@ -470,7 +593,6 @@ public class Player : MonoBehaviour {
                             action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
                             GameManager.instance.action_ended = true;
-                            //yield return new WaitForSeconds(1f);
                         }
                         break;
                 }
@@ -484,18 +606,51 @@ public class Player : MonoBehaviour {
                 {
                     case ActionType.attack:
                         
-                        foreach (GameObject target in action.targets)
+                        switch(_hero.main_class)
                         {
-                            //if main class is mage, check if the targeted enemy hasn't moved
-                            if (_hero.main_class == MainClass.Mage)
-                            {
-                                //check if target is alive and in the same row
-                                if (target != null && target.GetComponent<Hero>().y_position_grid == _hero.y_position_grid)
+                            case MainClass.Scout:
+
+                                break;
+
+                            case MainClass.Warrior:
+
+                                break;
+
+                            case MainClass.Mage:
+
+                                List<GameObject> enemy_heroes = new List<GameObject>();
+
+                                //default mage attack
+                                //check all enemies on same row and hit them with magic
+                                //check tag on target
+                                if(action.targets[0].tag == "HeroP1")
                                 {
-                                    //instance arrow from hero to target
-                                    _hero.RangedAttack(target, _hero.Damage);
+                                    enemy_heroes = GameManager.instance.HeroList_P1;
                                 }
-                            }
+                                else if(action.targets[0].tag == "HeroP2")
+                                {
+                                    enemy_heroes = GameManager.instance.HeroList_P2;
+                                }
+
+                                foreach(GameObject enemy_hero in enemy_heroes)
+                                {
+                                    Hero _enemy_hero = enemy_hero.GetComponent<Hero>();
+
+                                    //check if enemies on same row and alive
+                                    if(enemy_hero != null)
+                                    {
+                                        if(_enemy_hero.Healthpoints > 0)
+                                        {
+                                            if(_enemy_hero.y_position_grid == _hero.y_position_grid)
+                                            {
+                                                //hit enemy
+                                                _hero.RangedAttack(_enemy_hero.gameObject, _hero.Damage);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                break;
                         }
 
                         break;
@@ -511,8 +666,7 @@ public class Player : MonoBehaviour {
 
                 //set checkmark to green on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-
-                //yield return new WaitForSeconds(1f);
+                
             }
             else
             {
@@ -520,7 +674,6 @@ public class Player : MonoBehaviour {
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
 
                 GameManager.instance.action_ended = true;
-                //yield return new WaitForSeconds(1f);
             }
         }
 
@@ -528,10 +681,11 @@ public class Player : MonoBehaviour {
         list_of_actions.Clear();
 
         //build in wait buffer for heroes hp
-        yield return new WaitForSeconds(.5f);
+        yield return new WaitForSeconds(1f);
 
         //clear the field
         StartCoroutine(GameManager.instance.ClearKilledHeroes());
+        
     }
 
     private void IncrementActions(int value)
@@ -541,12 +695,30 @@ public class Player : MonoBehaviour {
             case PlayerTurn.Player1:
                 p1_actions += value;
                 GameManager.instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions;
+                      
+                //check if player one has max actions
+                if (p1_actions == max_actions)
+                {
+                    //disable all movement and targeting circles
+                    GameManager.instance.Grid_P1.SetMovementRings(-1, -1);
+                    GameManager.instance.Grid_P2.SetMovementRings(-1, -1);
+
+                    //change turn to player 2
+                    GameManager.instance.SetPlayerTurn(PlayerTurn.Player2);
+                }
 
                 break;
 
             case PlayerTurn.Player2:
                 p2_actions += value;
                 GameManager.instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
+
+                //check if player two has max actions
+                if (p2_actions == max_actions)
+                {
+                    //change phase to resolve
+                    GameManager.instance.SetCurrentPhase(Phase.ResolvePhase);
+                }
 
                 break;
         }
@@ -571,7 +743,7 @@ public class Player : MonoBehaviour {
     private void DisplayActionList()
     {
         //sort actions list by initiative descending
-        list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+        //list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
 
         ClearActionIcons();
 
@@ -586,7 +758,10 @@ public class Player : MonoBehaviour {
 
             //instance action prefab
             action_icons_list.Add(Instantiate(action_icon_prefab, icon_position, Quaternion.identity, Plan_list.transform));
-            
+
+            //set player
+            action_icons_list[action_icons_list.Count - 1].GetComponent<ActionPrefab>().player = action.player;
+
             //increment position y
             position_y++;
 
@@ -606,11 +781,11 @@ public class Player : MonoBehaviour {
                     break;
             }
 
-            //set sprite icon color
+            //set sprite icon color and player
             switch(action.player)
             {
                 case PlayerTurn.Player1:
-                    sRend.color = Color.blue;
+                    sRend.color = Color.blue;                    
                     break;
                 case PlayerTurn.Player2:
                     sRend.color = Color.red;
@@ -627,6 +802,111 @@ public class Player : MonoBehaviour {
             Destroy(action);
         }
         action_icons_list.Clear();
+    }
+
+    public void OnUndoAction()
+    {
+        //local list, gets set based on player turn
+        List<GameObject> hero_list = new List<GameObject>();
+
+        switch (GameManager.instance.CurrentTurn)
+        {
+            case PlayerTurn.Player1:
+                //check if actions lower or equal to 0, if they are then no undo left
+                if (p1_actions <= 0)
+                    return;
+
+                p1_actions--; //lower actions amount
+                GameManager.instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
+                hero_list = GameManager.instance.HeroList_P1; //set local list    
+
+
+                break;
+
+            case PlayerTurn.Player2:
+                //check if actions lower or equal to 0, if they are then no undo left
+                if (p2_actions <= 0)
+                    return;
+
+                p2_actions--;
+                GameManager.instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
+                hero_list = GameManager.instance.HeroList_P2;
+                break;
+        }
+               
+        //remove last added action from the list based on whos turn it is
+        //check if last action belongs to current player
+        if (list_of_actions[list_of_actions.Count - 1].player == GameManager.instance.CurrentTurn)
+        {
+            //reset checkmark and has action on hero
+            list_of_actions[list_of_actions.Count - 1].selected_hero.GetComponent<Hero>().SetAction(false);
+
+            //destroy icon from plan list
+            Destroy(action_icons_list[list_of_actions.IndexOf(list_of_actions[list_of_actions.Count - 1])]);
+            
+            //remove action from list
+            list_of_actions.Remove(list_of_actions[list_of_actions.Count - 1]);
+        }
+
+        //clean up icons list
+        action_icons_list.RemoveAll(item => item == null);
+
+    }
+
+    public void OnUndoAllActions()
+    {
+        //local list, gets set based on player turn
+        List<GameObject> hero_list = new List<GameObject>();
+
+        switch(GameManager.instance.CurrentTurn)
+        {
+            case PlayerTurn.Player1:
+                //check if any actions for player, otherwise it will throw error
+                if (p1_actions <= 0)
+                    return;
+
+                p1_actions = 0; //reset actions amount
+                GameManager.instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
+                hero_list = GameManager.instance.HeroList_P1; //set local list                
+                break;
+
+            case PlayerTurn.Player2:
+
+                if (p2_actions <= 0)
+                    return;
+
+                p2_actions = 0;
+                GameManager.instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
+                hero_list = GameManager.instance.HeroList_P2;
+                break;
+        }
+        
+        //remove all actions from the list based on whos turn it is
+        list_of_actions.RemoveAll(item => item.player == GameManager.instance.CurrentTurn);
+
+        //remove icons from plan list
+        foreach (GameObject action in action_icons_list)
+        {
+            ActionPrefab _action = action.GetComponent<ActionPrefab>();
+
+            if(_action.player == GameManager.instance.CurrentTurn)
+            {
+                Destroy(action);
+            }
+        }
+
+        action_icons_list.RemoveAll(item => item == null);
+
+        //reset checkmark and has action on heroes
+        foreach (GameObject hero in hero_list)
+        {
+            Hero _hero = hero.GetComponent<Hero>();
+
+            if (_hero.hasAction)
+            {
+                _hero.SetAction(false);
+            }
+        }        
     }
 }
 

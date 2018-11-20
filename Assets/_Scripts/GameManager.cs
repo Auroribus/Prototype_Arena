@@ -112,6 +112,8 @@ public class GameManager : MonoBehaviour {
 
     private GameObject EndUI;
 
+    private GameObject GridUI;
+
     //bool to keep track if an action has ended so that resolving can continue
     public bool action_ended = true;
 
@@ -143,6 +145,7 @@ public class GameManager : MonoBehaviour {
         DraftP2 = GameObject.Find("DraftP2").transform;
 
         DraftUI = GameObject.Find("Draft UI");
+        DraftUI.SetActive(true);
         P1_drafted = DraftUI.transform.Find("P1_drafted").GetComponent<Text>();
         P2_drafted = DraftUI.transform.Find("P2_drafted").GetComponent<Text>();
         p1_draft_panel = DraftUI.transform.Find("P1_draft_panel");
@@ -161,15 +164,21 @@ public class GameManager : MonoBehaviour {
         p2_hero_abil = p2_draft_panel.Find("ABIL_name").GetComponent<Text>();
 
         PlanUI = GameObject.Find("Plan UI");
+        PlanUI.SetActive(true);
         P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
         P2_actions = PlanUI.transform.Find("P2_actions").GetComponent<Text>();
 
         ResolveUI = GameObject.Find("Resolve UI");
+        ResolveUI.SetActive(true);
 
         EndUI = GameObject.Find("End UI");
+        EndUI.SetActive(true);
         Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
-        EndUI.SetActive(false);
 
+        GridUI = GameObject.Find("Grid UI");
+
+        GridUI.SetActive(false);
+        EndUI.SetActive(false);
         PlanUI.SetActive(false);
         DraftUI.SetActive(false);
         ResolveUI.SetActive(false);
@@ -257,6 +266,7 @@ public class GameManager : MonoBehaviour {
                 hero.main_class = Heroes[random].Main_class;
 
                 HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
                 HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
             }
         }
@@ -471,7 +481,7 @@ public class GameManager : MonoBehaviour {
         SetPlayerTurn(PlayerTurn.Player1);
     }
 
-    private void SetPlayerTurn(PlayerTurn active_turn)
+    public void SetPlayerTurn(PlayerTurn active_turn)
     {
         CurrentTurn = active_turn;
 
@@ -488,7 +498,7 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    private void SetCurrentGameState(GameState active_state)
+    public void SetCurrentGameState(GameState active_state)
     {
         CurrentState = active_state;
 
@@ -508,7 +518,7 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    private void SetCurrentPhase(Phase active_phase)
+    public void SetCurrentPhase(Phase active_phase)
     {
         switch(active_phase)
         {
@@ -541,6 +551,9 @@ public class GameManager : MonoBehaviour {
                 
                 CleanLists();
 
+                //enable grid ui
+                GridUI.SetActive(true);
+
                 //check if turn is player 1s turn
                 if (CurrentTurn != PlayerTurn.Player1)
                     SetPlayerTurn(PlayerTurn.Player1);
@@ -560,11 +573,15 @@ public class GameManager : MonoBehaviour {
 
                 foreach(GameObject hero in HeroList_P1)
                 {
-                    hero.GetComponent<Hero>().SetAction(false);
+                    Hero _hero = hero.GetComponent<Hero>();
+                    _hero.SetUI(true);
+                    _hero.SetAction(false);
                 }
                 foreach (GameObject hero in HeroList_P2)
                 {
-                    hero.GetComponent<Hero>().SetAction(false);
+                    Hero _hero = hero.GetComponent<Hero>();
+                    _hero.SetUI(true);
+                    _hero.SetAction(false);
                 }
 
                 //if phase was drafted phase, place units
@@ -577,10 +594,28 @@ public class GameManager : MonoBehaviour {
 
             case Phase.ResolvePhase:
 
+                //disable plan ui
+                PlanUI.SetActive(false);
+
                 //enable resolve ui
                 ResolveUI.SetActive(true);
 
+                //set action ended to true so that animations can play
                 action_ended = true;
+
+                //hide stats on heroes
+                foreach(GameObject g in HeroList_P1)
+                {
+                    Hero _hero = g.GetComponent<Hero>();
+
+                    _hero.SetUI(false);
+                }
+                foreach(GameObject g in HeroList_P2)
+                {
+                    Hero _hero = g.GetComponent<Hero>();
+
+                    _hero.SetUI(false);
+                }
 
                 phase_text.text = "Resolve Phase";
                 StartCoroutine(Player.instance.ResolveActions());
@@ -614,10 +649,13 @@ public class GameManager : MonoBehaviour {
         CleanLists();
 
         //check if either player has no more heroes
-        Debug.Log(HeroList_P2.Count);
         if(HeroList_P1.Count == 0 || HeroList_P2.Count == 0)
         {
             SetCurrentGameState(GameState.Ended);
+        }
+        else
+        {
+            SetCurrentPhase(Phase.PlanPhase);
         }
     }
 

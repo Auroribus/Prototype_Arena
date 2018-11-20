@@ -58,6 +58,14 @@ public class Hero : MonoBehaviour {
     private GameObject target_enemy;
     private int current_damage;
 
+    public AbilityBase HeroAbility;
+    public bool isUsingAbility = false;
+
+    private SpriteRenderer sprite_renderer;
+    private AudioSource audio_source;
+
+    public List<AudioClip> hit_sfx = new List<AudioClip>();
+    public List<AudioClip> melee_sfx = new List<AudioClip>();
     #endregion
 
     private void Awake()
@@ -78,6 +86,15 @@ public class Hero : MonoBehaviour {
         health_text = UiText.Find("HealthText").GetComponent<TextMesh>();
         damage_text = UiText.Find("DamageText").GetComponent<TextMesh>();
         initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
+
+        sprite_renderer = GetComponentInChildren<SpriteRenderer>();
+
+        audio_source = GetComponent<AudioSource>();
+    }
+
+    private void Start()
+    {
+        HeroAbility = HeroAbilities.instance.GenerateAbility(HeroAbilities.instance.GenerateSeed());
     }
 
     public void SetSelected(bool is_selected)
@@ -117,6 +134,8 @@ public class Hero : MonoBehaviour {
 
     private void Update()
     {
+        SetRenderOrder();
+
         health_text.text = Healthpoints.ToString();
         damage_text.text = Damage.ToString();
         initiative_text.text = Initiative.ToString();
@@ -129,8 +148,9 @@ public class Hero : MonoBehaviour {
 
             if (distance == 0)
             {
+                //disable move bool
                 move_hero = false;
-
+                //set action ended, so next animation can play
                 GameManager.instance.action_ended = true;
             }
         }
@@ -142,7 +162,11 @@ public class Hero : MonoBehaviour {
 
             if (distance <= 1)
             {
+                //disable attack move bool
                 attack_move_hero = false;
+
+                //play melee attack sfx
+                PlaySFX("melee");
 
                 //apply damage to target
                 target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
@@ -154,8 +178,41 @@ public class Hero : MonoBehaviour {
         }
     }
 
+    private void PlaySFX(string action)
+    {
+        int random_clip;
+
+        switch (action)
+        {
+            case "melee":
+                random_clip = Random.Range(0, melee_sfx.Count);
+                audio_source.PlayOneShot(melee_sfx[random_clip]);
+                break;
+            case "hit":
+                random_clip = Random.Range(0, hit_sfx.Count);
+                audio_source.PlayOneShot(hit_sfx[random_clip]);
+                break;
+        }
+    }
+
+    float current_y;
+    float old_y;
+
+    private void SetRenderOrder()
+    {
+        current_y = transform.position.y;
+
+        if(current_y != old_y)
+        {
+            old_y = current_y;
+            sprite_renderer.sortingOrder = Mathf.RoundToInt(transform.position.y * 100f) * -1;            
+        }
+    }
+
     public void TakeDamage(int damage_value)
     {
+        PlaySFX("hit");
+
         Healthpoints -= damage_value;
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
