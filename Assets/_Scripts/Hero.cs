@@ -27,6 +27,8 @@ public class Hero : MonoBehaviour {
     public GameObject BloodSplashPrefab;
     public GameObject BloodParticles;
 
+    public GameObject InstantHealParticles;
+
     public GameObject ArrowPrefab;
     public GameObject SpellPrefab;
 
@@ -68,6 +70,8 @@ public class Hero : MonoBehaviour {
     public List<AudioClip> melee_sfx = new List<AudioClip>();
 
     private Transform AbilityUI;
+
+    private CameraShake cam_shake;
     #endregion
 
     private void Awake()
@@ -95,6 +99,8 @@ public class Hero : MonoBehaviour {
         sprite_renderer = GetComponentInChildren<SpriteRenderer>();
 
         audio_source = GetComponent<AudioSource>();
+
+        cam_shake = Camera.main.transform.GetComponent<CameraShake>();
     }
 
     private void Start()
@@ -221,6 +227,9 @@ public class Hero : MonoBehaviour {
     
     public void TakeDamage(float damage_value)
     {
+        //shake camera
+        cam_shake.shakeDuration = .2f;
+
         PlaySFX("hit");
 
         float amount = damage_value;
@@ -261,6 +270,7 @@ public class Hero : MonoBehaviour {
         Healthpoints += (int)amount;
 
         //heal vfx
+        Instantiate(InstantHealParticles, transform.position, Quaternion.identity);
 
         GameObject heal_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
         heal_text.GetComponent<DamageText>().SetText("+" + amount, Color.green);

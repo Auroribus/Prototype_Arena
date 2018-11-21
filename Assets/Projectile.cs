@@ -7,7 +7,9 @@ public class Projectile : MonoBehaviour {
     public int damage;
     public float rotation_correction = 180f;
     public bool rotate_towards_target = false;
-    
+
+    public GameObject FireBurst;
+
     // Update is called once per frame
     void Update () {
 		if(target != null)
@@ -23,6 +25,11 @@ public class Projectile : MonoBehaviour {
 
                 //projectile hit, action ends
                 GameManager.instance.action_ended = true; 
+
+                if(FireBurst != null)
+                {
+                    Instantiate(FireBurst, transform.position, Quaternion.identity);
+                }
 
                 Destroy(gameObject);
             }
