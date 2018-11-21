@@ -27,6 +27,8 @@ public class Player : MonoBehaviour {
     public int p2_actions = 0;
 
     public List<Action> list_of_actions = new List<Action>();
+    //list of targets for ability
+    List<GameObject> ability_targets = new List<GameObject>();
 
     private GameObject Plan_list;
     public GameObject action_icon_prefab;
@@ -67,8 +69,11 @@ public class Player : MonoBehaviour {
                 }
             }
         }
-
-        UseAbility();
+               
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            DeselectHero();
+        }
     }
     
     private void DraftPhase(RaycastHit2D hit)
@@ -163,12 +168,91 @@ public class Player : MonoBehaviour {
 
     private void PlanPhase(RaycastHit2D hit)
     {
-        //see if selected hero not null and if not null, using ability
-        if (SelectedHero != null && SelectedHero.GetComponent<Hero>().isUsingAbility && player_actions < max_actions)
+        //check if hit is ability button
+        if(SelectedHero != null && hit.collider.tag == "Ability")
         {
-            //target allies
-            Debug.Log("using ability clicked");
-            //target enemies
+            AbilitySetTargets();
+        }
+        //see if selected hero not null and if not null, using ability
+        else if (SelectedHero != null && SelectedHero.GetComponent<Hero>().isUsingAbility && player_actions < max_actions)
+        {
+            //local hit object
+            Hero hit_hero = hit.transform.GetComponent<Hero>();
+
+            //local var of hero
+            Hero _hero = SelectedHero.GetComponent<Hero>();
+            
+            //check if the hit hero is targeted
+            if(hit_hero.isTargeted)
+            {
+                //take the ability from hero
+                AbilityBase ability = _hero.HeroAbility;
+
+                //local list of tarets
+                List<GameObject> target_heroes = new List<GameObject>();
+
+                //actual adding of the targets and not just setting them as possible targets as done previously
+                switch (ability.Ability_aoe)
+                {
+                    case AbilityAOE.all:
+
+                        //add all the targeted heroes
+                        target_heroes = ability_targets;
+                        
+                        break;
+
+                    case AbilityAOE.chain:
+
+                        //not sure yet how to implement
+                        //add single target, rest of logic implemented in the resolve phase
+                        target_heroes.Add(hit_hero.gameObject);
+
+                        break;
+
+                    case AbilityAOE.column:
+
+                        //take the column from the targeted hero, and hit all the heroes in that column
+                        foreach(GameObject hero in ability_targets)
+                        {
+                            if(hero.GetComponent<Hero>().x_position_grid == hit_hero.x_position_grid)
+                            {
+                                target_heroes.Add(hero);
+                            }
+                        }
+                        break;
+
+                    case AbilityAOE.row:
+
+                        //take the row from the targeted hero, and hit all the heroes in that row
+                        foreach (GameObject hero in ability_targets)
+                        {
+                            if (hero.GetComponent<Hero>().y_position_grid == hit_hero.y_position_grid)
+                            {
+                                target_heroes.Add(hero);
+                            }
+                        }
+                        break;
+
+                    case AbilityAOE.single:
+
+                        //add the single clicked hero
+                        target_heroes.Add(hit_hero.gameObject);
+                        
+                        break;
+                }
+
+                //add action to list
+                list_of_actions.Add(new Action(
+                        SelectedHero,
+                        GameManager.instance.CurrentTurn,
+                        ActionType.ability,
+                        target_heroes,
+                        ability
+                    ));
+
+                //increment attack
+                IncrementActions(+1);
+            }            
         }
         //
         else
@@ -271,9 +355,6 @@ public class Player : MonoBehaviour {
 
                         //increment attack
                         IncrementActions(+1);
-
-                        //unselect selected hero
-                        UnselectHero();
                     }
                     //magical attacks that target a whole row of heros
                     else if (SelectedHero.GetComponent<Hero>().main_class == MainClass.Mage)
@@ -301,9 +382,6 @@ public class Player : MonoBehaviour {
 
                         //increment attack
                         IncrementActions(+1);
-
-                        //unselect selected hero
-                        UnselectHero();
                     }
                 }
             }
@@ -324,123 +402,112 @@ public class Player : MonoBehaviour {
 
                         //increment attack
                         IncrementActions(+1);
-
-                        //deselect hero
-                        UnselectHero();
                     }
                 }
             }
         }
     }
 
-    private void UseAbility()
-    {        
-        //activate ability
-        if (Input.GetKeyDown(KeyCode.Space))
+    private void AbilitySetTargets()
+    { 
+        //local var hero
+        Hero selected_hero = SelectedHero.GetComponent<Hero>();
+        
+        if (!selected_hero.isUsingAbility)
         {
-            //check if hero not null
-            if(SelectedHero != null)
+            //local var ability
+            AbilityBase ability = selected_hero.HeroAbility;
+
+            Debug.Log(
+                "Effect: " + ability.Ability_effect + "\n" +
+                "Target: " + ability.Ability_target + "\n" +
+                "AoE: " + ability.Ability_aoe + "\n" +
+                "Strength: " + ability.strength + "\n" +
+                "Duration: " + ability.duration + "\n" +
+                "Delay: " + ability.delay
+                );
+
+            //deselect all previously targeted heroes
+            foreach (GameObject g in GameManager.instance.HeroList_P1)
             {
-                //local var hero
-                Hero selected_hero = SelectedHero.GetComponent<Hero>();
+                Hero _h = g.GetComponent<Hero>();
 
-                if(!selected_hero.isUsingAbility)
-                {
-                    //local var ability
-                    AbilityBase ability = selected_hero.HeroAbility;
+                if (_h.isTargeted)
+                    _h.SetTargeted(false);
+            }
+            foreach (GameObject g in GameManager.instance.HeroList_P2)
+            {
+                Hero _h = g.GetComponent<Hero>();
 
-                    //deselect all previously targeted heroes
-                    foreach (GameObject g in GameManager.instance.HeroList_P1)
+                if (_h.isTargeted)
+                    _h.SetTargeted(false);
+            }
+
+            //hide all movement rings unless ability has to do with movement
+            if (ability.Ability_effect != AbilityEffect.movement)
+            {
+                GameManager.instance.Grid_P1.SetMovementRings(-1, -1);
+                GameManager.instance.Grid_P2.SetMovementRings(-1, -1);
+            }
+            
+            //set bool to true on using ability
+            selected_hero.isUsingAbility = true;
+
+            //based on heal or damage, target enemies or allies
+            switch (ability.Ability_effect)
+            {
+                case AbilityEffect.damage:
+                    //target enemies
+                    ability_targets = enemy_list;
+                    break;
+                case AbilityEffect.heal:
+                    //target allies
+                    ability_targets = allies_list;
+                    break;
+            }
+
+            //highlight targets based on the heroes ability
+            switch (ability.Ability_target)
+            {
+                case AbilityTarget.all:
+                    foreach (GameObject target in ability_targets)
                     {
-                        Hero _h = g.GetComponent<Hero>();
+                        Hero _hero = target.GetComponent<Hero>();
 
-                        if (_h.isTargeted)
-                            _h.SetTargeted(false);
+                        _hero.SetTargeted(true);
                     }
-                    foreach (GameObject g in GameManager.instance.HeroList_P2)
+                    break;
+                case AbilityTarget.row:
+                    foreach (GameObject target in ability_targets)
                     {
-                        Hero _h = g.GetComponent<Hero>();
+                        Hero _hero = target.GetComponent<Hero>();
 
-                        if (_h.isTargeted)
-                            _h.SetTargeted(false);
+                        if (_hero.y_position_grid == selected_hero.y_position_grid)
+                        {
+                            _hero.SetTargeted(true);
+                        }
                     }
-
-                    //hide all movement rings unless ability has to do with movement
-                    if(ability.Ability_effect != AbilityEffect.movement)
+                    break;
+                case AbilityTarget.column:
+                    foreach (GameObject target in ability_targets)
                     {
-                        GameManager.instance.Grid_P1.SetMovementRings(-1, -1);
-                        GameManager.instance.Grid_P2.SetMovementRings(-1, -1);
+                        Hero _hero = target.GetComponent<Hero>();
+
+                        if (_hero.x_position_grid == selected_hero.x_position_grid)
+                        {
+                            _hero.SetTargeted(true);
+                        }
                     }
-
-
-                    //local list of targets
-                    List<GameObject> targets = new List<GameObject>();
-
-                    //set bool to true on using ability
-                    selected_hero.isUsingAbility = true;
-
-                    //based on heal or damage, target enemies or allies
-                    switch (ability.Ability_effect)
+                    break;
+                case AbilityTarget.any:
+                    foreach (GameObject target in ability_targets)
                     {
-                        case AbilityEffect.damage:
-                            //target enemies
-                            targets = enemy_list;
-                            break;
-                        case AbilityEffect.heal:
-                            //target allies
-                            targets = allies_list;
-                            break;
+                        Hero _hero = target.GetComponent<Hero>();
+
+                        _hero.SetTargeted(true);
                     }
-
-                    //highlight targets based on the heroes ability
-                    switch (ability.Ability_target)
-                    {
-                        case AbilityTarget.all:
-                            foreach (GameObject target in targets)
-                            {
-                                Hero _hero = target.GetComponent<Hero>();
-
-                                _hero.SetTargeted(true);
-                            }
-                            break;
-                        case AbilityTarget.row:
-                            foreach (GameObject target in targets)
-                            {
-                                Hero _hero = target.GetComponent<Hero>();
-
-                                if (_hero.x_position_grid == selected_hero.x_position_grid)
-                                {
-                                    _hero.SetTargeted(true);
-                                }
-                            }
-                            break;
-                        case AbilityTarget.column:
-                            foreach (GameObject target in targets)
-                            {
-                                Hero _hero = target.GetComponent<Hero>();
-
-                                if (_hero.y_position_grid == selected_hero.y_position_grid)
-                                {
-                                    _hero.SetTargeted(true);
-                                }
-                            }
-                            break;
-                        case AbilityTarget.any:
-                            foreach (GameObject target in targets)
-                            {
-                                Hero _hero = target.GetComponent<Hero>();
-
-                                _hero.SetTargeted(true);
-                            }
-                            break;
-                    }
-                }
-            }            
-        }
-
-        if(Input.GetKeyDown(KeyCode.D))
-        {
-            DeselectHero();
+                    break;
+            }
         }
     }
 
@@ -464,6 +531,8 @@ public class Player : MonoBehaviour {
             {
                 hero.GetComponent<Hero>().SetTargeted(false);
             }
+
+            SelectedHero = null;
         }
     }
 
@@ -706,6 +775,44 @@ public class Player : MonoBehaviour {
 
                         //enemies
 
+                        switch(action.ability.Ability_effect)
+                        {
+                            case AbilityEffect.damage:
+
+                                //hit all the targets in the action target list
+                                //based on the ability power
+
+                                //later use delay, duration, cost
+
+                                foreach(GameObject target in action.targets)
+                                {
+                                    Hero _target = target.GetComponent<Hero>();
+
+                                    //later use with animation
+                                    _target.TakeDamage(action.ability.strength);
+                                }
+
+                                break;
+
+                            case AbilityEffect.heal:
+
+                                foreach (GameObject target in action.targets)
+                                {
+                                    Hero _target = target.GetComponent<Hero>();
+
+                                    //later use with animation
+                                    //check if target is not dead already
+                                    if(_target.Healthpoints > 0)
+                                        _target.HealHero(action.ability.strength);
+                                }
+
+                                break;
+
+                            case AbilityEffect.movement:
+
+                                break;
+                        }
+
                         break;
 
                     case ActionType.movement:
@@ -715,13 +822,15 @@ public class Player : MonoBehaviour {
 
                 //set checkmark to green on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-                
+                GameManager.instance.action_ended = true;
+
+                //temp
+                yield return new WaitForSeconds(1f);
             }
             else
             {
                 //set checkmark to red on action prefab
                 action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
-
                 GameManager.instance.action_ended = true;
             }
         }
@@ -742,6 +851,9 @@ public class Player : MonoBehaviour {
         {
             case PlayerTurn.Player1:
                 p1_actions += value;
+
+                DeselectHero();
+
                 GameManager.instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions;
                       
                 //check if player one has max actions
@@ -759,6 +871,9 @@ public class Player : MonoBehaviour {
 
             case PlayerTurn.Player2:
                 p2_actions += value;
+
+                DeselectHero();
+
                 GameManager.instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
 
                 //check if player two has max actions
@@ -773,21 +888,7 @@ public class Player : MonoBehaviour {
 
         DisplayActionList();
     }
-
-    private void UnselectHero()
-    {
-        //unselect selected hero
-        SelectedHero.GetComponent<Hero>().SetSelected(false);
-        SelectedHero = null;
-
-        GameManager.instance.CleanLists();
-        foreach (GameObject hero in enemy_list)
-        {
-            hero.GetComponent<Hero>().SetTargeted(false);
-        }
-        player_grid.SetMovementRings(-1, -1);
-    }
-
+    
     private void DisplayActionList()
     {
         //sort actions list by initiative descending
@@ -819,6 +920,10 @@ public class Player : MonoBehaviour {
             switch (action.action_type)
             {
                 case ActionType.attack:
+                    switch(action.selected_hero.GetComponent<Hero>().main_class)
+                    {
+
+                    }
                     sRend.sprite = action_icon_sprites[0];
                     break;
                 case ActionType.ability:
@@ -833,10 +938,10 @@ public class Player : MonoBehaviour {
             switch(action.player)
             {
                 case PlayerTurn.Player1:
-                    sRend.color = Color.blue;                    
+                    sRend.color = GameManager.instance.Player1_color;                    
                     break;
                 case PlayerTurn.Player2:
-                    sRend.color = Color.red;
+                    sRend.color = GameManager.instance.Player2_color;
                     break;
             }
             
@@ -977,7 +1082,15 @@ public class Action
     public GameObject single_target;
     public List<GameObject> targets = new List<GameObject>();
     public int lasts_for_turns;
+    public AbilityBase ability;
    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_selected_hero"></param>
+    /// <param name="_player"></param>
+    /// <param name="_action"></param>
+    /// <param name="_single_target"></param>
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
     {
         selected_hero = _selected_hero;
@@ -990,6 +1103,13 @@ public class Action
         selected_hero.GetComponent<Hero>().SetAction(true);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_selected_hero"></param>
+    /// <param name="_player"></param>
+    /// <param name="_action"></param>
+    /// <param name="_targets"></param>
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets)
     {
         selected_hero = _selected_hero;
@@ -997,6 +1117,27 @@ public class Action
         action_type = _action;
         initiative = selected_hero.GetComponent<Hero>().Initiative;
         targets = _targets;
+
+        //set hero has action to true
+        selected_hero.GetComponent<Hero>().SetAction(true);
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_selected_hero"></param>
+    /// <param name="_player"></param>
+    /// <param name="_action"></param>
+    /// <param name="_targets"></param>
+    /// <param name="_ability"></param>
+    public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets, AbilityBase _ability)
+    {
+        selected_hero = _selected_hero;
+        player = _player;
+        action_type = _action;
+        initiative = selected_hero.GetComponent<Hero>().Initiative;
+        targets = _targets;
+        ability = _ability;
 
         //set hero has action to true
         selected_hero.GetComponent<Hero>().SetAction(true);

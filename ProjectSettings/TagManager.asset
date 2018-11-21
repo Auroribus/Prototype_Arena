@@ -8,6 +8,7 @@ TagManager:
   - HeroP2
   - Tile
   - Hero
+  - Ability
   layers:
   - Default
   - TransparentFX

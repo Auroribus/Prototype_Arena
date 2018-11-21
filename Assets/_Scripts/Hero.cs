@@ -66,6 +66,8 @@ public class Hero : MonoBehaviour {
 
     public List<AudioClip> hit_sfx = new List<AudioClip>();
     public List<AudioClip> melee_sfx = new List<AudioClip>();
+
+    private Transform AbilityUI;
     #endregion
 
     private void Awake()
@@ -78,7 +80,6 @@ public class Hero : MonoBehaviour {
 
         UiText = transform.Find("UI Text");
         UiImages = transform.Find("UI Images");
-        SetUI(false);
 
         IsDrafted = transform.Find("IsDrafted");
         IsDrafted.gameObject.SetActive(false);
@@ -86,6 +87,10 @@ public class Hero : MonoBehaviour {
         health_text = UiText.Find("HealthText").GetComponent<TextMesh>();
         damage_text = UiText.Find("DamageText").GetComponent<TextMesh>();
         initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
+
+        AbilityUI = transform.Find("Ability");
+
+        SetUI(false);
 
         sprite_renderer = GetComponentInChildren<SpriteRenderer>();
 
@@ -134,6 +139,7 @@ public class Hero : MonoBehaviour {
     {
         UiText.gameObject.SetActive(show);
         UiImages.gameObject.SetActive(show);
+        AbilityUI.gameObject.SetActive(show);
     }
 
     private void Update()
@@ -212,17 +218,19 @@ public class Hero : MonoBehaviour {
             sprite_renderer.sortingOrder = Mathf.RoundToInt(transform.position.y * 100f) * -1;            
         }
     }
-
-    public void TakeDamage(int damage_value)
+    
+    public void TakeDamage(float damage_value)
     {
         PlaySFX("hit");
 
-        Healthpoints -= damage_value;
+        float amount = damage_value;
+
+        Healthpoints -= (int)amount;
         Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
 
         GameObject damage_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
-        damage_text.GetComponent<DamageText>().SetText("-" + damage_value, Color.red);
+        damage_text.GetComponent<DamageText>().SetText("-" + amount, Color.red);
 
         if (Healthpoints <= 0)
         {
@@ -242,6 +250,21 @@ public class Hero : MonoBehaviour {
                     break;
             }
         }
+    }
+
+    public void HealHero(float heal_value)
+    {
+        //PlaySFX("hit");
+
+        float amount = heal_value;
+
+        Healthpoints += (int)amount;
+
+        //heal vfx
+
+        GameObject heal_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
+        heal_text.GetComponent<DamageText>().SetText("+" + amount, Color.green);
+        
     }
 
     GameObject projectile;

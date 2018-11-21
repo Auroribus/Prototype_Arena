@@ -122,6 +122,10 @@ public class GameManager : MonoBehaviour {
     //bool to keep track if an action has ended so that resolving can continue
     public bool action_ended = true;
 
+    //player colors
+    public Color Player1_color;
+    public Color Player2_color;
+
     #endregion
 
     private void Awake()
@@ -251,11 +255,11 @@ public class GameManager : MonoBehaviour {
                 {
                     case PlayerTurn.Player1:
                         animation_turn_text.text = "Player 1";
-                        animation_turn_text.color = Color.blue;
+                        animation_turn_text.color = Player1_color;
                         break;
                     case PlayerTurn.Player2:
                         animation_turn_text.text = "Player 2";
-                        animation_turn_text.color = Color.red;
+                        animation_turn_text.color = Player2_color;
                         break;
                 }
             }
@@ -291,7 +295,7 @@ public class GameManager : MonoBehaviour {
                 hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
-                HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.blue;
+                HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player1_color;
                 HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
             }
         }
@@ -315,7 +319,7 @@ public class GameManager : MonoBehaviour {
                 hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
-                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player2_color;
                 HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
                 HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
             }
@@ -539,11 +543,11 @@ public class GameManager : MonoBehaviour {
         {
             case PlayerTurn.Player1:
                 player_turn_text.text = "Player 1";
-                player_turn_text.color = Color.blue;
+                player_turn_text.color = Player1_color;
                 break;
             case PlayerTurn.Player2:
                 player_turn_text.text = "Player 2";
-                player_turn_text.color = Color.red;
+                player_turn_text.color = Player2_color;
 
                 //fade animation ui
                 SetAnimationUI(true, CurrentPhase, CurrentTurn);
@@ -606,6 +610,8 @@ public class GameManager : MonoBehaviour {
                 break;
 
             case Phase.PlanPhase:
+
+                Player.instance.ClearActionIcons();
 
                 //check if turn is player 1s turn
                 if (CurrentTurn != PlayerTurn.Player1)
@@ -740,12 +746,12 @@ public class GameManager : MonoBehaviour {
         if(HeroList_P2.Count == 0)
         {
             Winner_playername_text.text = "Player 1";
-            Winner_playername_text.color = Color.blue;
+            Winner_playername_text.color = Player1_color;
         }
         else if(HeroList_P1.Count == 0)
         {
             Winner_playername_text.text = "Player 2";
-            Winner_playername_text.color = Color.red;
+            Winner_playername_text.color = Player2_color;
         }
     }
 
