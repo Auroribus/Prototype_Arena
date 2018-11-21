@@ -255,6 +255,7 @@ public class HeroAbilities : MonoBehaviour {
         //delay; 0-9 10
         //cost 0-10 HP / 0-9 Stun
 
+        //change hard coded numbers
         string random_effect = ConvertIntToAlphabet(Random.Range(1, 3));
         string random_target = ConvertIntToAlphabet(Random.Range(1, 5));
         string random_area = ConvertIntToAlphabet(Random.Range(1, 6));
@@ -396,7 +397,8 @@ public class HeroAbilities : MonoBehaviour {
 public enum AbilityEffect
 {
     damage = 1,
-    heal = 2
+    heal = 2,
+    movement = 3
 }
 
 public enum AbilityTarget

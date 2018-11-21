@@ -101,6 +101,10 @@ public class Hero : MonoBehaviour {
     {
         selection_ring.gameObject.SetActive(is_selected);
 
+        //reset using ability
+        if(isUsingAbility)
+            isUsingAbility = false;
+
         //set movement rings on tiles in same row
         for (int i = 0; i < 3; i++)
         {

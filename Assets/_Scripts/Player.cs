@@ -163,176 +163,173 @@ public class Player : MonoBehaviour {
 
     private void PlanPhase(RaycastHit2D hit)
     {
-        //see if hit is a unit belonging to this player
-        //check if the unit already performing an action
-        if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction && !hit.transform.GetComponent<Hero>().isUsingAbility)
-        {
-            if (SelectedHero != null)
-                SelectedHero.GetComponent<Hero>().SetSelected(false);
-
-            SelectedHero = hit.transform.gameObject;
-            SelectedHero.GetComponent<Hero>().SetSelected(true);
-
-            Hero selected_hero = SelectedHero.GetComponent<Hero>();
-
-            GameManager.instance.CleanLists();
-
-            //deselect all previously selected heroes
-            foreach(GameObject hero in allies_list)
-            {
-                hero.GetComponent<Hero>().SetTargeted(false);
-            }
-            foreach (GameObject hero in enemy_list)
-            {
-                hero.GetComponent<Hero>().SetTargeted(false);
-            }
-
-            //local var for main class
-            MainClass main_class = selected_hero.main_class;
-
-            switch(main_class)
-            {
-                case MainClass.Scout:
-
-                    //ranged can hit any of the enemies heroes
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        hero.GetComponent<Hero>().SetTargeted(true);
-                    }
-
-                    break;
-
-                case MainClass.Warrior:
-
-                    //temp list to get the lanes from the hero's
-                    List<int> _max_list = new List<int>();
-
-                    //put all int values into the max list if the hero is on the same row
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        Hero _hero = hero.GetComponent<Hero>();
-
-                        if(_hero.y_position_grid == selected_hero.y_position_grid)
-                            _max_list.Add(hero.GetComponent<Hero>().x_position_grid);
-                    }
-
-                    //get the max value, meaning the closest lane that has a unit on it
-                    int _max = Mathf.Max(_max_list.ToArray());
-
-                    //melee can only hit the closest enemy in the same lane
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        Hero _hero = hero.GetComponent<Hero>();
-
-                        if (_hero.x_position_grid == _max && _hero.y_position_grid == selected_hero.y_position_grid)
-                            _hero.SetTargeted(true);
-                    }
-
-                    break;
-
-                case MainClass.Mage:
-
-                    //hit a whole lane in a straight line, horizontaly
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        Hero _hero = hero.GetComponent<Hero>();
-
-                        if (_hero.y_position_grid == selected_hero.y_position_grid)
-                            _hero.SetTargeted(true);
-                    }
-
-                    break;
-            }
-
-            //set movement ring on tiles in same lane to active
-            int x = selected_hero.x_position_grid;
-            int y = selected_hero.y_position_grid;
-            player_grid.SetMovementRings(x, y);
-            
-        }
-        //attacking, check if not null, not using ability, not at max actions
-        else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
-        {
-            if (hit.transform.GetComponent<Hero>().isTargeted)
-            {
-                //non magical attacks that only target one hero
-                if (SelectedHero.GetComponent<Hero>().main_class != MainClass.Mage)
-                {
-                    //add action to list
-                    list_of_actions.Add(new Action(
-                            SelectedHero,
-                            GameManager.instance.CurrentTurn, 
-                            ActionType.attack,
-                            hit.transform.gameObject
-                        ));
-
-                    //increment attack
-                    IncrementActions(+1);
-
-                    //unselect selected hero
-                    UnselectHero();
-                }
-                //magical attacks that target a whole row of heros
-                else if (SelectedHero.GetComponent<Hero>().main_class == MainClass.Mage)
-                {
-                    GameManager.instance.CleanLists();
-                    List<GameObject> target_heroes = new List<GameObject>();
-                    foreach (GameObject hero in enemy_list)
-                    {
-                        Hero _hero = hero.GetComponent<Hero>();
-
-                        if (hit.transform.GetComponent<Hero>().y_position_grid == _hero.y_position_grid)
-                        {
-                            //add hero to list
-                            target_heroes.Add(hero);
-                        }
-                    }
-
-                    //add action to the list
-                    list_of_actions.Add(new Action(
-                                    SelectedHero,
-                                    GameManager.instance.CurrentTurn,
-                                    ActionType.attack,
-                                    target_heroes
-                                ));
-
-                    //increment attack
-                    IncrementActions(+1);
-
-                    //unselect selected hero
-                    UnselectHero();
-                }
-            }
-        }
-        //moving, check if not null, hit is tile, less than max actions, not using ability
-        else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
-        {
-            if (hit.transform.GetComponent<GridTile>().can_move_here)
-            {
-                if (!SelectedHero.GetComponent<Hero>().move_hero)
-                {
-                    //add movement action to the list
-                    list_of_actions.Add(new Action(
-                                    SelectedHero,
-                                    GameManager.instance.CurrentTurn,
-                                    ActionType.movement,
-                                    hit.transform.gameObject
-                                ));
-
-                    //increment attack
-                    IncrementActions(+1);
-
-                    //deselect hero
-                    UnselectHero();
-                }
-            }
-        }
-        //ability, check if not null, less than max actions and is using ability
-        else if(SelectedHero != null && player_actions < max_actions && SelectedHero.GetComponent<Hero>().isUsingAbility)
+        //see if selected hero not null and if not null, using ability
+        if (SelectedHero != null && SelectedHero.GetComponent<Hero>().isUsingAbility && player_actions < max_actions)
         {
             //target allies
-
+            Debug.Log("using ability clicked");
             //target enemies
+        }
+        //
+        else
+        {
+            //check if the unit already performing an action, less than max actions and does not already have an action
+            if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<Hero>().hasAction)
+            {
+                //&& !hit.transform.GetComponent<Hero>().isUsingAbility
+
+                //deselect previous hero
+                DeselectHero();
+
+                //set new selected hero
+                SelectedHero = hit.transform.gameObject;
+                SelectedHero.GetComponent<Hero>().SetSelected(true);
+
+                Hero selected_hero = SelectedHero.GetComponent<Hero>();
+
+                //prevents modified list error for foreach after
+                GameManager.instance.CleanLists();
+                
+                //local var for main class
+                MainClass main_class = selected_hero.main_class;
+
+                switch (main_class)
+                {
+                    case MainClass.Scout:
+
+                        //ranged can hit any of the enemies heroes
+                        foreach (GameObject hero in enemy_list)
+                        {
+                            hero.GetComponent<Hero>().SetTargeted(true);
+                        }
+
+                        break;
+
+                    case MainClass.Warrior:
+
+                        //temp list to get the lanes from the hero's
+                        List<int> _max_list = new List<int>();
+
+                        //put all int values into the max list if the hero is on the same row
+                        foreach (GameObject hero in enemy_list)
+                        {
+                            Hero _hero = hero.GetComponent<Hero>();
+
+                            if (_hero.y_position_grid == selected_hero.y_position_grid)
+                                _max_list.Add(hero.GetComponent<Hero>().x_position_grid);
+                        }
+
+                        //get the max value, meaning the closest lane that has a unit on it
+                        int _max = Mathf.Max(_max_list.ToArray());
+
+                        //melee can only hit the closest enemy in the same lane
+                        foreach (GameObject hero in enemy_list)
+                        {
+                            Hero _hero = hero.GetComponent<Hero>();
+
+                            if (_hero.x_position_grid == _max && _hero.y_position_grid == selected_hero.y_position_grid)
+                                _hero.SetTargeted(true);
+                        }
+
+                        break;
+
+                    case MainClass.Mage:
+
+                        //hit a whole lane in a straight line, horizontaly
+                        foreach (GameObject hero in enemy_list)
+                        {
+                            Hero _hero = hero.GetComponent<Hero>();
+
+                            if (_hero.y_position_grid == selected_hero.y_position_grid)
+                                _hero.SetTargeted(true);
+                        }
+
+                        break;
+                }
+
+                //set movement ring on tiles in same lane to active
+                int x = selected_hero.x_position_grid;
+                int y = selected_hero.y_position_grid;
+                player_grid.SetMovementRings(x, y);
+
+            }
+            //attacking, check if not null, not using ability, not at max actions
+            else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
+            {
+                if (hit.transform.GetComponent<Hero>().isTargeted)
+                {
+                    //non magical attacks that only target one hero
+                    if (SelectedHero.GetComponent<Hero>().main_class != MainClass.Mage)
+                    {
+                        //add action to list
+                        list_of_actions.Add(new Action(
+                                SelectedHero,
+                                GameManager.instance.CurrentTurn,
+                                ActionType.attack,
+                                hit.transform.gameObject
+                            ));
+
+                        //increment attack
+                        IncrementActions(+1);
+
+                        //unselect selected hero
+                        UnselectHero();
+                    }
+                    //magical attacks that target a whole row of heros
+                    else if (SelectedHero.GetComponent<Hero>().main_class == MainClass.Mage)
+                    {
+                        GameManager.instance.CleanLists();
+                        List<GameObject> target_heroes = new List<GameObject>();
+                        foreach (GameObject hero in enemy_list)
+                        {
+                            Hero _hero = hero.GetComponent<Hero>();
+
+                            if (hit.transform.GetComponent<Hero>().y_position_grid == _hero.y_position_grid)
+                            {
+                                //add hero to list
+                                target_heroes.Add(hero);
+                            }
+                        }
+
+                        //add action to the list
+                        list_of_actions.Add(new Action(
+                                        SelectedHero,
+                                        GameManager.instance.CurrentTurn,
+                                        ActionType.attack,
+                                        target_heroes
+                                    ));
+
+                        //increment attack
+                        IncrementActions(+1);
+
+                        //unselect selected hero
+                        UnselectHero();
+                    }
+                }
+            }
+            //moving, check if not null, hit is tile, less than max actions, not using ability
+            else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions && !SelectedHero.GetComponent<Hero>().isUsingAbility)
+            {
+                if (hit.transform.GetComponent<GridTile>().can_move_here)
+                {
+                    if (!SelectedHero.GetComponent<Hero>().move_hero)
+                    {
+                        //add movement action to the list
+                        list_of_actions.Add(new Action(
+                                        SelectedHero,
+                                        GameManager.instance.CurrentTurn,
+                                        ActionType.movement,
+                                        hit.transform.gameObject
+                                    ));
+
+                        //increment attack
+                        IncrementActions(+1);
+
+                        //deselect hero
+                        UnselectHero();
+                    }
+                }
+            }
         }
     }
 
@@ -341,13 +338,15 @@ public class Player : MonoBehaviour {
         //activate ability
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            //check if hero not null
             if(SelectedHero != null)
             {
+                //local var hero
                 Hero selected_hero = SelectedHero.GetComponent<Hero>();
 
                 if(!selected_hero.isUsingAbility)
                 {
-                    //ability
+                    //local var ability
                     AbilityBase ability = selected_hero.HeroAbility;
 
                     //deselect all previously targeted heroes
@@ -365,6 +364,14 @@ public class Player : MonoBehaviour {
                         if (_h.isTargeted)
                             _h.SetTargeted(false);
                     }
+
+                    //hide all movement rings unless ability has to do with movement
+                    if(ability.Ability_effect != AbilityEffect.movement)
+                    {
+                        GameManager.instance.Grid_P1.SetMovementRings(-1, -1);
+                        GameManager.instance.Grid_P2.SetMovementRings(-1, -1);
+                    }
+
 
                     //local list of targets
                     List<GameObject> targets = new List<GameObject>();
@@ -430,6 +437,34 @@ public class Player : MonoBehaviour {
                 }
             }            
         }
+
+        if(Input.GetKeyDown(KeyCode.D))
+        {
+            DeselectHero();
+        }
+    }
+
+    private void DeselectHero()
+    {
+        if (SelectedHero != null)
+        {
+            //set selected hero to false
+            SelectedHero.GetComponent<Hero>().SetSelected(false);
+
+            //reset movement rings
+            GameManager.instance.Grid_P1.SetMovementRings(-1, -1);
+            GameManager.instance.Grid_P2.SetMovementRings(-1, -1);
+
+            //deselect all previously selected heroes
+            foreach (GameObject hero in allies_list)
+            {
+                hero.GetComponent<Hero>().SetTargeted(false);
+            }
+            foreach (GameObject hero in enemy_list)
+            {
+                hero.GetComponent<Hero>().SetTargeted(false);
+            }
+        }
     }
 
     private void SetPlayerTurnActionPhase()
@@ -459,6 +494,8 @@ public class Player : MonoBehaviour {
     {
         //sort actions list by initiative descending
         list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+
+        yield return new WaitForSeconds(1f);
 
         foreach (Action action in list_of_actions)
         {
@@ -547,6 +584,12 @@ public class Player : MonoBehaviour {
                         break;
 
                     case ActionType.ability:
+
+                        //!!single targets
+
+                        //allies
+
+                        //enemies
 
                         break;
 
@@ -656,6 +699,12 @@ public class Player : MonoBehaviour {
                         break;
 
                     case ActionType.ability:
+
+                        //!!multiple targets
+
+                        //allies
+
+                        //enemies
 
                         break;
 
