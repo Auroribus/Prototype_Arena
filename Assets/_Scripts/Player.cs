@@ -684,8 +684,7 @@ public class Player : MonoBehaviour {
         yield return new WaitForSeconds(1f);
 
         //clear the field
-        StartCoroutine(GameManager.instance.ClearKilledHeroes());
-        
+        StartCoroutine(GameManager.instance.ClearKilledHeroes());        
     }
 
     private void IncrementActions(int value)

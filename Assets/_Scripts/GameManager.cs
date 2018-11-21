@@ -114,6 +114,11 @@ public class GameManager : MonoBehaviour {
 
     private GameObject GridUI;
 
+    private GameObject AnimationUI;
+    private Animator animator_ui;
+    private Text animation_phase_text;
+    private Text animation_turn_text;
+
     //bool to keep track if an action has ended so that resolving can continue
     public bool action_ended = true;
 
@@ -145,7 +150,6 @@ public class GameManager : MonoBehaviour {
         DraftP2 = GameObject.Find("DraftP2").transform;
 
         DraftUI = GameObject.Find("Draft UI");
-        DraftUI.SetActive(true);
         P1_drafted = DraftUI.transform.Find("P1_drafted").GetComponent<Text>();
         P2_drafted = DraftUI.transform.Find("P2_drafted").GetComponent<Text>();
         p1_draft_panel = DraftUI.transform.Find("P1_draft_panel");
@@ -164,7 +168,6 @@ public class GameManager : MonoBehaviour {
         p2_hero_abil = p2_draft_panel.Find("ABIL_name").GetComponent<Text>();
 
         PlanUI = GameObject.Find("Plan UI");
-        PlanUI.SetActive(true);
         P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
         P2_actions = PlanUI.transform.Find("P2_actions").GetComponent<Text>();
 
@@ -172,10 +175,14 @@ public class GameManager : MonoBehaviour {
         ResolveUI.SetActive(true);
 
         EndUI = GameObject.Find("End UI");
-        EndUI.SetActive(true);
         Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
 
         GridUI = GameObject.Find("Grid UI");
+
+        AnimationUI = GameObject.Find("Animation UI");
+        animator_ui = AnimationUI.GetComponent<Animator>();
+        animation_phase_text = AnimationUI.transform.Find("Phase Text").GetComponent<Text>();
+        animation_turn_text = AnimationUI.transform.Find("Turn Text").GetComponent<Text>();
 
         GridUI.SetActive(false);
         EndUI.SetActive(false);
@@ -216,6 +223,49 @@ public class GameManager : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.R))
         {
             ResetGame();
+        }
+    }
+
+    public void SetAnimationUI(bool fade_in, Phase current_phase, PlayerTurn player)
+    {
+        if(fade_in)
+        {
+            AnimationUI.SetActive(true);
+            
+            switch(current_phase)
+            {
+                case Phase.DraftPhase:
+                    animation_phase_text.text = "Draft Phase";
+                    break;
+                case Phase.PlanPhase:
+                    animation_phase_text.text = "Planning Phase";
+                    break;
+                case Phase.ResolvePhase:
+                    animation_phase_text.text = "Resolve Phase";
+                    break;
+            }
+
+            if(current_phase != Phase.DraftPhase && current_phase != Phase.ResolvePhase)
+            {
+                switch (player)
+                {
+                    case PlayerTurn.Player1:
+                        animation_turn_text.text = "Player 1";
+                        animation_turn_text.color = Color.blue;
+                        break;
+                    case PlayerTurn.Player2:
+                        animation_turn_text.text = "Player 2";
+                        animation_turn_text.color = Color.red;
+                        break;
+                }
+            }
+            else
+            {
+                animation_turn_text.text = "";
+            }
+            
+
+            animator_ui.SetTrigger("FadeIn");
         }
     }
     
@@ -494,6 +544,10 @@ public class GameManager : MonoBehaviour {
             case PlayerTurn.Player2:
                 player_turn_text.text = "Player 2";
                 player_turn_text.color = Color.red;
+
+                //fade animation ui
+                SetAnimationUI(true, CurrentPhase, CurrentTurn);
+
                 break;
         }
     }
@@ -529,6 +583,10 @@ public class GameManager : MonoBehaviour {
                 break;
 
             case Phase.DraftPhase:
+
+                //fade in/out animation ui
+                SetAnimationUI(true, Phase.DraftPhase, CurrentTurn);
+
                 //set turn to 1
                 Current_turn_number = 1;
                 turn_number_text.text = "turn: " + Current_turn_number;
@@ -548,16 +606,19 @@ public class GameManager : MonoBehaviour {
                 break;
 
             case Phase.PlanPhase:
-                
-                CleanLists();
-
-                //enable grid ui
-                GridUI.SetActive(true);
 
                 //check if turn is player 1s turn
                 if (CurrentTurn != PlayerTurn.Player1)
                     SetPlayerTurn(PlayerTurn.Player1);
 
+                //fade in/out animation ui
+                SetAnimationUI(true, Phase.PlanPhase, CurrentTurn);
+                
+                CleanLists();
+
+                //enable grid ui
+                GridUI.SetActive(true);
+                
                 DraftUI.SetActive(false);
                 ResolveUI.SetActive(false);
                 phase_text.text = "Planning Phase";
@@ -593,6 +654,11 @@ public class GameManager : MonoBehaviour {
                 break;
 
             case Phase.ResolvePhase:
+
+                player_turn_text.text = "";
+
+                //fade in/out animation ui
+                SetAnimationUI(true, Phase.ResolvePhase, CurrentTurn);
 
                 //disable plan ui
                 PlanUI.SetActive(false);
