@@ -84,6 +84,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Checkmark: {fileID: 0}
   check_sprite: {fileID: 0}
+  player: 0
 --- !u!212 &212239918601797014
 SpriteRenderer:
   m_ObjectHideFlags: 1

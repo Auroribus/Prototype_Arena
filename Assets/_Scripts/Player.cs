@@ -842,7 +842,8 @@ public class Player : MonoBehaviour {
         yield return new WaitForSeconds(1f);
 
         //clear the field
-        StartCoroutine(GameManager.instance.ClearKilledHeroes());        
+        StartCoroutine(GameManager.instance.ClearKilledHeroes());
+                
     }
 
     private void IncrementActions(int value)
@@ -1080,17 +1081,10 @@ public class Action
     public int initiative;
     public GameObject selected_hero;
     public GameObject single_target;
-    public List<GameObject> targets = new List<GameObject>();
-    public int lasts_for_turns;
+    public List<GameObject> targets = new List<GameObject>();    
     public AbilityBase ability;
    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="_selected_hero"></param>
-    /// <param name="_player"></param>
-    /// <param name="_action"></param>
-    /// <param name="_single_target"></param>
+    //single target basic attack
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
     {
         selected_hero = _selected_hero;
@@ -1103,13 +1097,7 @@ public class Action
         selected_hero.GetComponent<Hero>().SetAction(true);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="_selected_hero"></param>
-    /// <param name="_player"></param>
-    /// <param name="_action"></param>
-    /// <param name="_targets"></param>
+    //multiple targets, basic attack
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets)
     {
         selected_hero = _selected_hero;
@@ -1122,14 +1110,7 @@ public class Action
         selected_hero.GetComponent<Hero>().SetAction(true);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="_selected_hero"></param>
-    /// <param name="_player"></param>
-    /// <param name="_action"></param>
-    /// <param name="_targets"></param>
-    /// <param name="_ability"></param>
+    //abilities
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets, AbilityBase _ability)
     {
         selected_hero = _selected_hero;

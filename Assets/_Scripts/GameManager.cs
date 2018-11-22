@@ -548,6 +548,15 @@ public class GameManager : MonoBehaviour {
             case PlayerTurn.Player2:
                 player_turn_text.text = "Player 2";
                 player_turn_text.color = Player2_color;
+                                
+                switch (CurrentPhase)
+                {
+                    case Phase.PlanPhase:
+                        P1_actions.text = "";
+                        P2_actions.text = "Actions: 0/" + Player.instance.max_actions;
+                        break;
+                }
+                
 
                 //fade animation ui
                 SetAnimationUI(true, CurrentPhase, CurrentTurn);
@@ -633,7 +642,7 @@ public class GameManager : MonoBehaviour {
 
                 //reset player actions on new turn
                 P1_actions.text = "Actions: 0/3";
-                P2_actions.text = "Actions: 0/3";
+                P2_actions.text = "";
 
                 Player.instance.p1_actions = 0;
                 Player.instance.p2_actions = 0;
@@ -642,13 +651,11 @@ public class GameManager : MonoBehaviour {
                 {
                     Hero _hero = hero.GetComponent<Hero>();
                     _hero.SetUI(true);
-                    _hero.SetAction(false);
                 }
                 foreach (GameObject hero in HeroList_P2)
                 {
                     Hero _hero = hero.GetComponent<Hero>();
                     _hero.SetUI(true);
-                    _hero.SetAction(false);
                 }
 
                 //if phase was drafted phase, place units
@@ -661,6 +668,7 @@ public class GameManager : MonoBehaviour {
 
             case Phase.ResolvePhase:
 
+                //hide player turn text/set empty
                 player_turn_text.text = "";
 
                 //fade in/out animation ui
@@ -675,18 +683,20 @@ public class GameManager : MonoBehaviour {
                 //set action ended to true so that animations can play
                 action_ended = true;
 
-                //hide stats on heroes
+                //hide stats on heroes and green check
                 foreach(GameObject g in HeroList_P1)
                 {
                     Hero _hero = g.GetComponent<Hero>();
 
                     _hero.SetUI(false);
+                    _hero.SetAction(false);
                 }
                 foreach(GameObject g in HeroList_P2)
                 {
                     Hero _hero = g.GetComponent<Hero>();
 
                     _hero.SetUI(false);
+                    _hero.SetAction(false);
                 }
 
                 phase_text.text = "Resolve Phase";
@@ -728,6 +738,9 @@ public class GameManager : MonoBehaviour {
         else
         {
             SetCurrentPhase(Phase.PlanPhase);
+            //increment turn
+            Current_turn_number++;
+            turn_number_text.text = "turn: " + Current_turn_number;
         }
     }
 
