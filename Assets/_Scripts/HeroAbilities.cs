@@ -115,7 +115,7 @@ public class HeroAbilities : MonoBehaviour {
             }
         }
 
-        target.GetComponent<Hero>().TakeDamage(Damage);
+        //target.GetComponent<Hero>().TakeDamage(Damage);
     }
 
     //deals x damage, deals extra damage if target has less than x health
@@ -132,13 +132,13 @@ public class HeroAbilities : MonoBehaviour {
             Damage = damage;
         }
         
-        target.GetComponent<Hero>().TakeDamage(Damage);
+        //target.GetComponent<Hero>().TakeDamage(Damage);
     }
 
     //hits target, then has x% chance to bounce to new target
     public void ChainLighting(GameObject target, int chance_percentage, int damage)
     {
-        target.GetComponent<Hero>().TakeDamage(damage);
+        //target.GetComponent<Hero>().TakeDamage(damage);
 
         if (Random.Range(0, 100) <= chance_percentage)
         {

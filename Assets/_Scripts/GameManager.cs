@@ -122,6 +122,10 @@ public class GameManager : MonoBehaviour {
     //bool to keep track if an action has ended so that resolving can continue
     public bool action_ended = true;
 
+    //player colors
+    public Color Player1_color;
+    public Color Player2_color;
+
     #endregion
 
     private void Awake()
@@ -251,11 +255,11 @@ public class GameManager : MonoBehaviour {
                 {
                     case PlayerTurn.Player1:
                         animation_turn_text.text = "Player 1";
-                        animation_turn_text.color = Color.blue;
+                        animation_turn_text.color = Player1_color;
                         break;
                     case PlayerTurn.Player2:
                         animation_turn_text.text = "Player 2";
-                        animation_turn_text.color = Color.red;
+                        animation_turn_text.color = Player2_color;
                         break;
                 }
             }
@@ -291,7 +295,7 @@ public class GameManager : MonoBehaviour {
                 hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
-                HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.blue;
+                HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player1_color;
                 HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
             }
         }
@@ -315,7 +319,7 @@ public class GameManager : MonoBehaviour {
                 hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
-                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player2_color;
                 HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
                 HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
             }
@@ -539,11 +543,20 @@ public class GameManager : MonoBehaviour {
         {
             case PlayerTurn.Player1:
                 player_turn_text.text = "Player 1";
-                player_turn_text.color = Color.blue;
+                player_turn_text.color = Player1_color;
                 break;
             case PlayerTurn.Player2:
                 player_turn_text.text = "Player 2";
-                player_turn_text.color = Color.red;
+                player_turn_text.color = Player2_color;
+                                
+                switch (CurrentPhase)
+                {
+                    case Phase.PlanPhase:
+                        P1_actions.text = "";
+                        P2_actions.text = "Actions: 0/" + Player.instance.max_actions;
+                        break;
+                }
+                
 
                 //fade animation ui
                 SetAnimationUI(true, CurrentPhase, CurrentTurn);
@@ -607,6 +620,8 @@ public class GameManager : MonoBehaviour {
 
             case Phase.PlanPhase:
 
+                Player.instance.ClearActionIcons();
+
                 //check if turn is player 1s turn
                 if (CurrentTurn != PlayerTurn.Player1)
                     SetPlayerTurn(PlayerTurn.Player1);
@@ -627,7 +642,7 @@ public class GameManager : MonoBehaviour {
 
                 //reset player actions on new turn
                 P1_actions.text = "Actions: 0/3";
-                P2_actions.text = "Actions: 0/3";
+                P2_actions.text = "";
 
                 Player.instance.p1_actions = 0;
                 Player.instance.p2_actions = 0;
@@ -636,13 +651,11 @@ public class GameManager : MonoBehaviour {
                 {
                     Hero _hero = hero.GetComponent<Hero>();
                     _hero.SetUI(true);
-                    _hero.SetAction(false);
                 }
                 foreach (GameObject hero in HeroList_P2)
                 {
                     Hero _hero = hero.GetComponent<Hero>();
                     _hero.SetUI(true);
-                    _hero.SetAction(false);
                 }
 
                 //if phase was drafted phase, place units
@@ -655,6 +668,7 @@ public class GameManager : MonoBehaviour {
 
             case Phase.ResolvePhase:
 
+                //hide player turn text/set empty
                 player_turn_text.text = "";
 
                 //fade in/out animation ui
@@ -669,18 +683,20 @@ public class GameManager : MonoBehaviour {
                 //set action ended to true so that animations can play
                 action_ended = true;
 
-                //hide stats on heroes
+                //hide stats on heroes and green check
                 foreach(GameObject g in HeroList_P1)
                 {
                     Hero _hero = g.GetComponent<Hero>();
 
                     _hero.SetUI(false);
+                    _hero.SetAction(false);
                 }
                 foreach(GameObject g in HeroList_P2)
                 {
                     Hero _hero = g.GetComponent<Hero>();
 
                     _hero.SetUI(false);
+                    _hero.SetAction(false);
                 }
 
                 phase_text.text = "Resolve Phase";
@@ -722,6 +738,9 @@ public class GameManager : MonoBehaviour {
         else
         {
             SetCurrentPhase(Phase.PlanPhase);
+            //increment turn
+            Current_turn_number++;
+            turn_number_text.text = "turn: " + Current_turn_number;
         }
     }
 
@@ -740,12 +759,12 @@ public class GameManager : MonoBehaviour {
         if(HeroList_P2.Count == 0)
         {
             Winner_playername_text.text = "Player 1";
-            Winner_playername_text.color = Color.blue;
+            Winner_playername_text.color = Player1_color;
         }
         else if(HeroList_P1.Count == 0)
         {
             Winner_playername_text.text = "Player 2";
-            Winner_playername_text.color = Color.red;
+            Winner_playername_text.color = Player2_color;
         }
     }
 

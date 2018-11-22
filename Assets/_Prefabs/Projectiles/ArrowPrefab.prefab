@@ -182,6 +182,7 @@ MonoBehaviour:
   damage: 0
   rotation_correction: 180
   rotate_towards_target: 1
+  FireBurst: {fileID: 0}
 --- !u!212 &212333477968971312
 SpriteRenderer:
   m_ObjectHideFlags: 1
