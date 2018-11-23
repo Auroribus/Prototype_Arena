@@ -10,6 +10,21 @@ public class Projectile : MonoBehaviour {
 
     public GameObject FireBurst;
 
+    public ProjectileType Projectile_type;
+
+    private void Start()
+    {
+        switch (Projectile_type)
+        {
+            case ProjectileType.Arrow:
+                SFXController.instance.PlaySFXClip("shoot arrow");
+                break;
+            case ProjectileType.Fireball:
+                SFXController.instance.PlaySFXClip("fire spell");
+                break;
+        }
+    }
+
     // Update is called once per frame
     void Update () {
 		if(target != null)
@@ -26,9 +41,13 @@ public class Projectile : MonoBehaviour {
                 //projectile hit, action ends
                 GameManager.instance.action_ended = true; 
 
-                if(FireBurst != null)
+                switch(Projectile_type)
                 {
-                    Instantiate(FireBurst, transform.position, Quaternion.identity);
+                    case ProjectileType.Arrow:
+                        break;
+                    case ProjectileType.Fireball:
+                        Instantiate(FireBurst, transform.position, Quaternion.identity);
+                        break;
                 }
 
                 Destroy(gameObject);

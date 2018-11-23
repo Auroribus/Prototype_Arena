@@ -57,6 +57,8 @@ public class Player : MonoBehaviour {
 
             if (hit.collider != null)
             {
+                //Debug.Log(hit.collider.tag);
+
                 switch (GameManager.instance.CurrentPhase)
                 {
                     case Phase.DraftPhase:
@@ -66,6 +68,13 @@ public class Player : MonoBehaviour {
                         SetPlayerTurnActionPhase();
                         PlanPhase(hit);
                         break;
+                }
+            }
+            else
+            {
+                if(SelectedHero != null)
+                {
+                    DeselectHero();
                 }
             }
         }
@@ -100,17 +109,19 @@ public class Player : MonoBehaviour {
                         GameManager.instance.HeroList_P1.Add(_hero.transform.gameObject);
                         GameManager.instance.P1_drafted.text = "Drafted: " + GameManager.instance.HeroList_P1.Count + "/" + GameManager.instance.max_amount_units;
 
+                        /* now set in hero on draft and on select
                         AbilityBase ability = _hero.HeroAbility;
 
-                        string ability_text = 
+                        string ability_text =
                             "Effect: " + ability.Ability_effect + "\n" +
                             "Target: " + ability.Ability_target + "\n" +
                             "AoE: " + ability.Ability_aoe + "\n" +
-                            "Strength: " + ability.strength + "\n" +
-                            "Duration: " + ability.duration + "\n" +
-                            "Delay: " + ability.delay;
+                            "Strength: " + ability.strength;
+                            //"Duration: " + ability.duration + "\n" +
+                            //"Delay: " + ability.delay;
 
-                        GameManager.instance.SetDraftHeroStats(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
+                        GameManager.instance.SetHeroInfo(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
+                        */
                     }
                 }
             }
@@ -143,17 +154,19 @@ public class Player : MonoBehaviour {
                         GameManager.instance.HeroList_P2.Add(_hero.transform.gameObject);
                         GameManager.instance.P2_drafted.text = "Drafted: " + GameManager.instance.HeroList_P2.Count + "/" + GameManager.instance.max_amount_units;
 
+                        /*see p1 comment for more info
                         AbilityBase ability = _hero.HeroAbility;
 
                         string ability_text =
                             "Effect: " + ability.Ability_effect + "\n" +
                             "Target: " + ability.Ability_target + "\n" +
                             "AoE: " + ability.Ability_aoe + "\n" +
-                            "Strength: " + ability.strength + "\n" +
-                            "Duration: " + ability.duration + "\n" +
-                            "Delay: " + ability.delay;
+                            "Strength: " + ability.strength; //+ "\n" +
+                            //"Duration: " + ability.duration + "\n" +
+                            //"Delay: " + ability.delay;
 
-                        GameManager.instance.SetDraftHeroStats(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
+                        GameManager.instance.SetHeroInfo(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
+                        */
                     }
                 }
             }

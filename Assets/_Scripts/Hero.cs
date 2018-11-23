@@ -64,14 +64,11 @@ public class Hero : MonoBehaviour {
     public bool isUsingAbility = false;
 
     private SpriteRenderer sprite_renderer;
-    private AudioSource audio_source;
-
-    public List<AudioClip> hit_sfx = new List<AudioClip>();
-    public List<AudioClip> melee_sfx = new List<AudioClip>();
 
     private Transform AbilityUI;
 
     private CameraShake cam_shake;
+
     #endregion
 
     private void Awake()
@@ -93,13 +90,9 @@ public class Hero : MonoBehaviour {
         initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
 
         AbilityUI = transform.Find("Ability");
-
         SetUI(false);
 
-        sprite_renderer = GetComponentInChildren<SpriteRenderer>();
-
-        audio_source = GetComponent<AudioSource>();
-
+        sprite_renderer = GetComponentInChildren<SpriteRenderer>();        
         cam_shake = Camera.main.transform.GetComponent<CameraShake>();
     }
 
@@ -121,6 +114,22 @@ public class Hero : MonoBehaviour {
         {
             GameManager.instance.Grid_P1.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
         }
+
+        //display hero info
+        SetHeroInfo();
+    }
+
+    private void SetHeroInfo()
+    {
+        string ability_text =
+            "Effect: " + HeroAbility.Ability_effect + "\n" +
+            "Target: " + HeroAbility.Ability_target + "\n" +
+            "AoE: " + HeroAbility.Ability_aoe + "\n" +
+            "Strength: " + HeroAbility.strength; //+ "\n" +
+                                                 //"Duration: " + ability.duration + "\n" +
+                                                 //"Delay: " + ability.delay;
+
+        GameManager.instance.SetHeroInfo(main_class, Healthpoints, Damage, Initiative, ability_text);
     }
 
     public void SetTargeted(bool is_targeted)
@@ -133,6 +142,8 @@ public class Hero : MonoBehaviour {
     {
         IsDrafted.gameObject.SetActive(is_drafted);
         isDrafted = is_drafted;
+
+        SetHeroInfo();
     }
 
     public void SetAction(bool has_action)
@@ -182,7 +193,7 @@ public class Hero : MonoBehaviour {
                 attack_move_hero = false;
 
                 //play melee attack sfx
-                PlaySFX("melee");
+                SFXController.instance.PlaySFXClip("sword slash");
 
                 //apply damage to target
                 target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
@@ -191,23 +202,6 @@ public class Hero : MonoBehaviour {
                 target_position = original_position;
                 move_hero = true;
             }
-        }
-    }
-
-    private void PlaySFX(string action)
-    {
-        int random_clip;
-
-        switch (action)
-        {
-            case "melee":
-                random_clip = Random.Range(0, melee_sfx.Count);
-                audio_source.PlayOneShot(melee_sfx[random_clip]);
-                break;
-            case "hit":
-                random_clip = Random.Range(0, hit_sfx.Count);
-                audio_source.PlayOneShot(hit_sfx[random_clip]);
-                break;
         }
     }
 
@@ -230,7 +224,7 @@ public class Hero : MonoBehaviour {
         //shake camera
         cam_shake.shakeDuration = .2f;
 
-        PlaySFX("hit");
+        SFXController.instance.PlaySFXClip("hit");
 
         float amount = damage_value;
 
