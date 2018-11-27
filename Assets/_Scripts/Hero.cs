@@ -264,7 +264,7 @@ public class Hero : MonoBehaviour {
         if (Healthpoints <= 0)
         {
             //blood/hit effect
-            Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
+            //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
 
             //update gridtile to no longer be occupied
             switch (gameObject.tag)
