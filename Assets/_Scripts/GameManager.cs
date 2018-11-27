@@ -51,7 +51,8 @@ public enum ProjectileType
 {
     Arrow,
     BounceArrow,
-    Fireball
+    Fireball,
+    WindSlash
 }
 
 #endregion

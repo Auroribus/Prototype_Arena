@@ -818,7 +818,8 @@ public class Player : MonoBehaviour {
                                             else
                                             {
                                                 //melee AoE ability
-                                                _target.TakeDamage(action.ability.strength);
+                                                _hero.MeleeAbilityAttack(target, action.ability.strength);
+                                                yield return new WaitForSeconds(.2f);
                                             }
                                             break;
                                         case MainClass.Scout:
@@ -844,7 +845,7 @@ public class Player : MonoBehaviour {
                                             else
                                             {
                                                 //magic AoE ability
-                                                _target.TakeDamage(action.ability.strength);
+                                                StartCoroutine(_hero.MageAbilityAttack(target, action.ability.strength));
                                             }
                                             break;
                                     }
@@ -852,7 +853,9 @@ public class Player : MonoBehaviour {
 
                                 if (action.ability.Ability_aoe == AbilityAOE.chain)
                                     yield return new WaitUntil(() => _hero.chain_ended == true);
-
+                                else
+                                    yield return new WaitForSeconds(1f);
+                                
                                 break;
 
                             case AbilityEffect.heal:
