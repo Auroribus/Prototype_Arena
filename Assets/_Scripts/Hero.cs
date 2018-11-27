@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Hero : MonoBehaviour {
@@ -30,7 +31,10 @@ public class Hero : MonoBehaviour {
     public GameObject InstantHealParticles;
 
     public GameObject ArrowPrefab;
-    public GameObject SpellPrefab;
+    public GameObject BouncingArrowPrefab;
+    public GameObject ArrowRainPrefab;
+    
+    public GameObject FireballPrefab;
 
     //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
@@ -64,14 +68,20 @@ public class Hero : MonoBehaviour {
     public bool isUsingAbility = false;
 
     private SpriteRenderer sprite_renderer;
-    private AudioSource audio_source;
-
-    public List<AudioClip> hit_sfx = new List<AudioClip>();
-    public List<AudioClip> melee_sfx = new List<AudioClip>();
 
     private Transform AbilityUI;
 
     private CameraShake cam_shake;
+
+    private BoxCollider2D draft_collider;
+    private CircleCollider2D main_collider;
+       
+    private GameObject projectile;
+       
+    private float current_y;
+    private float old_y;
+
+    public bool chain_ended = false;
     #endregion
 
     private void Awake()
@@ -93,20 +103,22 @@ public class Hero : MonoBehaviour {
         initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
 
         AbilityUI = transform.Find("Ability");
-
         SetUI(false);
 
-        sprite_renderer = GetComponentInChildren<SpriteRenderer>();
-
-        audio_source = GetComponent<AudioSource>();
-
+        sprite_renderer = GetComponentInChildren<SpriteRenderer>();        
         cam_shake = Camera.main.transform.GetComponent<CameraShake>();
+
+        draft_collider = GetComponent<BoxCollider2D>();
+        main_collider = GetComponent<CircleCollider2D>();
+
+        main_collider.enabled = false;
     }
 
     private void Start()
     {
         HeroAbility = HeroAbilities.instance.GenerateAbility(HeroAbilities.instance.GenerateSeed());
     }
+
 
     public void SetSelected(bool is_selected)
     {
@@ -121,6 +133,22 @@ public class Hero : MonoBehaviour {
         {
             GameManager.instance.Grid_P1.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
         }
+
+        //display hero info
+        SetHeroInfo();
+    }
+
+    private void SetHeroInfo()
+    {
+        string ability_text =
+            "Effect: " + HeroAbility.Ability_effect + "\n" +
+            "Target: " + HeroAbility.Ability_target + "\n" +
+            "AoE: " + HeroAbility.Ability_aoe + "\n" +
+            "Strength: " + HeroAbility.strength; //+ "\n" +
+                                                 //"Duration: " + ability.duration + "\n" +
+                                                 //"Delay: " + ability.delay;
+
+        GameManager.instance.SetHeroInfo(main_class, Healthpoints, Damage, Initiative, ability_text);
     }
 
     public void SetTargeted(bool is_targeted)
@@ -133,6 +161,8 @@ public class Hero : MonoBehaviour {
     {
         IsDrafted.gameObject.SetActive(is_drafted);
         isDrafted = is_drafted;
+
+        SetHeroInfo();
     }
 
     public void SetAction(bool has_action)
@@ -146,7 +176,15 @@ public class Hero : MonoBehaviour {
         UiText.gameObject.SetActive(show);
         UiImages.gameObject.SetActive(show);
         AbilityUI.gameObject.SetActive(show);
+
+        if(show)
+        { 
+            //disable draft collider and enable main collider
+            draft_collider.enabled = false;
+            main_collider.enabled = true;
+        }
     }
+
 
     private void Update()
     {
@@ -182,7 +220,7 @@ public class Hero : MonoBehaviour {
                 attack_move_hero = false;
 
                 //play melee attack sfx
-                PlaySFX("melee");
+                SFXController.instance.PlaySFXClip("sword slash");
 
                 //apply damage to target
                 target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
@@ -194,26 +232,7 @@ public class Hero : MonoBehaviour {
         }
     }
 
-    private void PlaySFX(string action)
-    {
-        int random_clip;
-
-        switch (action)
-        {
-            case "melee":
-                random_clip = Random.Range(0, melee_sfx.Count);
-                audio_source.PlayOneShot(melee_sfx[random_clip]);
-                break;
-            case "hit":
-                random_clip = Random.Range(0, hit_sfx.Count);
-                audio_source.PlayOneShot(hit_sfx[random_clip]);
-                break;
-        }
-    }
-
-    float current_y;
-    float old_y;
-
+    
     private void SetRenderOrder()
     {
         current_y = transform.position.y;
@@ -225,17 +244,18 @@ public class Hero : MonoBehaviour {
         }
     }
     
+
     public void TakeDamage(float damage_value)
     {
         //shake camera
         cam_shake.shakeDuration = .2f;
 
-        PlaySFX("hit");
+        SFXController.instance.PlaySFXClip("hit");
 
         float amount = damage_value;
 
         Healthpoints -= (int)amount;
-        Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
+        //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
         Instantiate(BloodParticles, transform.position, Quaternion.identity);
 
         GameObject damage_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
@@ -277,22 +297,21 @@ public class Hero : MonoBehaviour {
         
     }
 
-    GameObject projectile;
-
-    public void RangedAttack(GameObject target, int damage)
-    {        
-        switch (main_class)
-        {
-            case MainClass.Scout:
-                projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
-                break;
-            case MainClass.Mage:
-                projectile = Instantiate(SpellPrefab, transform.position, Quaternion.identity);
-                break;
-        }
-
-        projectile.GetComponent<Projectile>().target = target;
+    //basic attacks
+    #region basic attacks
+    public void RangedAttack(GameObject _target, int damage)
+    {
+        projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
         projectile.GetComponent<Projectile>().damage = damage;
+        projectile.GetComponent<Projectile>().target = _target;
+    }
+
+    public void MagicAttack(int damage, int direction, string target_tag)
+    {
+        projectile = Instantiate(FireballPrefab, transform.position, Quaternion.identity);
+        projectile.GetComponent<Projectile>().Target_tag = target_tag;
+        projectile.GetComponent<Projectile>().damage = damage;
+        projectile.GetComponent<Projectile>().movement_speed *= direction;
     }
 
     public void MeleeAttack(GameObject _target, int _damage)
@@ -312,6 +331,100 @@ public class Hero : MonoBehaviour {
         //set target position
         target_position = _target.transform.position;
     }
+    #endregion
+
+    //chain attacks
+    #region Chain attacks
+    public IEnumerator RangedAttack_Chain(GameObject _target, int damage)
+    {
+        //reset chain ended
+        chain_ended = false;
+
+        //set targets list of enemies
+        //set start position and target object
+        List<GameObject> targets = new List<GameObject>();
+        Vector2 start_position = transform.position;
+        GameObject target_object = _target;
+
+        //instantiate prefab
+        projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
+        projectile.GetComponent<Projectile>().damage = damage;
+        projectile.GetComponent<Projectile>().target = target_object;
+
+        switch(tag)
+        {
+            case "HeroP1":
+                targets = GameManager.instance.HeroList_P2;
+                break;
+            case "HeroP2":
+                targets = GameManager.instance.HeroList_P1;
+                break;
+        }
+
+        //to hit next target in list, set start position to previous targe
+        start_position = _target.transform.position;
+        
+        //hit target, arrow to next target
+        foreach (GameObject g in targets)
+        {
+            //don't hit original target again
+            if(g != _target)
+            { 
+                //wait till arrow hits target
+                yield return new WaitUntil(() => GameManager.instance.action_ended == true);
+
+                GameManager.instance.action_ended = false;
+
+                //set new target object
+                target_object = g;
+
+                projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
+                projectile.GetComponent<Projectile>().damage = damage;
+                projectile.GetComponent<Projectile>().target = target_object;
+
+                //set start position from previous hit target
+                start_position = target_object.transform.position;
+            }
+        }
+
+        //set chain ended to true
+        chain_ended = true;
+    }
+
+    public void MagicAttack_Chain(GameObject _target, int damage)
+    {
+        
+    }
+
+    public void MeleeAttack_Chain()
+    {
+
+    }
+    #endregion
+
+    //other aoe ability attacks
+    #region aoe attacks
+    public IEnumerator RangedAbilityAttack(GameObject _target, int damage)
+    {
+        Instantiate(ArrowRainPrefab, _target.transform.position, Quaternion.identity);
+
+        yield return new WaitForSeconds(1f);
+
+        _target.GetComponent<Hero>().TakeDamage(damage);
+        GameManager.instance.action_ended = true;
+    }
+
+    public void MeleeAbilityAttack()
+    {
+
+    }
+
+    public void MageAbilityAttack()
+    {
+
+    }
+
+    #endregion
 
     private void DestroyAfterTime(float seconds)
     {

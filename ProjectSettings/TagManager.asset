@@ -9,6 +9,7 @@ TagManager:
   - Tile
   - Hero
   - Ability
+  - AnimationUI
   layers:
   - Default
   - TransparentFX

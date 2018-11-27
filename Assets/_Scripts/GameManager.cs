@@ -47,6 +47,13 @@ public enum SubClass
     Mage3
 }
 
+public enum ProjectileType
+{
+    Arrow,
+    BounceArrow,
+    Fireball
+}
+
 #endregion
 
 public class GameManager : MonoBehaviour {
@@ -98,12 +105,12 @@ public class GameManager : MonoBehaviour {
 
     private GameObject DraftUI;
     [System.NonSerialized] public Text P1_drafted, P2_drafted;
-    private Transform p1_draft_panel, p2_draft_panel;
-    private Text p1_hero_name, p2_hero_name;
-    private Text p1_hero_hp, p2_hero_hp;
-    private Text p1_hero_dmg, p2_hero_dmg;
-    private Text p1_hero_init, p2_hero_init;
-    private Text p1_hero_abil, p2_hero_abil;
+    private Transform hero_info_panel;
+    private Text hero_name;
+    private Text hero_hp;
+    private Text hero_dmg;
+    private Text hero_init;
+    private Text hero_abil;
 
     private GameObject PlanUI;
     [System.NonSerialized] public Text P1_actions, P2_actions;
@@ -154,22 +161,15 @@ public class GameManager : MonoBehaviour {
         DraftP2 = GameObject.Find("DraftP2").transform;
 
         DraftUI = GameObject.Find("Draft UI");
-        P1_drafted = DraftUI.transform.Find("P1_drafted").GetComponent<Text>();
-        P2_drafted = DraftUI.transform.Find("P2_drafted").GetComponent<Text>();
-        p1_draft_panel = DraftUI.transform.Find("P1_draft_panel");
-        p2_draft_panel = DraftUI.transform.Find("P2_draft_panel");
+        P1_drafted = DraftUI.transform.Find("P1 drafted").GetComponent<Text>();
+        P2_drafted = DraftUI.transform.Find("P2 drafted").GetComponent<Text>();
+        hero_info_panel = GameObject.Find("Hero Info Panel").transform;
 
-        p1_hero_name = p1_draft_panel.Find("Hero_name").GetComponent<Text>();
-        p1_hero_hp = p1_draft_panel.Find("HP_value").GetComponent<Text>();
-        p1_hero_dmg = p1_draft_panel.Find("DMG_value").GetComponent<Text>();
-        p1_hero_init = p1_draft_panel.Find("INIT_value").GetComponent<Text>();
-        p1_hero_abil = p1_draft_panel.Find("ABIL_name").GetComponent<Text>();
-
-        p2_hero_name = p2_draft_panel.Find("Hero_name").GetComponent<Text>();
-        p2_hero_hp = p2_draft_panel.Find("HP_value").GetComponent<Text>();
-        p2_hero_dmg = p2_draft_panel.Find("DMG_value").GetComponent<Text>();
-        p2_hero_init = p2_draft_panel.Find("INIT_value").GetComponent<Text>();
-        p2_hero_abil = p2_draft_panel.Find("ABIL_name").GetComponent<Text>();
+        hero_name = hero_info_panel.Find("Hero_name").GetComponent<Text>();
+        hero_hp = hero_info_panel.Find("HP_value").GetComponent<Text>();
+        hero_dmg = hero_info_panel.Find("DMG_value").GetComponent<Text>();
+        hero_init = hero_info_panel.Find("INIT_value").GetComponent<Text>();
+        hero_abil = hero_info_panel.Find("ABIL_name").GetComponent<Text>();
 
         PlanUI = GameObject.Find("Plan UI");
         P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
@@ -292,7 +292,7 @@ public class GameManager : MonoBehaviour {
                 hero.Healthpoints = Heroes[random].HealthPoints;
                 hero.Damage = Heroes[random].Damage;
                 hero.Initiative = Heroes[random].Initiative;
-                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
                 HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player1_color;
@@ -316,7 +316,7 @@ public class GameManager : MonoBehaviour {
                 hero.Healthpoints = Heroes[random].HealthPoints;
                 hero.Damage = Heroes[random].Damage;
                 hero.Initiative = Heroes[random].Initiative;
-                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Hero_sprite;
+                hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
                 hero.main_class = Heroes[random].Main_class;
 
                 HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player2_color;
@@ -326,40 +326,28 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void SetDraftHeroStats(int player_number ,MainClass main_class, int hp, int damage, int init, string ability_name)
+    public void SetHeroInfo(MainClass main_class, int hp, int damage, int init, string ability_name)
     {
-        string hero_name = "";
+        string _hero_name = "";
 
         switch(main_class)
         {
             case MainClass.Scout:
-                hero_name = "Scout";
+                _hero_name = "Scout";
                 break;
             case MainClass.Warrior:
-                hero_name = "Warrior";
+                _hero_name = "Warrior";
                 break;
             case MainClass.Mage:
-                hero_name = "Mage";
+                _hero_name = "Mage";
                 break;
         }
 
-        switch(player_number)
-        {
-            case 1:
-                p1_hero_name.text = hero_name;
-                p1_hero_hp.text = hp.ToString();
-                p1_hero_dmg.text = damage.ToString();
-                p1_hero_init.text = init.ToString();
-                p1_hero_abil.text = ability_name;
-                break;
-            case 2:
-                p2_hero_name.text = hero_name;
-                p2_hero_hp.text = hp.ToString();
-                p2_hero_dmg.text = damage.ToString();
-                p2_hero_init.text = init.ToString();
-                p2_hero_abil.text = ability_name;
-                break;
-        }
+        hero_name.text = _hero_name;
+        hero_hp.text = hp.ToString();
+        hero_dmg.text = damage.ToString();
+        hero_init.text = init.ToString();
+        hero_abil.text = ability_name;
     }
 
     private void PlaceDraftedUnits()
@@ -408,15 +396,14 @@ public class GameManager : MonoBehaviour {
 
                     //disable drafted visual
                     _hero.SetDrafted(false);
-
-                    //enable ui text and images
-
+                    
                     //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                     Grid_P1.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
                     _hero.x_position_grid = tile_x;
                     _hero.y_position_grid = tile_y;
 
+                    //enable ui text and images
                     _hero.SetUI(true);
                 }                
             }            
@@ -463,15 +450,14 @@ public class GameManager : MonoBehaviour {
 
                     //disable drafted visual
                     _hero.SetDrafted(false);
-
-                    //enable ui text and images
-
+                    
                     //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                     Grid_P2.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
                     _hero.x_position_grid = tile_x;
                     _hero.y_position_grid = tile_y;
-
+                    
+                    //enable ui text and images
                     _hero.SetUI(true);
                 }
             }
@@ -529,6 +515,7 @@ public class GameManager : MonoBehaviour {
         HeroList_P1.Clear();
         HeroList_P2.Clear();
         Player.instance.ClearActionIcons();
+        Player.instance.ClearActionsList();
                 
         //reset enums
         SetCurrentGameState(GameState.Game);
@@ -552,6 +539,15 @@ public class GameManager : MonoBehaviour {
                 switch (CurrentPhase)
                 {
                     case Phase.PlanPhase:
+
+                        foreach (GameObject g in HeroList_P1)
+                        {
+                            Hero _hero = g.GetComponent<Hero>();
+
+                            _hero.SetUI(false);
+                            _hero.SetAction(false);
+                        }
+
                         P1_actions.text = "";
                         P2_actions.text = "Actions: 0/" + Player.instance.max_actions;
                         break;
@@ -623,8 +619,7 @@ public class GameManager : MonoBehaviour {
                 Player.instance.ClearActionIcons();
 
                 //check if turn is player 1s turn
-                if (CurrentTurn != PlayerTurn.Player1)
-                    SetPlayerTurn(PlayerTurn.Player1);
+                SetPlayerTurn(PlayerTurn.Player1);
 
                 //fade in/out animation ui
                 SetAnimationUI(true, Phase.PlanPhase, CurrentTurn);
@@ -683,14 +678,7 @@ public class GameManager : MonoBehaviour {
                 //set action ended to true so that animations can play
                 action_ended = true;
 
-                //hide stats on heroes and green check
-                foreach(GameObject g in HeroList_P1)
-                {
-                    Hero _hero = g.GetComponent<Hero>();
-
-                    _hero.SetUI(false);
-                    _hero.SetAction(false);
-                }
+                //hide stats on heroes and green check                
                 foreach(GameObject g in HeroList_P2)
                 {
                     Hero _hero = g.GetComponent<Hero>();
@@ -825,5 +813,6 @@ public class HeroBase
     public int Initiative;
     public MainClass Main_class;
     public SubClass Sub_clas;
-    public Sprite Hero_sprite;
+    public Sprite Draft_sprite;
+    public Sprite Main_sprite;
 }
