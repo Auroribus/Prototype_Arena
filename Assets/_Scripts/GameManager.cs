@@ -50,6 +50,7 @@ public enum SubClass
 public enum ProjectileType
 {
     Arrow,
+    BounceArrow,
     Fireball
 }
 
@@ -514,6 +515,7 @@ public class GameManager : MonoBehaviour {
         HeroList_P1.Clear();
         HeroList_P2.Clear();
         Player.instance.ClearActionIcons();
+        Player.instance.ClearActionsList();
                 
         //reset enums
         SetCurrentGameState(GameState.Game);
@@ -537,6 +539,15 @@ public class GameManager : MonoBehaviour {
                 switch (CurrentPhase)
                 {
                     case Phase.PlanPhase:
+
+                        foreach (GameObject g in HeroList_P1)
+                        {
+                            Hero _hero = g.GetComponent<Hero>();
+
+                            _hero.SetUI(false);
+                            _hero.SetAction(false);
+                        }
+
                         P1_actions.text = "";
                         P2_actions.text = "Actions: 0/" + Player.instance.max_actions;
                         break;
@@ -667,14 +678,7 @@ public class GameManager : MonoBehaviour {
                 //set action ended to true so that animations can play
                 action_ended = true;
 
-                //hide stats on heroes and green check
-                foreach(GameObject g in HeroList_P1)
-                {
-                    Hero _hero = g.GetComponent<Hero>();
-
-                    _hero.SetUI(false);
-                    _hero.SetAction(false);
-                }
+                //hide stats on heroes and green check                
                 foreach(GameObject g in HeroList_P2)
                 {
                     Hero _hero = g.GetComponent<Hero>();

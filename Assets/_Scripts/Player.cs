@@ -59,6 +59,14 @@ public class Player : MonoBehaviour {
             {
                 //Debug.Log(hit.collider.tag);
 
+                //quick skip animation ui on clicking it
+                if(hit.collider.tag == "AnimationUI")
+                {
+                    hit.transform.GetComponent<Animator>().SetTrigger("DisableFade");
+                    hit.transform.gameObject.SetActive(false);
+                    return;
+                }
+
                 switch (GameManager.instance.CurrentPhase)
                 {
                     case Phase.DraftPhase:
@@ -185,6 +193,11 @@ public class Player : MonoBehaviour {
         if(SelectedHero != null && hit.collider.tag == "Ability")
         {
             AbilitySetTargets();
+        }
+        //deselect hero if clicking the same hero twice, without using an ability
+        else if(SelectedHero != null && !SelectedHero.GetComponent<Hero>().isUsingAbility && SelectedHero == hit.transform.gameObject)
+        {
+            DeselectHero();
         }
         //see if selected hero not null and if not null, using ability
         else if (SelectedHero != null && SelectedHero.GetComponent<Hero>().isUsingAbility && player_actions < max_actions)
@@ -431,6 +444,7 @@ public class Player : MonoBehaviour {
             //local var ability
             AbilityBase ability = selected_hero.HeroAbility;
 
+            /*
             Debug.Log(
                 "Effect: " + ability.Ability_effect + "\n" +
                 "Target: " + ability.Ability_target + "\n" +
@@ -439,6 +453,7 @@ public class Player : MonoBehaviour {
                 "Duration: " + ability.duration + "\n" +
                 "Delay: " + ability.delay
                 );
+                */
 
             //deselect all previously targeted heroes
             foreach (GameObject g in GameManager.instance.HeroList_P1)
@@ -665,16 +680,6 @@ public class Player : MonoBehaviour {
                         
                         break;
 
-                    case ActionType.ability:
-
-                        //!!single targets
-
-                        //allies
-
-                        //enemies
-
-                        break;
-
                     case ActionType.movement:
 
                         //check if target tile is not occupied by other movement
@@ -743,38 +748,24 @@ public class Player : MonoBehaviour {
 
                             case MainClass.Mage:
 
-                                List<GameObject> enemy_heroes = new List<GameObject>();
+                                string target_tag = "";
+                                int direction = 0;
 
-                                //default mage attack
-                                //check all enemies on same row and hit them with magic
-                                //check tag on target
-                                if(action.targets[0].tag == "HeroP1")
+                                switch(action.player)
                                 {
-                                    enemy_heroes = GameManager.instance.HeroList_P1;
-                                }
-                                else if(action.targets[0].tag == "HeroP2")
-                                {
-                                    enemy_heroes = GameManager.instance.HeroList_P2;
-                                }
+                                    case PlayerTurn.Player1:
+                                        direction = 1;
+                                        target_tag = "HeroP2";
+                                        break;
 
-                                foreach(GameObject enemy_hero in enemy_heroes)
-                                {
-                                    Hero _enemy_hero = enemy_hero.GetComponent<Hero>();
-
-                                    //check if enemies on same row and alive
-                                    if(enemy_hero != null)
-                                    {
-                                        if(_enemy_hero.Healthpoints > 0)
-                                        {
-                                            if(_enemy_hero.y_position_grid == _hero.y_position_grid)
-                                            {
-                                                //hit enemy
-                                                _hero.RangedAttack(_enemy_hero.gameObject, _hero.Damage);
-                                            }
-                                        }
-                                    }
+                                    case PlayerTurn.Player2:
+                                        direction = -1;
+                                        target_tag = "HeroP1";
+                                        break;
                                 }
 
+                                _hero.MagicAttack(_hero.Damage, direction, target_tag);
+                                
                                 break;
                         }
 
@@ -782,28 +773,85 @@ public class Player : MonoBehaviour {
 
                     case ActionType.ability:
 
+                        //implementation of duration and delay
+                        /*
+                        //perform action only if delay is 0
+                        if(action.casting_delay == 0)
+                        {                            
+                            //keep performing action if duration > 0
+                            if(action.duration_of_effect > 0)
+                            {
+                                //lower duration by 1 turn
+                                action.duration_of_effect--;
+                            }
+                        }
+                        else if(action.casting_delay > 0)
+                        {
+                            //lower delay by 1 turn
+                            action.casting_delay--;
+                        }
+                        */
+
                         //!!multiple targets
-
-                        //allies
-
-                        //enemies
-
-                        switch(action.ability.Ability_effect)
+                        switch (action.ability.Ability_effect)
                         {
                             case AbilityEffect.damage:
 
                                 //hit all the targets in the action target list
                                 //based on the ability power
-
-                                //later use delay, duration, cost
-
                                 foreach(GameObject target in action.targets)
                                 {
                                     Hero _target = target.GetComponent<Hero>();
 
                                     //later use with animation
-                                    _target.TakeDamage(action.ability.strength);
+                                    //_target.TakeDamage(action.ability.strength);
+
+                                    switch(_hero.main_class)
+                                    {
+                                        case MainClass.Warrior:
+                                            if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                            {
+                                                //melee chain ability
+                                                StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                yield return new WaitForSeconds(.2f);
+                                            }
+                                            else
+                                            {
+                                                //melee AoE ability
+                                                _target.TakeDamage(action.ability.strength);
+                                            }
+                                            break;
+                                        case MainClass.Scout:
+                                            if(action.ability.Ability_aoe == AbilityAOE.chain)
+                                            {
+                                                //ranged chain ability
+                                                StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                yield return new WaitForSeconds(.2f);
+                                            }
+                                            else
+                                            {
+                                                //ranged AoE ability
+                                                StartCoroutine(_hero.RangedAbilityAttack(target, action.ability.strength));                                                
+                                            }
+                                            break;
+                                        case MainClass.Mage:
+                                            if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                            {
+                                                //magic chain ability
+                                                StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                yield return new WaitForSeconds(.2f);
+                                            }
+                                            else
+                                            {
+                                                //magic AoE ability
+                                                _target.TakeDamage(action.ability.strength);
+                                            }
+                                            break;
+                                    }
                                 }
+
+                                if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                    yield return new WaitUntil(() => _hero.chain_ended == true);
 
                                 break;
 
@@ -849,8 +897,8 @@ public class Player : MonoBehaviour {
         }
 
         //clear list of actions after all actions have been resolved
-        list_of_actions.Clear();
-
+        ClearActionsList();
+        
         //build in wait buffer for heroes hp
         yield return new WaitForSeconds(1f);
 
@@ -858,7 +906,7 @@ public class Player : MonoBehaviour {
         StartCoroutine(GameManager.instance.ClearKilledHeroes());
                 
     }
-
+    
     private void IncrementActions(int value)
     {
         switch (GameManager.instance.CurrentTurn)
@@ -969,6 +1017,19 @@ public class Player : MonoBehaviour {
             Destroy(action);
         }
         action_icons_list.Clear();
+    }
+
+    public void ClearActionsList()
+    {
+        foreach (Action action in list_of_actions)
+        {
+            //remove action if attack or movement
+
+            //ability
+            //remove if duration is 0 and delay is 0
+        }
+
+        list_of_actions.Clear();
     }
 
     public void OnUndoAction()
@@ -1096,6 +1157,9 @@ public class Action
     public GameObject single_target;
     public List<GameObject> targets = new List<GameObject>();    
     public AbilityBase ability;
+
+    public int casting_delay;
+    public int duration_of_effect;
    
     //single target basic attack
     public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
@@ -1103,11 +1167,17 @@ public class Action
         selected_hero = _selected_hero;
         player = _player;
         action_type = _action;
-        initiative = selected_hero.GetComponent<Hero>().Initiative;
         single_target = _single_target;
 
         //set hero has action to true
         selected_hero.GetComponent<Hero>().SetAction(true);
+
+        initiative = selected_hero.GetComponent<Hero>().Initiative;
+        //temp fix to coin flip for same initiative
+        if (Random.Range(0, 2) == 0)
+        {
+            initiative++;
+        }
     }
 
     //multiple targets, basic attack
@@ -1116,11 +1186,17 @@ public class Action
         selected_hero = _selected_hero;
         player = _player;
         action_type = _action;
-        initiative = selected_hero.GetComponent<Hero>().Initiative;
         targets = _targets;
 
         //set hero has action to true
         selected_hero.GetComponent<Hero>().SetAction(true);
+
+        initiative = selected_hero.GetComponent<Hero>().Initiative;
+        //temp fix to coin flip for same initiative
+        if (Random.Range(0, 2) == 0)
+        {
+            initiative++;
+        }
     }
     
     //abilities
@@ -1129,11 +1205,20 @@ public class Action
         selected_hero = _selected_hero;
         player = _player;
         action_type = _action;
-        initiative = selected_hero.GetComponent<Hero>().Initiative;
         targets = _targets;
         ability = _ability;
 
+        casting_delay = _ability.delay;
+        duration_of_effect = _ability.duration;
+
         //set hero has action to true
         selected_hero.GetComponent<Hero>().SetAction(true);
+
+        initiative = selected_hero.GetComponent<Hero>().Initiative;
+        //temp fix to coin flip for same initiative
+        if (Random.Range(0, 2) == 0)
+        {
+            initiative++;
+        }
     }
 }

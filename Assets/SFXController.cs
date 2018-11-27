@@ -27,7 +27,7 @@ public class SFXController : MonoBehaviour {
             if(clip.sfx_name == sfx_name)
             {
                 clip_index = SFX_List.IndexOf(clip);
-                Debug.Log("Clip: " + clip_index);
+                //Debug.Log("Clip: " + clip_index);
                 break;
             }
         }
