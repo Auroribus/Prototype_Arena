@@ -35,6 +35,9 @@ public class Hero : MonoBehaviour {
     public GameObject ArrowRainPrefab;
     
     public GameObject FireballPrefab;
+    public GameObject IceBurstPrefab;
+
+    public GameObject WindSlashPrefab;
 
     //for storing the position of the hero in the level grids
     [System.NonSerialized] public int x_position_grid = 0;
@@ -411,17 +414,22 @@ public class Hero : MonoBehaviour {
         yield return new WaitForSeconds(1f);
 
         _target.GetComponent<Hero>().TakeDamage(damage);
-        GameManager.instance.action_ended = true;
     }
 
-    public void MeleeAbilityAttack()
+    public void MeleeAbilityAttack(GameObject _target, int damage)
     {
-
+        //windslash projectile
+        projectile = Instantiate(WindSlashPrefab, transform.position, Quaternion.identity);
+        projectile.GetComponent<Projectile>().damage = damage;
+        projectile.GetComponent<Projectile>().target = _target;
     }
 
-    public void MageAbilityAttack()
+    public IEnumerator MageAbilityAttack(GameObject _target, int damage)
     {
+        Instantiate(IceBurstPrefab, _target.transform.position, Quaternion.identity);
 
+        yield return new WaitForSeconds(1.5f);
+        _target.GetComponent<Hero>().TakeDamage(damage);
     }
 
     #endregion

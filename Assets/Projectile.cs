@@ -72,6 +72,21 @@ public class Projectile : MonoBehaviour {
                 transform.position = new Vector2(transform.position.x + (movement_speed * Time.deltaTime), transform.position.y);
 
                 break;
+
+            case ProjectileType.WindSlash:
+
+                if (rotate_towards_target)
+                    RotateTowardsTarget();
+
+                transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+
+                if (Vector2.Distance(transform.position, target.transform.position) == 0)
+                {
+                    target.GetComponent<Hero>().TakeDamage(damage);                    
+                    Destroy(gameObject);
+                }
+
+                break;
         }
 	}
 
@@ -86,12 +101,9 @@ public class Projectile : MonoBehaviour {
     {
         switch (Projectile_type)
         {
-            case ProjectileType.Arrow:
-
-                break;
             case ProjectileType.Fireball:
                 if (collision.tag == Target_tag)
-                {
+                {                    
                     collision.transform.GetComponent<Hero>().TakeDamage(damage);
                     Instantiate(FireBurst, collision.transform.position, Quaternion.identity);
                 }
