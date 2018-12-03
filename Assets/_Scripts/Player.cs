@@ -591,6 +591,7 @@ public class Player : MonoBehaviour {
     {
         //sort actions list by initiative descending
         list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+        DisplayActionList();
 
         yield return new WaitForSeconds(1f);
 
