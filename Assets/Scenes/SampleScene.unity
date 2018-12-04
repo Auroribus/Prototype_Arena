@@ -791,6 +791,11 @@ MonoBehaviour:
     - {fileID: 8300000, guid: efb47c7a7b57337408075affc4a3a243, type: 3}
     sfx_volume: 0.5
     sfx_pitch: 1
+  - sfx_name: boomerang
+    sfx_clips:
+    - {fileID: 8300000, guid: 1fc648541c8426a42a6e184fa69cdec8, type: 3}
+    sfx_volume: 0.1
+    sfx_pitch: 1
 --- !u!82 &229407500
 AudioSource:
   m_ObjectHideFlags: 0

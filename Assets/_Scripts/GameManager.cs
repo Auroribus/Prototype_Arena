@@ -52,7 +52,8 @@ public enum ProjectileType
     Arrow,
     BounceArrow,
     Fireball,
-    WindSlash
+    WindSlash,
+    ChainLightning
 }
 
 #endregion
@@ -60,7 +61,7 @@ public enum ProjectileType
 public class GameManager : MonoBehaviour {
 
     #region Variables
-
+    
     //static reference which can be accessed in all other scripts by calling GameManager.instance
     public static GameManager instance;
 

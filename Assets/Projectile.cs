@@ -8,8 +8,7 @@ public class Projectile : MonoBehaviour {
     public float rotation_correction = 180f;
     public bool rotate_towards_target = false;
 
-    public GameObject FireBurst;
-    public GameObject BounceHit;
+    public GameObject HitEffect;
 
     public ProjectileType Projectile_type;
     public string Target_tag;
@@ -25,6 +24,9 @@ public class Projectile : MonoBehaviour {
                 break;
             case ProjectileType.Fireball:
                 SFXController.instance.PlaySFXClip("fire spell");
+                break;
+            case ProjectileType.BounceArrow:
+                //SFXController.instance.PlaySFXClip("boomerang");
                 break;
         }
     }
@@ -46,7 +48,7 @@ public class Projectile : MonoBehaviour {
 
                     //projectile hit, action ends
                     GameManager.instance.action_ended = true;
-                                       
+                    Instantiate(HitEffect, transform.position, Quaternion.identity);
                     Destroy(gameObject);
                 }
 
@@ -62,7 +64,7 @@ public class Projectile : MonoBehaviour {
                     //projectile hit, action ends
                     GameManager.instance.action_ended = true;
 
-                    Instantiate(BounceHit, transform.position, Quaternion.identity);
+                    Instantiate(HitEffect, transform.position, Quaternion.identity);
                     Destroy(gameObject);
                 }
 
@@ -82,7 +84,25 @@ public class Projectile : MonoBehaviour {
 
                 if (Vector2.Distance(transform.position, target.transform.position) == 0)
                 {
-                    target.GetComponent<Hero>().TakeDamage(damage);                    
+                    target.GetComponent<Hero>().TakeDamage(damage);
+                    Instantiate(HitEffect, transform.position, Quaternion.identity);
+                    Destroy(gameObject);
+                }
+
+                break;
+
+            case ProjectileType.ChainLightning:
+
+                transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+
+                if (Vector2.Distance(transform.position, target.transform.position) == 0)
+                {
+                    target.GetComponent<Hero>().TakeDamage(damage);
+
+                    //projectile hit, action ends
+                    GameManager.instance.action_ended = true;
+
+                    Instantiate(HitEffect, transform.position, Quaternion.identity);
                     Destroy(gameObject);
                 }
 
@@ -105,7 +125,7 @@ public class Projectile : MonoBehaviour {
                 if (collision.tag == Target_tag)
                 {                    
                     collision.transform.GetComponent<Hero>().TakeDamage(damage);
-                    Instantiate(FireBurst, collision.transform.position, Quaternion.identity);
+                    Instantiate(HitEffect, collision.transform.position, Quaternion.identity);
                 }
                 break;
         }

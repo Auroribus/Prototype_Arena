@@ -149,8 +149,7 @@ MonoBehaviour:
   damage: 0
   rotation_correction: 180
   rotate_towards_target: 1
-  FireBurst: {fileID: 0}
-  BounceHit: {fileID: 1321226323740644, guid: d29564d2273b3ce4891a6248b16d74ad, type: 2}
+  HitEffect: {fileID: 1321226323740644, guid: d29564d2273b3ce4891a6248b16d74ad, type: 2}
   Projectile_type: 1
   Target_tag: 
   projectile_reached_end: 0

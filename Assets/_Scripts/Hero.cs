@@ -36,6 +36,7 @@ public class Hero : MonoBehaviour {
     
     public GameObject FireballPrefab;
     public GameObject IceBurstPrefab;
+    public GameObject ChainLightningPrefab;
 
     public GameObject WindSlashPrefab;
 
@@ -394,9 +395,61 @@ public class Hero : MonoBehaviour {
         chain_ended = true;
     }
 
-    public void MagicAttack_Chain(GameObject _target, int damage)
+    public IEnumerator MagicAttack_Chain(GameObject _target, int damage)
     {
-        
+        //reset chain ended
+        chain_ended = false;
+
+        //set targets list of enemies
+        //set start position and target object
+        List<GameObject> targets = new List<GameObject>();
+        Vector2 start_position = transform.position;
+        GameObject target_object = _target;
+
+        //instantiate prefab
+        projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
+        projectile.GetComponent<Projectile>().damage = damage;
+        projectile.GetComponent<Projectile>().target = target_object;
+
+        switch (tag)
+        {
+            case "HeroP1":
+                targets = GameManager.instance.HeroList_P2;
+                break;
+            case "HeroP2":
+                targets = GameManager.instance.HeroList_P1;
+                break;
+        }
+
+        //to hit next target in list, set start position to previous targe
+        start_position = _target.transform.position;
+
+        //hit target, arrow to next target
+        foreach (GameObject g in targets)
+        {
+            //don't hit original target again
+            if (g != _target)
+            {
+                //wait till arrow hits target
+                yield return new WaitUntil(() => GameManager.instance.action_ended == true);
+
+                GameManager.instance.action_ended = false;
+
+                //set new target object
+                target_object = g;
+
+                projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
+                projectile.GetComponent<Projectile>().damage = damage;
+                projectile.GetComponent<Projectile>().target = target_object;
+                projectile.GetComponent<Projectile>().movement_speed =  10;
+
+               //set start position from previous hit target
+               start_position = target_object.transform.position;
+            }
+        }
+
+        //set chain ended to true
+        chain_ended = true;
     }
 
     public void MeleeAttack_Chain()
