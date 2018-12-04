@@ -59,7 +59,7 @@ public class Player : MonoBehaviour {
 
             if (hit.collider != null)
             {
-                //Debug.Log(hit.collider.tag);
+                Debug.Log(hit.collider.tag);
 
                 //quick skip animation ui on clicking it
                 if(hit.collider.tag == "AnimationUI")
