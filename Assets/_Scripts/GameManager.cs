@@ -52,7 +52,8 @@ public enum ProjectileType
     Arrow,
     BounceArrow,
     Fireball,
-    WindSlash
+    WindSlash,
+    ChainLightning
 }
 
 #endregion
@@ -60,7 +61,7 @@ public enum ProjectileType
 public class GameManager : MonoBehaviour {
 
     #region Variables
-
+    
     //static reference which can be accessed in all other scripts by calling GameManager.instance
     public static GameManager instance;
 
@@ -122,6 +123,8 @@ public class GameManager : MonoBehaviour {
 
     private GameObject GridUI;
 
+    private GameObject MenuUI;
+
     private GameObject AnimationUI;
     private Animator animator_ui;
     private Text animation_phase_text;
@@ -147,6 +150,8 @@ public class GameManager : MonoBehaviour {
     void Start () {
         Player1 = GameObject.Find("Player1");
         Player2 = GameObject.Find("Player2");
+
+        MenuUI = GameObject.Find("Menu UI");
 
         Grid_P2 = GameObject.Find("GridParent P2").GetComponent<GridParent>();
         //flip grid parent 2, so that the column orientation is the same as grid p1
@@ -189,14 +194,16 @@ public class GameManager : MonoBehaviour {
         animation_phase_text = AnimationUI.transform.Find("Phase Text").GetComponent<Text>();
         animation_turn_text = AnimationUI.transform.Find("Turn Text").GetComponent<Text>();
 
+        
         GridUI.SetActive(false);
         EndUI.SetActive(false);
         PlanUI.SetActive(false);
         DraftUI.SetActive(false);
         ResolveUI.SetActive(false);
+        AnimationUI.SetActive(false);
 
         //set first state
-        SetCurrentGameState(GameState.Game);
+        SetCurrentGameState(GameState.Menu);
     }
 	
 	// Update is called once per frame
@@ -525,9 +532,7 @@ public class GameManager : MonoBehaviour {
 
     public void SetPlayerTurn(PlayerTurn active_turn)
     {
-        CurrentTurn = active_turn;
-
-        switch(CurrentTurn)
+        switch(active_turn)
         {
             case PlayerTurn.Player1:
                 player_turn_text.text = "Player 1";
@@ -560,17 +565,19 @@ public class GameManager : MonoBehaviour {
 
                 break;
         }
+        
+        CurrentTurn = active_turn;
     }
 
     public void SetCurrentGameState(GameState active_state)
-    {
-        CurrentState = active_state;
-
-        switch (CurrentState)
+    {        
+        //do stuff with new state
+        switch (active_state)
         {
             case GameState.Menu:
                 break;
             case GameState.Game:
+                MenuUI.SetActive(false);
                 EndUI.SetActive(false);
                 SetCurrentPhase(Phase.DraftPhase);
                 break;
@@ -580,6 +587,8 @@ public class GameManager : MonoBehaviour {
                 SetEndScreen();
                 break;
         }
+
+        CurrentState = active_state;
     }
 
     public void SetCurrentPhase(Phase active_phase)
@@ -587,9 +596,6 @@ public class GameManager : MonoBehaviour {
         switch(active_phase)
         {
             case Phase.IdlePhase:
-                //increase turn count
-
-                //set to planning phase
                 break;
 
             case Phase.DraftPhase:
@@ -802,6 +808,11 @@ public class GameManager : MonoBehaviour {
     public void OnRestart()
     {
         ResetGame();
+    }
+
+    public void OnStart()
+    {
+        SetCurrentGameState(GameState.Game);
     }
 }
 

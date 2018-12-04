@@ -9,6 +9,8 @@ public class Player : MonoBehaviour {
 
     public static Player instance;
 
+    private Vector2 touchOrigin = -Vector2.one;
+
     public int PlayerNumber = 1;
 
     [System.NonSerialized] public GameObject SelectedHero;
@@ -57,7 +59,7 @@ public class Player : MonoBehaviour {
 
             if (hit.collider != null)
             {
-                //Debug.Log(hit.collider.tag);
+                Debug.Log(hit.collider.tag);
 
                 //quick skip animation ui on clicking it
                 if(hit.collider.tag == "AnimationUI")
@@ -86,10 +88,46 @@ public class Player : MonoBehaviour {
                 }
             }
         }
-               
-        if (Input.GetKeyDown(KeyCode.D))
+        else if (Input.touchCount > 0)
         {
-            DeselectHero();
+            Touch myTouch = Input.touches[0];
+
+            if(myTouch.phase == TouchPhase.Began)
+            {
+                touchOrigin = myTouch.position;
+
+                RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(touchOrigin), Vector2.zero);
+
+                if (hit.collider != null)
+                {
+                    //quick skip animation ui on clicking it
+                    if (hit.collider.tag == "AnimationUI")
+                    {
+                        hit.transform.GetComponent<Animator>().SetTrigger("DisableFade");
+                        hit.transform.gameObject.SetActive(false);
+                        return;
+                    }
+
+                    switch (GameManager.instance.CurrentPhase)
+                    {
+                        case Phase.DraftPhase:
+                            DraftPhase(hit);
+                            break;
+                        case Phase.PlanPhase:
+                            SetPlayerTurnActionPhase();
+                            PlanPhase(hit);
+                            break;
+                    }
+                }
+                else
+                {
+                    if (SelectedHero != null)
+                    {
+                        DeselectHero();
+                    }
+                }
+            }
+            
         }
     }
     
@@ -840,7 +878,7 @@ public class Player : MonoBehaviour {
                                             if (action.ability.Ability_aoe == AbilityAOE.chain)
                                             {
                                                 //magic chain ability
-                                                StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                StartCoroutine(_hero.MagicAttack_Chain(target, action.ability.strength));
                                                 yield return new WaitForSeconds(.2f);
                                             }
                                             else

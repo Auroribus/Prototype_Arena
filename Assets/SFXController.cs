@@ -32,6 +32,8 @@ public class SFXController : MonoBehaviour {
             }
         }
 
+        
+
         //set volume and pitch
         audio_source.volume = SFX_List[clip_index].sfx_volume;
         audio_source.pitch = SFX_List[clip_index].sfx_pitch;

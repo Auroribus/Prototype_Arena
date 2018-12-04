@@ -86,7 +86,10 @@ MonoBehaviour:
   damage: 0
   rotation_correction: 180
   rotate_towards_target: 1
-  FireBurst: {fileID: 0}
+  HitEffect: {fileID: 1939838589753436, guid: 54fabd609fa4434409401cb6d50ca8f2, type: 2}
+  Projectile_type: 0
+  Target_tag: 
+  projectile_reached_end: 0
 --- !u!212 &212333477968971312
 SpriteRenderer:
   m_ObjectHideFlags: 1
