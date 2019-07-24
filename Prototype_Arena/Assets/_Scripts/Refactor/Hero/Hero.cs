@@ -143,7 +143,7 @@ namespace _Scripts.Refactor.Hero
             //set movement rings on tiles in same row
             for (int i = 0; i < 3; i++)
             {
-                GameManager.instance.Grid_P1.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
+                GameManager.Instance.Grid_P1.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
             }
 
             //display hero info
@@ -160,7 +160,7 @@ namespace _Scripts.Refactor.Hero
             //"Duration: " + ability.duration + "\n" +
             //"Delay: " + ability.delay;
 
-            GameManager.instance.SetHeroInfo(main_class, Healthpoints, Damage, Initiative, ability_text);
+            GameManager.Instance.SetHeroInfo(main_class, Healthpoints, Damage, Initiative, ability_text);
         }
 
         public void SetTargeted(bool is_targeted)
@@ -217,7 +217,7 @@ namespace _Scripts.Refactor.Hero
                     //disable move bool
                     move_hero = false;
                     //set action ended, so next animation can play
-                    GameManager.instance.action_ended = true;
+                    GameManager.Instance.action_ended = true;
                 }
             }
             else if(attack_move_hero)
@@ -282,11 +282,11 @@ namespace _Scripts.Refactor.Hero
                 switch (gameObject.tag)
                 {
                     case "HeroP1":
-                        GameManager.instance.Grid_P1.Grid[x_position_grid, y_position_grid]
+                        GameManager.Instance.Grid_P1.Grid[x_position_grid, y_position_grid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                     case "HeroP2":
-                        GameManager.instance.Grid_P2.Grid[x_position_grid, y_position_grid]
+                        GameManager.Instance.Grid_P2.Grid[x_position_grid, y_position_grid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                 }
@@ -366,10 +366,10 @@ namespace _Scripts.Refactor.Hero
             switch(tag)
             {
                 case "HeroP1":
-                    targets = GameManager.instance.HeroList_P2;
+                    targets = GameManager.Instance.HeroList_P2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.instance.HeroList_P1;
+                    targets = GameManager.Instance.HeroList_P1;
                     break;
             }
 
@@ -383,9 +383,9 @@ namespace _Scripts.Refactor.Hero
                 if(g != _target)
                 { 
                     //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.instance.action_ended == true);
+                    yield return new WaitUntil(() => GameManager.Instance.action_ended == true);
 
-                    GameManager.instance.action_ended = false;
+                    GameManager.Instance.action_ended = false;
 
                     //set new target object
                     target_object = g;
@@ -422,10 +422,10 @@ namespace _Scripts.Refactor.Hero
             switch (tag)
             {
                 case "HeroP1":
-                    targets = GameManager.instance.HeroList_P2;
+                    targets = GameManager.Instance.HeroList_P2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.instance.HeroList_P1;
+                    targets = GameManager.Instance.HeroList_P1;
                     break;
             }
 
@@ -439,9 +439,9 @@ namespace _Scripts.Refactor.Hero
                 if (g != _target)
                 {
                     //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.instance.action_ended == true);
+                    yield return new WaitUntil(() => GameManager.Instance.action_ended == true);
 
-                    GameManager.instance.action_ended = false;
+                    GameManager.Instance.action_ended = false;
 
                     //set new target object
                     target_object = g;

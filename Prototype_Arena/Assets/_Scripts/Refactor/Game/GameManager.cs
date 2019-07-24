@@ -1,10 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero;
 using _Scripts.Refactor.PlayerScripts;
+using _Scripts.Refactor.UI;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace _Scripts.Refactor.Game
 {
@@ -12,11 +16,14 @@ namespace _Scripts.Refactor.Game
     {
         [SerializeField] private HeroInfoPanel _heroInfoPanelPrefab;
         private HeroInfoPanel _heroInfoPanel;
+
+        [SerializeField] private FadingBannerView _fadingBannerPrefab;
+        private FadingBannerView _fadingBannerView;
         
         #region Variables
     
         //static reference which can be accessed in all other scripts by calling GameManager.instance
-        public static GameManager instance;
+        public static GameManager Instance;
 
         //References to enums
         public GameState CurrentState = GameState.Game;
@@ -24,11 +31,11 @@ namespace _Scripts.Refactor.Game
         public PlayerTurn CurrentTurn = PlayerTurn.Player1;
 
         //Reference to each player
-        [System.NonSerialized] public GameObject Player1, Player2;
+        [NonSerialized] public GameObject Player1, Player2;
 
         //Reference to the grid parents for each player
-        [System.NonSerialized] public GridParent Grid_P1;
-        [System.NonSerialized] public GridParent Grid_P2;
+        [NonSerialized] public GridParent Grid_P1;
+        [NonSerialized] public GridParent Grid_P2;
 
         //max units that each player can have
         public int max_amount_units = 5;
@@ -37,11 +44,11 @@ namespace _Scripts.Refactor.Game
         public GameObject HeroPrefab;
 
         //Lists of all the hero units per player that are on the board
-        [System.NonSerialized] public List<GameObject> HeroList_P1 = new List<GameObject>();
-        [System.NonSerialized] public List<GameObject> HeroList_P2 = new List<GameObject>();
+        [NonSerialized] public List<GameObject> HeroList_P1 = new List<GameObject>();
+        [NonSerialized] public List<GameObject> HeroList_P2 = new List<GameObject>();
 
-        [System.NonSerialized] public List<GameObject> HeroPool_P1 = new List<GameObject>();
-        [System.NonSerialized] public List<GameObject> HeroPool_P2 = new List<GameObject>();
+        [NonSerialized] public List<GameObject> HeroPool_P1 = new List<GameObject>();
+        [NonSerialized] public List<GameObject> HeroPool_P2 = new List<GameObject>();
 
         //temp spawn point for randomly spawning heros
         private Vector2 hero_spawnpoint;
@@ -53,16 +60,16 @@ namespace _Scripts.Refactor.Game
 
         public List<HeroBase> Heroes = new List<HeroBase>();
     
-        public int Current_turn_number = 0;
+        public int Current_turn_number;
 
         private Transform DraftP1;
         private Transform DraftP2;
 
         private GameObject DraftUI;
-        [System.NonSerialized] public Text P1_drafted, P2_drafted;
+        [NonSerialized] public Text P1_drafted, P2_drafted;
         
         private GameObject PlanUI;
-        [System.NonSerialized] public Text P1_actions, P2_actions;
+        [NonSerialized] public Text P1_actions, P2_actions;
 
         private GameObject ResolveUI;
 
@@ -72,29 +79,30 @@ namespace _Scripts.Refactor.Game
 
         private GameObject MenuUI;
 
-        private GameObject AnimationUI;
-        private Animator animator_ui;
-        private Text animation_phase_text;
-        private Text animation_turn_text;
-
         //bool to keep track if an action has ended so that resolving can continue
         public bool action_ended = true;
 
         //player colors
-        public Color Player1_color;
-        public Color Player2_color;
+        [FormerlySerializedAs("Player1_color")] 
+        public Color ColorPlayer1;
+        [FormerlySerializedAs("Player2_color")] 
+        public Color ColorPlayer2;
 
         #endregion
 
         private void Awake()
         {
             //check if no instance already exists of game manager
-            if (instance == null)
-                instance = this;
+            if (Instance == null)
+                Instance = this;
         }
 
         // Use this for initialization
         void Start () {
+            
+            _heroInfoPanel = Instantiate(_heroInfoPanelPrefab);
+            _fadingBannerView = Instantiate(_fadingBannerPrefab);
+            
             Player1 = GameObject.Find("Player1");
             Player2 = GameObject.Find("Player2");
 
@@ -117,8 +125,6 @@ namespace _Scripts.Refactor.Game
             P1_drafted = DraftUI.transform.Find("P1 drafted").GetComponent<Text>();
             P2_drafted = DraftUI.transform.Find("P2 drafted").GetComponent<Text>();
         
-            _heroInfoPanel = Instantiate(_heroInfoPanelPrefab);
-
             PlanUI = GameObject.Find("Plan UI");
             P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
             P2_actions = PlanUI.transform.Find("P2_actions").GetComponent<Text>();
@@ -131,18 +137,11 @@ namespace _Scripts.Refactor.Game
 
             GridUI = GameObject.Find("Grid UI");
 
-            AnimationUI = GameObject.Find("Animation UI");
-            animator_ui = AnimationUI.GetComponent<Animator>();
-            animation_phase_text = AnimationUI.transform.Find("Phase Text").GetComponent<Text>();
-            animation_turn_text = AnimationUI.transform.Find("Turn Text").GetComponent<Text>();
-
-        
             GridUI.SetActive(false);
             EndUI.SetActive(false);
             PlanUI.SetActive(false);
             DraftUI.SetActive(false);
             ResolveUI.SetActive(false);
-            AnimationUI.SetActive(false);
 
             //set first state
             SetCurrentGameState(GameState.Menu);
@@ -180,63 +179,21 @@ namespace _Scripts.Refactor.Game
             }
         }
 
-        public void SetAnimationUI(bool fade_in, Phase current_phase, PlayerTurn player)
-        {
-            if(fade_in)
-            {
-                AnimationUI.SetActive(true);
-            
-                switch(current_phase)
-                {
-                    case Phase.DraftPhase:
-                        animation_phase_text.text = "Draft Phase";
-                        break;
-                    case Phase.PlanPhase:
-                        animation_phase_text.text = "Planning Phase";
-                        break;
-                    case Phase.ResolvePhase:
-                        animation_phase_text.text = "Resolve Phase";
-                        break;
-                }
-
-                if(current_phase != Phase.DraftPhase && current_phase != Phase.ResolvePhase)
-                {
-                    switch (player)
-                    {
-                        case PlayerTurn.Player1:
-                            animation_turn_text.text = "Player 1";
-                            animation_turn_text.color = Player1_color;
-                            break;
-                        case PlayerTurn.Player2:
-                            animation_turn_text.text = "Player 2";
-                            animation_turn_text.color = Player2_color;
-                            break;
-                    }
-                }
-                else
-                {
-                    animation_turn_text.text = "";
-                }
-            
-
-                animator_ui.SetTrigger("FadeIn");
-            }
-        }
     
         //Function for handling the players drafting heroes
         private void DraftHeroUnits()
         {
             //spawn 10 random heroes for player 1
-            for (int j = 0; j < 5; j++)
+            for (var j = 0; j < 5; j++)
             {
-                for (int i = 0; i < 2; i++)
+                for (var i = 0; i < 2; i++)
                 {
                     hero_spawnpoint.x = i * 1.2f + DraftP1.transform.position.x;
                     hero_spawnpoint.y = j * 1.2f + DraftP1.transform.position.y;
 
                     int random = Random.Range(0, Heroes.Count);
                     HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP1));
-                    global::_Scripts.Refactor.Hero.Hero hero = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    Hero.Hero hero = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<Hero.Hero>();
 
                     //assisgn hero specifics based on the hero base presets
                     hero.Healthpoints = Heroes[random].HealthPoints;
@@ -245,22 +202,22 @@ namespace _Scripts.Refactor.Game
                     hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
                     hero.main_class = Heroes[random].Main_class;
 
-                    HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player1_color;
+                    HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer1;
                     HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
                 }
             }
 
             //spawn 10 random heroes for player 2
-            for (int j = 0; j < 5; j++)
+            for (var j = 0; j < 5; j++)
             {
-                for (int i = 0; i < 2; i++)
+                for (var i = 0; i < 2; i++)
                 {
                     hero_spawnpoint.x = i * 1.2f + DraftP2.transform.position.x;
                     hero_spawnpoint.y = j * 1.2f + DraftP2.transform.position.y;
 
-                    int random = Random.Range(0, Heroes.Count);
+                    var random = Random.Range(0, Heroes.Count);
                     HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP2));
-                    global::_Scripts.Refactor.Hero.Hero hero = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    var hero = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<Hero.Hero>();
 
                     //assisgn hero specifics based on the hero base presets
                     hero.Healthpoints = Heroes[random].HealthPoints;
@@ -269,7 +226,7 @@ namespace _Scripts.Refactor.Game
                     hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
                     hero.main_class = Heroes[random].Main_class;
 
-                    HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = Player2_color;
+                    HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer2;
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
                     HeroPool_P2[HeroPool_P2.Count - 1].tag = "HeroP2";
                 }
@@ -278,7 +235,7 @@ namespace _Scripts.Refactor.Game
 
         public void SetHeroInfo(MainClass mainClass, int healthPoints, int damage, int initiative, string abilityName)
         {
-            string heroName = "";
+            var heroName = "";
 
             switch(mainClass)
             {
@@ -302,12 +259,12 @@ namespace _Scripts.Refactor.Game
 
         private void PlaceDraftedUnits()
         {
-            int column = 0;
+            var column = 0;
 
             //instantiate heroes in the hero list in the grid system
-            for (int i = 0; i < HeroList_P1.Count; i++)
+            for (var i = 0; i < HeroList_P1.Count; i++)
             {
-                global::_Scripts.Refactor.Hero.Hero _hero = HeroList_P1[i].GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                Hero.Hero _hero = HeroList_P1[i].GetComponent<Hero.Hero>();
 
                 //check the class and select the column
                 switch (_hero.main_class)
@@ -328,7 +285,7 @@ namespace _Scripts.Refactor.Game
                 while (_hero.isDrafted)
                 {
                     //select random y
-                    int random_y = Random.Range(0, 3);
+                    var random_y = Random.Range(0, 3);
 
                     GridTile _tile = Grid_P1.Grid[column, random_y].GetComponent<GridTile>();
 
@@ -359,9 +316,9 @@ namespace _Scripts.Refactor.Game
                 }            
             }
 
-            for (int i = 0; i < HeroList_P2.Count; i++)
+            for (var i = 0; i < HeroList_P2.Count; i++)
             {
-                global::_Scripts.Refactor.Hero.Hero _hero = HeroList_P2[i].GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                Hero.Hero _hero = HeroList_P2[i].GetComponent<Hero.Hero>();
 
                 //check the class and select the column
                 switch (_hero.main_class)
@@ -382,14 +339,14 @@ namespace _Scripts.Refactor.Game
                 while (_hero.isDrafted)
                 {
                     //select random y
-                    int random_y = Random.Range(0, 3);
+                    var random_y = Random.Range(0, 3);
 
-                    GridTile _tile = Grid_P2.Grid[column, random_y].GetComponent<GridTile>();
+                    var _tile = Grid_P2.Grid[column, random_y].GetComponent<GridTile>();
 
                     if (!_tile.isOccupied)
                     {
-                        int tile_x = _tile.pos_grid_x;
-                        int tile_y = _tile.pos_grid_y;
+                        var tile_x = _tile.pos_grid_x;
+                        var tile_y = _tile.pos_grid_y;
 
                         //remove unit from pool list                                                                      
                         HeroPool_P2.Remove(HeroList_P2[i]);
@@ -414,11 +371,11 @@ namespace _Scripts.Refactor.Game
             }
 
             //destroy pool lists
-            foreach(GameObject g in HeroPool_P1)
+            foreach(var g in HeroPool_P1)
             {
                 Destroy(g);
             }
-            foreach (GameObject g in HeroPool_P2)
+            foreach (var g in HeroPool_P2)
             {
                 Destroy(g);
             }
@@ -430,32 +387,32 @@ namespace _Scripts.Refactor.Game
         private void ResetGame()
         {
             //destroy all heros
-            foreach (GameObject g in HeroList_P1)
+            foreach (var g in HeroList_P1)
             {
                 Destroy(g);
             }
-            foreach (GameObject g in HeroList_P2)
+            foreach (var g in HeroList_P2)
             {
                 Destroy(g);
             }
 
             //destroy all heroes in pools
-            foreach(GameObject g in HeroPool_P1)
+            foreach(var g in HeroPool_P1)
             {
                 Destroy(g);
             }
-            foreach(GameObject g in HeroPool_P2)
+            foreach(var g in HeroPool_P2)
             {
                 Destroy(g);
             }
 
             //Reset bools in grid tiles
-            foreach (GameObject g in Grid_P1.Grid)
+            foreach (var g in Grid_P1.Grid)
             {
                 g.GetComponent<GridTile>().isOccupied = false;
                 g.GetComponent<GridTile>().SetMovementRing(false);
             }
-            foreach (GameObject g in Grid_P2.Grid)
+            foreach (var g in Grid_P2.Grid)
             {
                 g.GetComponent<GridTile>().isOccupied = false;
                 g.GetComponent<GridTile>().SetMovementRing(false);
@@ -465,25 +422,25 @@ namespace _Scripts.Refactor.Game
             HeroList_P1.Clear();
             HeroList_P2.Clear();
             
-            PlayerScripts.Player.Instance.ClearActionIcons();
-            PlayerScripts.Player.Instance.ClearActionsList();
+            Player.Instance.ClearActionIcons();
+            Player.Instance.ClearActionsList();
                 
             //reset enums
             SetCurrentGameState(GameState.Game);
             SetPlayerTurn(PlayerTurn.Player1);
         }
 
-        public void SetPlayerTurn(PlayerTurn active_turn)
+        public void SetPlayerTurn(PlayerTurn playerTurn)
         {
-            switch(active_turn)
+            switch(playerTurn)
             {
                 case PlayerTurn.Player1:
                     player_turn_text.text = "Player 1";
-                    player_turn_text.color = Player1_color;
+                    player_turn_text.color = ColorPlayer1;
                     break;
                 case PlayerTurn.Player2:
                     player_turn_text.text = "Player 2";
-                    player_turn_text.color = Player2_color;
+                    player_turn_text.color = ColorPlayer2;
                                 
                     switch (CurrentPhase)
                     {
@@ -491,7 +448,7 @@ namespace _Scripts.Refactor.Game
 
                             foreach (GameObject g in HeroList_P1)
                             {
-                                global::_Scripts.Refactor.Hero.Hero _hero = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                Hero.Hero _hero = g.GetComponent<Hero.Hero>();
 
                                 _hero.SetUI(false);
                                 _hero.SetAction(false);
@@ -502,14 +459,13 @@ namespace _Scripts.Refactor.Game
                             break;
                     }
                 
-
                     //fade animation ui
-                    SetAnimationUI(true, CurrentPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, CurrentPhase, CurrentTurn);
 
                     break;
             }
         
-            CurrentTurn = active_turn;
+            CurrentTurn = playerTurn;
         }
 
         public void SetCurrentGameState(GameState active_state)
@@ -544,7 +500,7 @@ namespace _Scripts.Refactor.Game
                 case Phase.DraftPhase:
 
                     //fade in/out animation ui
-                    SetAnimationUI(true, Phase.DraftPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.DraftPhase, CurrentTurn);
 
                     //set turn to 1
                     Current_turn_number = 1;
@@ -566,13 +522,13 @@ namespace _Scripts.Refactor.Game
 
                 case Phase.PlanPhase:
 
-                    PlayerScripts.Player.Instance.ClearActionIcons();
+                    Player.Instance.ClearActionIcons();
 
                     //check if turn is player 1s turn
                     SetPlayerTurn(PlayerTurn.Player1);
 
                     //fade in/out animation ui
-                    SetAnimationUI(true, Phase.PlanPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.PlanPhase, CurrentTurn);
                 
                     CleanLists();
 
@@ -589,17 +545,17 @@ namespace _Scripts.Refactor.Game
                     P1_actions.text = "Actions: 0/3";
                     P2_actions.text = "";
 
-                    PlayerScripts.Player.Instance.p1_actions = 0;
-                    PlayerScripts.Player.Instance.p2_actions = 0;
+                    Player.Instance.p1_actions = 0;
+                    Player.Instance.p2_actions = 0;
 
                     foreach(GameObject hero in HeroList_P1)
                     {
-                        global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                        Hero.Hero _hero = hero.GetComponent<Hero.Hero>();
                         _hero.SetUI(true);
                     }
                     foreach (GameObject hero in HeroList_P2)
                     {
-                        global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                        Hero.Hero _hero = hero.GetComponent<Hero.Hero>();
                         _hero.SetUI(true);
                     }
 
@@ -617,7 +573,7 @@ namespace _Scripts.Refactor.Game
                     player_turn_text.text = "";
 
                     //fade in/out animation ui
-                    SetAnimationUI(true, Phase.ResolvePhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.ResolvePhase, CurrentTurn);
 
                     //disable plan ui
                     PlanUI.SetActive(false);
@@ -631,7 +587,7 @@ namespace _Scripts.Refactor.Game
                     //hide stats on heroes and green check                
                     foreach(GameObject g in HeroList_P2)
                     {
-                        global::_Scripts.Refactor.Hero.Hero _hero = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                        Hero.Hero _hero = g.GetComponent<Hero.Hero>();
 
                         _hero.SetUI(false);
                         _hero.SetAction(false);
@@ -650,7 +606,7 @@ namespace _Scripts.Refactor.Game
         {
             foreach(GameObject hero in HeroList_P1)
             {
-                if(hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Healthpoints <= 0)
+                if(hero.GetComponent<Hero.Hero>().Healthpoints <= 0)
                 {
                     Destroy(hero);
                 }
@@ -658,7 +614,7 @@ namespace _Scripts.Refactor.Game
 
             foreach(GameObject hero in HeroList_P2)
             {
-                if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Healthpoints <= 0)
+                if (hero.GetComponent<Hero.Hero>().Healthpoints <= 0)
                 {
                     Destroy(hero);
                 }
@@ -697,12 +653,12 @@ namespace _Scripts.Refactor.Game
             if(HeroList_P2.Count == 0)
             {
                 Winner_playername_text.text = "Player 1";
-                Winner_playername_text.color = Player1_color;
+                Winner_playername_text.color = ColorPlayer1;
             }
             else if(HeroList_P1.Count == 0)
             {
                 Winner_playername_text.text = "Player 2";
-                Winner_playername_text.color = Player2_color;
+                Winner_playername_text.color = ColorPlayer2;
             }
         }
 
@@ -759,7 +715,7 @@ namespace _Scripts.Refactor.Game
         }
     }
 
-    [System.Serializable]
+    [Serializable]
     public class HeroBase
     {
         public string Hero_name;

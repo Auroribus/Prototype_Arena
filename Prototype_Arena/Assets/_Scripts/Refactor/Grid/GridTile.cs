@@ -35,7 +35,7 @@ namespace _Scripts.Refactor.Grid
         //public function to set the rings attached to the tile
         public void SetMovementRing(bool is_active)
         {
-            if (player == GameManager.instance.CurrentTurn)
+            if (player == GameManager.Instance.CurrentTurn)
             {
                 movement_ring.gameObject.SetActive(is_active);
                 can_move_here = is_active;

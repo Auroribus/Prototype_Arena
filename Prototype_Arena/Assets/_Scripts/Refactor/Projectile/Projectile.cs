@@ -51,7 +51,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.instance.action_ended = true;
+                        GameManager.Instance.action_ended = true;
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
                     }
@@ -66,7 +66,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.instance.action_ended = true;
+                        GameManager.Instance.action_ended = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
@@ -104,7 +104,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.instance.action_ended = true;
+                        GameManager.Instance.action_ended = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
