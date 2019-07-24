@@ -7,14 +7,33 @@ namespace _Scripts.Refactor.Hero
     {
         [SerializeField] private Text _heroNameText;
         [SerializeField] private Text _healthPointsText;
-        [SerializeField] private Text _damageText;
+        [SerializeField] private Text _attackDamageText;
         [SerializeField] private Text _initiativeText;
         [SerializeField] private Text _abilityNameText;
 
-//        hero_name = hero_info_panel.Find("Hero_name").GetComponent<Text>();
-//        hero_hp = hero_info_panel.Find("HP_value").GetComponent<Text>();
-//        hero_dmg = hero_info_panel.Find("DMG_value").GetComponent<Text>();
-//        hero_init = hero_info_panel.Find("INIT_value").GetComponent<Text>();
-//        hero_abil = hero_info_panel.Find("ABIL_name").GetComponent<Text>();
+        public void SetHeroName(string name)
+        {
+            _heroNameText.text = name;
+        }
+
+        public void SetHealthPoints(int healthPoints)
+        {
+            _healthPointsText.text = healthPoints.ToString();
+        }
+
+        public void SetAttackDamage(int attackDamage)
+        {
+            _attackDamageText.text = attackDamage.ToString();
+        }
+
+        public void SetInitiative(int initiative)
+        {
+            _initiativeText.text = initiative.ToString();
+        }
+
+        public void SetAbilityName(string abilityName)
+        {
+            _abilityNameText.text = abilityName;
+        }
     }
 }

@@ -8,8 +8,11 @@ using UnityEngine.UI;
 
 namespace _Scripts.Refactor.Game
 {
-    public class GameManager : MonoBehaviour {
-
+    public class GameManager : MonoBehaviour
+    {
+        [SerializeField] private HeroInfoPanel _heroInfoPanelPrefab;
+        private HeroInfoPanel _heroInfoPanel;
+        
         #region Variables
     
         //static reference which can be accessed in all other scripts by calling GameManager.instance
@@ -57,13 +60,7 @@ namespace _Scripts.Refactor.Game
 
         private GameObject DraftUI;
         [System.NonSerialized] public Text P1_drafted, P2_drafted;
-        private Transform hero_info_panel;
-        private Text hero_name;
-        private Text hero_hp;
-        private Text hero_dmg;
-        private Text hero_init;
-        private Text hero_abil;
-
+        
         private GameObject PlanUI;
         [System.NonSerialized] public Text P1_actions, P2_actions;
 
@@ -120,13 +117,7 @@ namespace _Scripts.Refactor.Game
             P1_drafted = DraftUI.transform.Find("P1 drafted").GetComponent<Text>();
             P2_drafted = DraftUI.transform.Find("P2 drafted").GetComponent<Text>();
         
-            hero_info_panel = GameObject.Find("Hero Info Panel").transform;
-
-            hero_name = hero_info_panel.Find("Hero_name").GetComponent<Text>();
-            hero_hp = hero_info_panel.Find("HP_value").GetComponent<Text>();
-            hero_dmg = hero_info_panel.Find("DMG_value").GetComponent<Text>();
-            hero_init = hero_info_panel.Find("INIT_value").GetComponent<Text>();
-            hero_abil = hero_info_panel.Find("ABIL_name").GetComponent<Text>();
+            _heroInfoPanel = Instantiate(_heroInfoPanelPrefab);
 
             PlanUI = GameObject.Find("Plan UI");
             P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
@@ -285,28 +276,28 @@ namespace _Scripts.Refactor.Game
             }
         }
 
-        public void SetHeroInfo(MainClass main_class, int hp, int damage, int init, string ability_name)
+        public void SetHeroInfo(MainClass mainClass, int healthPoints, int damage, int initiative, string abilityName)
         {
-            string _hero_name = "";
+            string heroName = "";
 
-            switch(main_class)
+            switch(mainClass)
             {
                 case MainClass.Scout:
-                    _hero_name = "Scout";
+                    heroName = "Scout";
                     break;
                 case MainClass.Warrior:
-                    _hero_name = "Warrior";
+                    heroName = "Warrior";
                     break;
                 case MainClass.Mage:
-                    _hero_name = "Mage";
+                    heroName = "Mage";
                     break;
             }
 
-            hero_name.text = _hero_name;
-            hero_hp.text = hp.ToString();
-            hero_dmg.text = damage.ToString();
-            hero_init.text = init.ToString();
-            hero_abil.text = ability_name;
+            _heroInfoPanel.SetHeroName(heroName);
+            _heroInfoPanel.SetHealthPoints(healthPoints);
+            _heroInfoPanel.SetAttackDamage(damage);
+            _heroInfoPanel.SetInitiative(initiative);
+            _heroInfoPanel.SetAbilityName(abilityName);
         }
 
         private void PlaceDraftedUnits()
