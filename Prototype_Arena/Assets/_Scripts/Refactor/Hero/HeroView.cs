@@ -411,10 +411,6 @@ namespace _Scripts.Refactor.Hero
             HasChainEnded = true;
         }
 
-        public void MeleeAttack_Chain()
-        {
-
-        }
         #endregion
 
         //other aoe ability attacks
