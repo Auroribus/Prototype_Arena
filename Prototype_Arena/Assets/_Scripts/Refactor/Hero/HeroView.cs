@@ -10,15 +10,12 @@ using UnityEngine;
 
 namespace _Scripts.Refactor.Hero
 {
-    public class Hero : MonoBehaviour {
+    public class HeroView : MonoBehaviour {
 
+        public HeroStatsController HeroStatsController { get; private set; }
+        public HeroStatsModel HeroStatsModel { get; private set; }
+        
         #region variables
-
-        //hero stats, values set in the inspector
-        public int Healthpoints = 1;
-        public int Damage = 1;
-        public int Defense = 1;
-        public int Initiative = 1;
 
         public MainClass main_class = MainClass.Scout;
 
@@ -26,12 +23,11 @@ namespace _Scripts.Refactor.Hero
         private Transform targeting_ring;
         private Transform IsDrafted;
 
-        public bool isDrafted = false;
-
-        public bool hasAction = false;
+        public bool isDrafted;
+        public bool hasAction;
 
         //used for when the hero can be targeted by an enemy hero
-        public bool isTargeted = false;
+        public bool isTargeted;
 
         public GameObject BloodSplashPrefab;
         public GameObject BloodParticles;
@@ -53,11 +49,11 @@ namespace _Scripts.Refactor.Hero
         [System.NonSerialized] public int y_position_grid = 0;
 
         //bool for moving the hero from tile to tile
-        [System.NonSerialized] public bool move_hero = false;
+        [System.NonSerialized] public bool move_hero;
         //end position for the movement of the hero
         [System.NonSerialized] public Vector2 target_position;
 
-        [System.NonSerialized] public bool attack_move_hero = false;
+        [System.NonSerialized] public bool attack_move_hero;
         [System.NonSerialized] public Vector2 original_position;
 
         //speed the characters move at from tile to tile
@@ -77,13 +73,11 @@ namespace _Scripts.Refactor.Hero
         private int current_damage;
 
         public AbilityBase HeroAbility;
-        public bool isUsingAbility = false;
+        public bool isUsingAbility;
 
         private SpriteRenderer sprite_renderer;
 
         private Transform AbilityUI;
-
-        private CameraShake cam_shake;
 
         private BoxCollider2D draft_collider;
         private CircleCollider2D main_collider;
@@ -93,11 +87,18 @@ namespace _Scripts.Refactor.Hero
         private float current_y;
         private float old_y;
 
-        public bool chain_ended = false;
+        public bool chain_ended;
         #endregion
 
         private void Awake()
         {
+            HeroStatsModel = new HeroStatsModel();
+            HeroStatsController = new HeroStatsController(
+                this,
+                HeroStatsModel,
+                BloodSplashPrefab,
+                DamageTextPrefab);
+            
             selection_ring = transform.Find("SelectionRing");
             selection_ring.gameObject.SetActive(false);
 
@@ -117,8 +118,7 @@ namespace _Scripts.Refactor.Hero
             AbilityUI = transform.Find("Ability");
             SetUI(false);
 
-            sprite_renderer = GetComponentInChildren<SpriteRenderer>();        
-            cam_shake = Camera.main.transform.GetComponent<CameraShake>();
+            sprite_renderer = GetComponentInChildren<SpriteRenderer>();    
 
             draft_collider = GetComponent<BoxCollider2D>();
             main_collider = GetComponent<CircleCollider2D>();
@@ -152,15 +152,18 @@ namespace _Scripts.Refactor.Hero
 
         private void SetHeroInfo()
         {
-            string ability_text =
+            var ability_text =
                 "Effect: " + HeroAbility.Ability_effect + "\n" +
                 "Target: " + HeroAbility.Ability_target + "\n" +
                 "AoE: " + HeroAbility.Ability_aoe + "\n" +
-                "Strength: " + HeroAbility.strength; //+ "\n" +
-            //"Duration: " + ability.duration + "\n" +
-            //"Delay: " + ability.delay;
+                "Strength: " + HeroAbility.strength; 
 
-            GameManager.Instance.SetHeroInfo(main_class, Healthpoints, Damage, Initiative, ability_text);
+            GameManager.Instance.SetHeroInfo(
+                main_class, 
+                HeroStatsModel.HealthPoints, 
+                HeroStatsModel.AttackDamage, 
+                HeroStatsModel.Initiative, 
+                ability_text);
         }
 
         public void SetTargeted(bool is_targeted)
@@ -202,9 +205,9 @@ namespace _Scripts.Refactor.Hero
         {
             SetRenderOrder();
 
-            health_text.text = Healthpoints.ToString();
-            damage_text.text = Damage.ToString();
-            initiative_text.text = Initiative.ToString();
+            health_text.text = HeroStatsModel.HealthPoints.ToString();
+            damage_text.text = HeroStatsModel.AttackDamage.ToString();
+            initiative_text.text = HeroStatsModel.Initiative.ToString();
 
             if (move_hero)
             {
@@ -235,7 +238,7 @@ namespace _Scripts.Refactor.Hero
                     SFXController.instance.PlaySFXClip("sword slash");
 
                     //apply damage to target
-                    target_enemy.GetComponent<Hero>().TakeDamage(current_damage);
+                    target_enemy.GetComponent<HeroView>().HeroStatsController.TakeDamage(current_damage);
 
                     //set target position back to original, so the hero can move back
                     target_position = original_position;
@@ -256,59 +259,6 @@ namespace _Scripts.Refactor.Hero
             }
         }
     
-
-        public void TakeDamage(float damage_value)
-        {
-            //shake camera
-            cam_shake.shakeDuration = .2f;
-
-            SFXController.instance.PlaySFXClip("hit");
-
-            float amount = damage_value;
-
-            Healthpoints -= (int)amount;
-            //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
-            Instantiate(BloodParticles, transform.position, Quaternion.identity);
-
-            GameObject damage_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
-            damage_text.GetComponent<DamageText>().SetText("-" + amount, Color.red);
-
-            if (Healthpoints <= 0)
-            {
-                //blood/hit effect
-                //Instantiate(BloodSplashPrefab, transform.position, Quaternion.identity);
-
-                //update gridtile to no longer be occupied
-                switch (gameObject.tag)
-                {
-                    case "HeroP1":
-                        GameManager.Instance.GridPlayerOne.Grid[x_position_grid, y_position_grid]
-                            .GetComponent<GridTile>().isOccupied = false;
-                        break;
-                    case "HeroP2":
-                        GameManager.Instance.GridPlayerTwo.Grid[x_position_grid, y_position_grid]
-                            .GetComponent<GridTile>().isOccupied = false;
-                        break;
-                }
-            }
-        }
-
-        public void HealHero(float heal_value)
-        {
-            //PlaySFX("hit");
-
-            float amount = heal_value;
-
-            Healthpoints += (int)amount;
-
-            //heal vfx
-            Instantiate(InstantHealParticles, transform.position, Quaternion.identity);
-
-            GameObject heal_text = Instantiate(DamageTextPrefab, transform.position, Quaternion.identity, transform);
-            heal_text.GetComponent<DamageText>().SetText("+" + amount, Color.green);
-        
-        }
-
         //basic attacks
         #region basic attacks
         public void RangedAttack(GameObject _target, int damage)
@@ -474,48 +424,25 @@ namespace _Scripts.Refactor.Hero
 
             yield return new WaitForSeconds(1f);
 
-            _target.GetComponent<Hero>().TakeDamage(damage);
+            _target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
         }
 
-        public void MeleeAbilityAttack(GameObject _target, int damage)
+        public void MeleeAbilityAttack(GameObject target, int damage)
         {
             //windslash projectile
             projectile = Instantiate(WindSlashPrefab, transform.position, Quaternion.identity);
             projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().target = _target;
+            projectile.GetComponent<Projectile.Projectile>().target = target;
         }
 
-        public IEnumerator MageAbilityAttack(GameObject _target, int damage)
+        public IEnumerator MageAbilityAttack(GameObject target, int damage)
         {
-            Instantiate(IceBurstPrefab, _target.transform.position, Quaternion.identity);
+            Instantiate(IceBurstPrefab, target.transform.position, Quaternion.identity);
 
             yield return new WaitForSeconds(1.5f);
-            _target.GetComponent<Hero>().TakeDamage(damage);
+            target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
         }
 
         #endregion
-
-        private void DestroyAfterTime(float seconds)
-        {
-            Destroy(gameObject, seconds);
-        }
-    }
-
-    [System.Serializable]
-    public class StatBuff
-    {
-        //buff for hp, dmg or initative
-        int buff_value;
-        int turns;
-
-        //updates each turn
-        //if turns == 0, destroy object
-    }
-
-    [System.Serializable]
-    public class StatMultiplier
-    {
-        float multiplier;
-        int turns;
     }
 }

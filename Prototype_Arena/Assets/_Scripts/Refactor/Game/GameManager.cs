@@ -201,16 +201,16 @@ namespace _Scripts.Refactor.Game
                     hero_spawnpoint.x = i * 1.2f + DraftP1.transform.position.x;
                     hero_spawnpoint.y = j * 1.2f + DraftP1.transform.position.y;
 
-                    int random = Random.Range(0, Heroes.Count);
+                    var random = Random.Range(0, Heroes.Count);
                     HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP1));
-                    Hero.Hero hero = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<Hero.Hero>();
+                    var heroView = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
-                    hero.Healthpoints = Heroes[random].HealthPoints;
-                    hero.Damage = Heroes[random].Damage;
-                    hero.Initiative = Heroes[random].Initiative;
-                    hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    hero.main_class = Heroes[random].Main_class;
+                    heroView.HeroStatsModel.SetHealthPoints(Heroes[random].HealthPoints);
+                    heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
+                    heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
+                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
+                    heroView.main_class = Heroes[random].Main_class;
 
                     HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer1;
                     HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
@@ -227,14 +227,14 @@ namespace _Scripts.Refactor.Game
 
                     var random = Random.Range(0, Heroes.Count);
                     HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP2));
-                    var hero = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<Hero.Hero>();
+                    var heroView = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
-                    hero.Healthpoints = Heroes[random].HealthPoints;
-                    hero.Damage = Heroes[random].Damage;
-                    hero.Initiative = Heroes[random].Initiative;
-                    hero.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    hero.main_class = Heroes[random].Main_class;
+                    heroView.HeroStatsModel.SetHealthPoints(Heroes[random].HealthPoints);
+                    heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
+                    heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
+                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
+                    heroView.main_class = Heroes[random].Main_class;
 
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer2;
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
@@ -274,10 +274,10 @@ namespace _Scripts.Refactor.Game
             //instantiate heroes in the hero list in the grid system
             for (var i = 0; i < HeroListP1.Count; i++)
             {
-                Hero.Hero _hero = HeroListP1[i].GetComponent<Hero.Hero>();
+                HeroView heroView = HeroListP1[i].GetComponent<HeroView>();
 
                 //check the class and select the column
-                switch (_hero.main_class)
+                switch (heroView.main_class)
                 {
                     case MainClass.Warrior:
                         column = 2;
@@ -292,7 +292,7 @@ namespace _Scripts.Refactor.Game
 
                 //put character on random tile in set column
                 //loop till no longer drafted
-                while (_hero.isDrafted)
+                while (heroView.isDrafted)
                 {
                     //select random y
                     var random_y = Random.Range(0, 3);
@@ -312,26 +312,26 @@ namespace _Scripts.Refactor.Game
                         HeroListP1[i].transform.position = hero_spawnpoint;
 
                         //disable drafted visual
-                        _hero.SetDrafted(false);
+                        heroView.SetDrafted(false);
                     
                         //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                         _gridPlayerOne.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        _hero.x_position_grid = tile_x;
-                        _hero.y_position_grid = tile_y;
+                        heroView.x_position_grid = tile_x;
+                        heroView.y_position_grid = tile_y;
 
                         //enable ui text and images
-                        _hero.SetUI(true);
+                        heroView.SetUI(true);
                     }                
                 }            
             }
 
             for (var i = 0; i < HeroListP2.Count; i++)
             {
-                Hero.Hero _hero = HeroListP2[i].GetComponent<Hero.Hero>();
+                HeroView heroView = HeroListP2[i].GetComponent<HeroView>();
 
                 //check the class and select the column
-                switch (_hero.main_class)
+                switch (heroView.main_class)
                 {
                     case MainClass.Warrior:
                         column = 2;
@@ -346,7 +346,7 @@ namespace _Scripts.Refactor.Game
 
                 //put character on random tile in set column
                 //loop till no longer drafted
-                while (_hero.isDrafted)
+                while (heroView.isDrafted)
                 {
                     //select random y
                     var random_y = Random.Range(0, 3);
@@ -366,16 +366,16 @@ namespace _Scripts.Refactor.Game
                         HeroListP2[i].transform.position = hero_spawnpoint;
 
                         //disable drafted visual
-                        _hero.SetDrafted(false);
+                        heroView.SetDrafted(false);
                     
                         //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                         _gridPlayerTwo.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        _hero.x_position_grid = tile_x;
-                        _hero.y_position_grid = tile_y;
+                        heroView.x_position_grid = tile_x;
+                        heroView.y_position_grid = tile_y;
                     
                         //enable ui text and images
-                        _hero.SetUI(true);
+                        heroView.SetUI(true);
                     }
                 }
             }
@@ -459,14 +459,14 @@ namespace _Scripts.Refactor.Game
 
                             foreach (GameObject g in HeroListP1)
                             {
-                                var hero = g.GetComponent<Hero.Hero>();
+                                var hero = g.GetComponent<HeroView>();
 
                                 hero.SetUI(false);
                                 hero.SetAction(false);
                             }
 
                             P1_actions.text = string.Empty;
-                            P2_actions.text = "Actions: 0/" + Player.Instance.max_actions;
+                            P2_actions.text = "Actions: 0/" + Player.Instance.MaxPlayerActions;
                             break;
                     }
                 
@@ -554,18 +554,18 @@ namespace _Scripts.Refactor.Game
                     P1_actions.text = "Actions: 0/3";
                     P2_actions.text = "";
 
-                    Player.Instance.p1_actions = 0;
-                    Player.Instance.p2_actions = 0;
+                    Player.Instance.PlayerOneActionCount = 0;
+                    Player.Instance.PlayerTwoActionCount = 0;
 
                     foreach(GameObject hero in HeroListP1)
                     {
-                        Hero.Hero _hero = hero.GetComponent<Hero.Hero>();
-                        _hero.SetUI(true);
+                        HeroView heroView = hero.GetComponent<HeroView>();
+                        heroView.SetUI(true);
                     }
                     foreach (GameObject hero in HeroListP2)
                     {
-                        Hero.Hero _hero = hero.GetComponent<Hero.Hero>();
-                        _hero.SetUI(true);
+                        HeroView heroView = hero.GetComponent<HeroView>();
+                        heroView.SetUI(true);
                     }
 
                     //if phase was drafted phase, place units
@@ -596,10 +596,10 @@ namespace _Scripts.Refactor.Game
                     //hide stats on heroes and green check                
                     foreach(GameObject g in HeroListP2)
                     {
-                        Hero.Hero _hero = g.GetComponent<Hero.Hero>();
+                        HeroView heroView = g.GetComponent<HeroView>();
 
-                        _hero.SetUI(false);
-                        _hero.SetAction(false);
+                        heroView.SetUI(false);
+                        heroView.SetAction(false);
                     }
 
                     phase_text.text = "Resolve Phase";
@@ -615,7 +615,7 @@ namespace _Scripts.Refactor.Game
         {
             foreach(GameObject hero in HeroListP1)
             {
-                if(hero.GetComponent<Hero.Hero>().Healthpoints <= 0)
+                if(hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
                 {
                     Destroy(hero);
                 }
@@ -623,7 +623,7 @@ namespace _Scripts.Refactor.Game
 
             foreach(GameObject hero in HeroListP2)
             {
-                if (hero.GetComponent<Hero.Hero>().Healthpoints <= 0)
+                if (hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
                 {
                     Destroy(hero);
                 }

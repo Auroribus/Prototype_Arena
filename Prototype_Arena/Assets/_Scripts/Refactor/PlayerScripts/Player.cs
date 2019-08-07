@@ -1,73 +1,78 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using _Scripts.Refactor.Actions;
 using _Scripts.Refactor.Game;
 using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _Scripts.Refactor.PlayerScripts
 {
-    public class Player : MonoBehaviour {
-    
+    public class Player : MonoBehaviour
+    {
         #region variables
 
         public static Player Instance;
 
-        private Vector2 touchOrigin = -Vector2.one;
+        private Vector2 _touchOrigin = -Vector2.one;
 
         public int PlayerNumber = 1;
 
-        [System.NonSerialized] public GameObject SelectedHero;
+        [NonSerialized] public GameObject SelectedHero;
 
         //player specific variables that chance depending on the turn
-        private string target_tag = "";
-        private string own_tag = "";
-        private List<GameObject> enemy_list;
-        private List<GameObject> allies_list;
-        private GridCreator player_grid;
-        private int player_actions = 0;
+        private string _targetTag = "";
+        private string _ownTag = "";
+        private List<GameObject> _listOfEnemies;
+        private List<GameObject> _listOfAllies;
+        private GridCreator _playerGrid;
+        private int _playerActionCount;
 
         //action based variables
-        public int max_actions = 3;
-        public int p1_actions = 0;
-        public int p2_actions = 0;
+        [FormerlySerializedAs("max_actions")] public int MaxPlayerActions = 3;
+        [FormerlySerializedAs("p1_actions")] public int PlayerOneActionCount;
+        [FormerlySerializedAs("p2_actions")] public int PlayerTwoActionCount;
 
-        public List<Action> list_of_actions = new List<Action>();
+        [FormerlySerializedAs("list_of_actions")] public List<HeroAction> ListOfActions = new List<HeroAction>();
+
         //list of targets for ability
-        List<GameObject> ability_targets = new List<GameObject>();
+        private List<GameObject> _listOfAbilityTargets = new List<GameObject>();
 
-        private GameObject Plan_list;
-        public GameObject action_icon_prefab;
-        public List<Sprite> action_icon_sprites = new List<Sprite>();
-        private List<GameObject> action_icons_list = new List<GameObject>();
+        private GameObject _planningList;
+        [FormerlySerializedAs("action_icon_prefab")] public GameObject _actionIconPrefab;
+        [FormerlySerializedAs("action_icon_sprites")] public List<Sprite> _actionIconSprites = new List<Sprite>();
+        private List<GameObject> _actionIconsList = new List<GameObject>();
 
         #endregion
 
         private void Awake()
         {
             if (Instance == null)
+            {
                 Instance = this;
+            }
 
-            Plan_list = GameObject.Find("Plan List");
+            _planningList = GameObject.Find("Plan List");
         }
-    
-        private void Update () {
+
+        private void Update()
+        {
             MouseControl();
         }
-        
+
         private void MouseControl()
-        {       
-            if(Input.GetMouseButtonDown(0))
+        {
+            if (Input.GetMouseButtonDown(0))
             {
-                RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+                var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
 
                 if (hit.collider != null)
                 {
-                    Debug.Log(hit.collider.tag);
-
                     //quick skip animation ui on clicking it
-                    if(hit.collider.tag == "AnimationUI")
+                    if (hit.collider.tag == "AnimationUI")
                     {
                         hit.transform.GetComponent<Animator>().SetTrigger("DisableFade");
                         hit.transform.gameObject.SetActive(false);
@@ -87,7 +92,7 @@ namespace _Scripts.Refactor.PlayerScripts
                 }
                 else
                 {
-                    if(SelectedHero != null)
+                    if (SelectedHero != null)
                     {
                         DeselectHero();
                     }
@@ -95,13 +100,13 @@ namespace _Scripts.Refactor.PlayerScripts
             }
             else if (Input.touchCount > 0)
             {
-                Touch myTouch = Input.touches[0];
+                var myTouch = Input.touches[0];
 
-                if(myTouch.phase == TouchPhase.Began)
+                if (myTouch.phase == TouchPhase.Began)
                 {
-                    touchOrigin = myTouch.position;
+                    _touchOrigin = myTouch.position;
 
-                    RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(touchOrigin), Vector2.zero);
+                    RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(_touchOrigin), Vector2.zero);
 
                     if (hit.collider != null)
                     {
@@ -132,33 +137,36 @@ namespace _Scripts.Refactor.PlayerScripts
                         }
                     }
                 }
-            
             }
         }
-    
+
         private void DraftPhase(RaycastHit2D hit)
         {
-            if(hit.collider.tag == "HeroP1")
+            if (hit.collider.tag == "HeroP1")
             {
-                if(!hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isDrafted)
+                if (!hit.transform.GetComponent<HeroView>().isDrafted)
                 {
                     if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.max_amount_units)
                     {
-                        global::_Scripts.Refactor.Hero.Hero _hero = hit.transform.gameObject.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                        HeroView heroView = hit.transform.gameObject
+                            .GetComponent<HeroView>();
 
                         int amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach(GameObject hero in GameManager.Instance.HeroListP1)
+                        foreach (GameObject hero in GameManager.Instance.HeroListP1)
                         {
-                            if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class == _hero.main_class)
+                            if (hero.GetComponent<HeroView>().main_class ==
+                                heroView.main_class)
                                 amount_of_class++;
                         }
 
                         if (amount_of_class < 3)
                         {
-                            _hero.SetDrafted(true);
-                            GameManager.Instance.HeroListP1.Add(_hero.transform.gameObject);
-                            GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" + GameManager.Instance.max_amount_units;
+                            heroView.SetDrafted(true);
+                            GameManager.Instance.HeroListP1.Add(heroView.transform.gameObject);
+                            GameManager.Instance.P1_drafted.text =
+                                "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
+                                GameManager.Instance.max_amount_units;
 
                             /* now set in hero on draft and on select
                         AbilityBase ability = _hero.HeroAbility;
@@ -178,32 +186,37 @@ namespace _Scripts.Refactor.PlayerScripts
                 }
                 else
                 {
-                    hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetDrafted(false);
+                    hit.transform.GetComponent<HeroView>().SetDrafted(false);
                     GameManager.Instance.HeroListP1.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" + GameManager.Instance.max_amount_units;
+                    GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
+                                                           GameManager.Instance.max_amount_units;
                 }
             }
-            else if(hit.collider.tag == "HeroP2")
+            else if (hit.collider.tag == "HeroP2")
             {
-                if (!hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isDrafted)
+                if (!hit.transform.GetComponent<HeroView>().isDrafted)
                 {
                     if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.max_amount_units)
                     {
-                        global::_Scripts.Refactor.Hero.Hero _hero = hit.transform.gameObject.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                        HeroView heroView = hit.transform.gameObject
+                            .GetComponent<HeroView>();
 
                         int amount_of_class = 0;
                         //check if not already 3 of main class
                         foreach (GameObject hero in GameManager.Instance.HeroListP2)
                         {
-                            if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class == _hero.main_class)
+                            if (hero.GetComponent<HeroView>().main_class ==
+                                heroView.main_class)
                                 amount_of_class++;
                         }
 
                         if (amount_of_class < 3)
                         {
-                            _hero.SetDrafted(true);
-                            GameManager.Instance.HeroListP2.Add(_hero.transform.gameObject);
-                            GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" + GameManager.Instance.max_amount_units;
+                            heroView.SetDrafted(true);
+                            GameManager.Instance.HeroListP2.Add(heroView.transform.gameObject);
+                            GameManager.Instance.P2_drafted.text =
+                                "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
+                                GameManager.Instance.max_amount_units;
 
                             /*see p1 comment for more info
                         AbilityBase ability = _hero.HeroAbility;
@@ -223,9 +236,10 @@ namespace _Scripts.Refactor.PlayerScripts
                 }
                 else
                 {
-                    hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetDrafted(false);
+                    hit.transform.GetComponent<HeroView>().SetDrafted(false);
                     GameManager.Instance.HeroListP2.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" + GameManager.Instance.max_amount_units;
+                    GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
+                                                           GameManager.Instance.max_amount_units;
                 }
             }
         }
@@ -233,29 +247,35 @@ namespace _Scripts.Refactor.PlayerScripts
         private void PlanPhase(RaycastHit2D hit)
         {
             //check if hit is ability button
-            if(SelectedHero != null && hit.collider.tag == "Ability")
+            if (SelectedHero != null && hit.collider.tag == "Ability")
             {
                 AbilitySetTargets();
             }
             //deselect hero if clicking the same hero twice, without using an ability
-            else if(SelectedHero != null && !SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isUsingAbility && SelectedHero == hit.transform.gameObject)
+            else if (SelectedHero != null &&
+                     !SelectedHero.GetComponent<HeroView>().isUsingAbility &&
+                     SelectedHero == hit.transform.gameObject)
             {
                 DeselectHero();
             }
             //see if selected hero not null and if not null, using ability
-            else if (SelectedHero != null && SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isUsingAbility && player_actions < max_actions)
+            else if (SelectedHero != null &&
+                     SelectedHero.GetComponent<HeroView>().isUsingAbility &&
+                     _playerActionCount < MaxPlayerActions)
             {
                 //local hit object
-                global::_Scripts.Refactor.Hero.Hero hit_hero = hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                HeroView hit_heroView =
+                    hit.transform.GetComponent<HeroView>();
 
                 //local var of hero
-                global::_Scripts.Refactor.Hero.Hero _hero = SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
-            
+                HeroView heroView =
+                    SelectedHero.GetComponent<HeroView>();
+
                 //check if the hit hero is targeted
-                if(hit_hero.isTargeted)
+                if (hit_heroView.isTargeted)
                 {
                     //take the ability from hero
-                    AbilityBase ability = _hero.HeroAbility;
+                    AbilityBase ability = heroView.HeroAbility;
 
                     //local list of tarets
                     List<GameObject> target_heroes = new List<GameObject>();
@@ -266,52 +286,56 @@ namespace _Scripts.Refactor.PlayerScripts
                         case AbilityAOE.all:
 
                             //add all the targeted heroes
-                            target_heroes = ability_targets;
-                        
+                            target_heroes = _listOfAbilityTargets;
+
                             break;
 
                         case AbilityAOE.chain:
 
                             //not sure yet how to implement
                             //add single target, rest of logic implemented in the resolve phase
-                            target_heroes.Add(hit_hero.gameObject);
+                            target_heroes.Add(hit_heroView.gameObject);
 
                             break;
 
                         case AbilityAOE.column:
 
                             //take the column from the targeted hero, and hit all the heroes in that column
-                            foreach(GameObject hero in ability_targets)
+                            foreach (GameObject hero in _listOfAbilityTargets)
                             {
-                                if(hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid == hit_hero.x_position_grid)
+                                if (hero.GetComponent<HeroView>().x_position_grid ==
+                                    hit_heroView.x_position_grid)
                                 {
                                     target_heroes.Add(hero);
                                 }
                             }
+
                             break;
 
                         case AbilityAOE.row:
 
                             //take the row from the targeted hero, and hit all the heroes in that row
-                            foreach (GameObject hero in ability_targets)
+                            foreach (GameObject hero in _listOfAbilityTargets)
                             {
-                                if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid == hit_hero.y_position_grid)
+                                if (hero.GetComponent<HeroView>().y_position_grid ==
+                                    hit_heroView.y_position_grid)
                                 {
                                     target_heroes.Add(hero);
                                 }
                             }
+
                             break;
 
                         case AbilityAOE.single:
 
                             //add the single clicked hero
-                            target_heroes.Add(hit_hero.gameObject);
-                        
+                            target_heroes.Add(hit_heroView.gameObject);
+
                             break;
                     }
 
                     //add action to list
-                    list_of_actions.Add(new Action(
+                    ListOfActions.Add(new HeroAction(
                         SelectedHero,
                         GameManager.Instance.CurrentPlayerTurn,
                         ActionType.ability,
@@ -321,13 +345,14 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     //increment attack
                     IncrementActions(+1);
-                }            
+                }
             }
             //
             else
             {
                 //check if the unit already performing an action, less than max actions and does not already have an action
-                if (hit.collider.tag == own_tag && player_actions < max_actions && !hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().hasAction)
+                if (hit.collider.tag == _ownTag && _playerActionCount < MaxPlayerActions &&
+                    !hit.transform.GetComponent<HeroView>().hasAction)
                 {
                     //&& !hit.transform.GetComponent<Hero>().isUsingAbility
 
@@ -336,24 +361,25 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     //set new selected hero
                     SelectedHero = hit.transform.gameObject;
-                    SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetSelected(true);
+                    SelectedHero.GetComponent<HeroView>().SetSelected(true);
 
-                    global::_Scripts.Refactor.Hero.Hero selected_hero = SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    HeroView selected_heroView =
+                        SelectedHero.GetComponent<HeroView>();
 
                     //prevents modified list error for foreach after
                     GameManager.Instance.CleanLists();
-                
+
                     //local var for main class
-                    MainClass main_class = selected_hero.main_class;
+                    MainClass main_class = selected_heroView.main_class;
 
                     switch (main_class)
                     {
                         case MainClass.Scout:
 
                             //ranged can hit any of the enemies heroes
-                            foreach (GameObject hero in enemy_list)
+                            foreach (GameObject hero in _listOfEnemies)
                             {
-                                hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetTargeted(true);
+                                hero.GetComponent<HeroView>().SetTargeted(true);
                             }
 
                             break;
@@ -364,24 +390,28 @@ namespace _Scripts.Refactor.PlayerScripts
                             List<int> _max_list = new List<int>();
 
                             //put all int values into the max list if the hero is on the same row
-                            foreach (GameObject hero in enemy_list)
+                            foreach (GameObject hero in _listOfEnemies)
                             {
-                                global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                HeroView heroView =
+                                    hero.GetComponent<HeroView>();
 
-                                if (_hero.y_position_grid == selected_hero.y_position_grid)
-                                    _max_list.Add(hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid);
+                                if (heroView.y_position_grid == selected_heroView.y_position_grid)
+                                    _max_list.Add(hero.GetComponent<HeroView>()
+                                        .x_position_grid);
                             }
 
                             //get the max value, meaning the closest lane that has a unit on it
                             int _max = Mathf.Max(_max_list.ToArray());
 
                             //melee can only hit the closest enemy in the same lane
-                            foreach (GameObject hero in enemy_list)
+                            foreach (GameObject hero in _listOfEnemies)
                             {
-                                global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                HeroView heroView =
+                                    hero.GetComponent<HeroView>();
 
-                                if (_hero.x_position_grid == _max && _hero.y_position_grid == selected_hero.y_position_grid)
-                                    _hero.SetTargeted(true);
+                                if (heroView.x_position_grid == _max &&
+                                    heroView.y_position_grid == selected_heroView.y_position_grid)
+                                    heroView.SetTargeted(true);
                             }
 
                             break;
@@ -389,33 +419,35 @@ namespace _Scripts.Refactor.PlayerScripts
                         case MainClass.Mage:
 
                             //hit a whole lane in a straight line, horizontaly
-                            foreach (GameObject hero in enemy_list)
+                            foreach (GameObject hero in _listOfEnemies)
                             {
-                                global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                HeroView heroView =
+                                    hero.GetComponent<HeroView>();
 
-                                if (_hero.y_position_grid == selected_hero.y_position_grid)
-                                    _hero.SetTargeted(true);
+                                if (heroView.y_position_grid == selected_heroView.y_position_grid)
+                                    heroView.SetTargeted(true);
                             }
 
                             break;
                     }
 
                     //set movement ring on tiles in same lane to active
-                    int x = selected_hero.x_position_grid;
-                    int y = selected_hero.y_position_grid;
-                    player_grid.SetMovementRings(x, y);
-
+                    int x = selected_heroView.x_position_grid;
+                    int y = selected_heroView.y_position_grid;
+                    _playerGrid.SetMovementRings(x, y);
                 }
                 //attacking, check if not null, not using ability, not at max actions
-                else if (SelectedHero != null && hit.collider.tag == target_tag && player_actions < max_actions && !SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isUsingAbility)
+                else if (SelectedHero != null && hit.collider.tag == _targetTag && _playerActionCount < MaxPlayerActions &&
+                         !SelectedHero.GetComponent<HeroView>().isUsingAbility)
                 {
-                    if (hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isTargeted)
+                    if (hit.transform.GetComponent<HeroView>().isTargeted)
                     {
                         //non magical attacks that only target one hero
-                        if (SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class != MainClass.Mage)
+                        if (SelectedHero.GetComponent<HeroView>().main_class !=
+                            MainClass.Mage)
                         {
                             //add action to list
-                            list_of_actions.Add(new Action(
+                            ListOfActions.Add(new HeroAction(
                                 SelectedHero,
                                 GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.attack,
@@ -426,15 +458,18 @@ namespace _Scripts.Refactor.PlayerScripts
                             IncrementActions(+1);
                         }
                         //magical attacks that target a whole row of heros
-                        else if (SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class == MainClass.Mage)
+                        else if (SelectedHero.GetComponent<HeroView>().main_class ==
+                                 MainClass.Mage)
                         {
                             GameManager.Instance.CleanLists();
                             List<GameObject> target_heroes = new List<GameObject>();
-                            foreach (GameObject hero in enemy_list)
+                            foreach (GameObject hero in _listOfEnemies)
                             {
-                                global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                HeroView heroView =
+                                    hero.GetComponent<HeroView>();
 
-                                if (hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid == _hero.y_position_grid)
+                                if (hit.transform.GetComponent<HeroView>()
+                                        .y_position_grid == heroView.y_position_grid)
                                 {
                                     //add hero to list
                                     target_heroes.Add(hero);
@@ -442,7 +477,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             }
 
                             //add action to the list
-                            list_of_actions.Add(new Action(
+                            ListOfActions.Add(new HeroAction(
                                 SelectedHero,
                                 GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.attack,
@@ -455,14 +490,15 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
                 }
                 //moving, check if not null, hit is tile, less than max actions, not using ability
-                else if (SelectedHero != null && hit.collider.tag == "Tile" && player_actions < max_actions && !SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isUsingAbility)
+                else if (SelectedHero != null && hit.collider.tag == "Tile" && _playerActionCount < MaxPlayerActions &&
+                         !SelectedHero.GetComponent<HeroView>().isUsingAbility)
                 {
                     if (hit.transform.GetComponent<GridTile>().can_move_here)
                     {
-                        if (!SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().move_hero)
+                        if (!SelectedHero.GetComponent<HeroView>().move_hero)
                         {
                             //add movement action to the list
-                            list_of_actions.Add(new Action(
+                            ListOfActions.Add(new HeroAction(
                                 SelectedHero,
                                 GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.movement,
@@ -478,14 +514,15 @@ namespace _Scripts.Refactor.PlayerScripts
         }
 
         private void AbilitySetTargets()
-        { 
+        {
             //local var hero
-            global::_Scripts.Refactor.Hero.Hero selected_hero = SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
-        
-            if (!selected_hero.isUsingAbility)
+            HeroView selected_heroView =
+                SelectedHero.GetComponent<HeroView>();
+
+            if (!selected_heroView.isUsingAbility)
             {
                 //local var ability
-                AbilityBase ability = selected_hero.HeroAbility;
+                AbilityBase ability = selected_heroView.HeroAbility;
 
                 /*
             Debug.Log(
@@ -501,14 +538,17 @@ namespace _Scripts.Refactor.PlayerScripts
                 //deselect all previously targeted heroes
                 foreach (GameObject g in GameManager.Instance.HeroListP1)
                 {
-                    global::_Scripts.Refactor.Hero.Hero _h = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    HeroView _h =
+                        g.GetComponent<HeroView>();
 
                     if (_h.isTargeted)
                         _h.SetTargeted(false);
                 }
+
                 foreach (GameObject g in GameManager.Instance.HeroListP2)
                 {
-                    global::_Scripts.Refactor.Hero.Hero _h = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    HeroView _h =
+                        g.GetComponent<HeroView>();
 
                     if (_h.isTargeted)
                         _h.SetTargeted(false);
@@ -520,20 +560,20 @@ namespace _Scripts.Refactor.PlayerScripts
                     GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
                     GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
                 }
-            
+
                 //set bool to true on using ability
-                selected_hero.isUsingAbility = true;
+                selected_heroView.isUsingAbility = true;
 
                 //based on heal or damage, target enemies or allies
                 switch (ability.Ability_effect)
                 {
                     case AbilityEffect.damage:
                         //target enemies
-                        ability_targets = enemy_list;
+                        _listOfAbilityTargets = _listOfEnemies;
                         break;
                     case AbilityEffect.heal:
                         //target allies
-                        ability_targets = allies_list;
+                        _listOfAbilityTargets = _listOfAllies;
                         break;
                 }
 
@@ -541,42 +581,50 @@ namespace _Scripts.Refactor.PlayerScripts
                 switch (ability.Ability_target)
                 {
                     case AbilityTarget.all:
-                        foreach (GameObject target in ability_targets)
+                        foreach (GameObject target in _listOfAbilityTargets)
                         {
-                            global::_Scripts.Refactor.Hero.Hero _hero = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                            HeroView heroView =
+                                target.GetComponent<HeroView>();
 
-                            _hero.SetTargeted(true);
+                            heroView.SetTargeted(true);
                         }
+
                         break;
                     case AbilityTarget.row:
-                        foreach (GameObject target in ability_targets)
+                        foreach (GameObject target in _listOfAbilityTargets)
                         {
-                            global::_Scripts.Refactor.Hero.Hero _hero = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                            HeroView heroView =
+                                target.GetComponent<HeroView>();
 
-                            if (_hero.y_position_grid == selected_hero.y_position_grid)
+                            if (heroView.y_position_grid == selected_heroView.y_position_grid)
                             {
-                                _hero.SetTargeted(true);
+                                heroView.SetTargeted(true);
                             }
                         }
+
                         break;
                     case AbilityTarget.column:
-                        foreach (GameObject target in ability_targets)
+                        foreach (GameObject target in _listOfAbilityTargets)
                         {
-                            global::_Scripts.Refactor.Hero.Hero _hero = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                            HeroView heroView =
+                                target.GetComponent<HeroView>();
 
-                            if (_hero.x_position_grid == selected_hero.x_position_grid)
+                            if (heroView.x_position_grid == selected_heroView.x_position_grid)
                             {
-                                _hero.SetTargeted(true);
+                                heroView.SetTargeted(true);
                             }
                         }
+
                         break;
                     case AbilityTarget.any:
-                        foreach (GameObject target in ability_targets)
+                        foreach (GameObject target in _listOfAbilityTargets)
                         {
-                            global::_Scripts.Refactor.Hero.Hero _hero = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                            HeroView heroView =
+                                target.GetComponent<HeroView>();
 
-                            _hero.SetTargeted(true);
+                            heroView.SetTargeted(true);
                         }
+
                         break;
                 }
             }
@@ -587,20 +635,21 @@ namespace _Scripts.Refactor.PlayerScripts
             if (SelectedHero != null)
             {
                 //set selected hero to false
-                SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetSelected(false);
+                SelectedHero.GetComponent<HeroView>().SetSelected(false);
 
                 //reset movement rings
                 GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
                 GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
 
                 //deselect all previously selected heroes
-                foreach (GameObject hero in allies_list)
+                foreach (GameObject hero in _listOfAllies)
                 {
-                    hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetTargeted(false);
+                    hero.GetComponent<HeroView>().SetTargeted(false);
                 }
-                foreach (GameObject hero in enemy_list)
+
+                foreach (GameObject hero in _listOfEnemies)
                 {
-                    hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetTargeted(false);
+                    hero.GetComponent<HeroView>().SetTargeted(false);
                 }
 
                 SelectedHero = null;
@@ -612,20 +661,20 @@ namespace _Scripts.Refactor.PlayerScripts
             switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
-                    own_tag = "HeroP1";
-                    target_tag = "HeroP2";
-                    enemy_list = GameManager.Instance.HeroListP2;
-                    allies_list = GameManager.Instance.HeroListP1;
-                    player_grid = GameManager.Instance.GridPlayerOne;
-                    player_actions = p1_actions;
+                    _ownTag = "HeroP1";
+                    _targetTag = "HeroP2";
+                    _listOfEnemies = GameManager.Instance.HeroListP2;
+                    _listOfAllies = GameManager.Instance.HeroListP1;
+                    _playerGrid = GameManager.Instance.GridPlayerOne;
+                    _playerActionCount = PlayerOneActionCount;
                     break;
                 case PlayerTurn.Player2:
-                    own_tag = "HeroP2";
-                    target_tag = "HeroP1";
-                    enemy_list = GameManager.Instance.HeroListP1;
-                    allies_list = GameManager.Instance.HeroListP2;
-                    player_grid = GameManager.Instance.GridPlayerTwo;
-                    player_actions = p2_actions;
+                    _ownTag = "HeroP2";
+                    _targetTag = "HeroP1";
+                    _listOfEnemies = GameManager.Instance.HeroListP1;
+                    _listOfAllies = GameManager.Instance.HeroListP2;
+                    _playerGrid = GameManager.Instance.GridPlayerTwo;
+                    _playerActionCount = PlayerTwoActionCount;
                     break;
             }
         }
@@ -633,16 +682,15 @@ namespace _Scripts.Refactor.PlayerScripts
         public IEnumerator ResolveActions()
         {
             //sort actions list by initiative descending
-            list_of_actions = list_of_actions.OrderByDescending(action => action.initiative).ToList();
+            ListOfActions = ListOfActions.OrderByDescending(action => action.initiative).ToList();
             DisplayActionList();
 
             yield return new WaitForSeconds(1f);
 
-            foreach (Action action in list_of_actions)
+            foreach (HeroAction action in ListOfActions)
             {
-                //yield return new WaitForSeconds(1f);
                 //wait till action is finished
-                yield return new WaitUntil(() => GameManager.Instance.action_ended == true);
+                yield return new WaitUntil(() => GameManager.Instance.action_ended);
                 //set action ended to false
                 GameManager.Instance.action_ended = false;
 
@@ -650,27 +698,32 @@ namespace _Scripts.Refactor.PlayerScripts
 
                 //check if the hero doing the action is still alive and the target is still alive
                 //single target actions
-                if(action.selected_hero != null && action.single_target != null && action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Healthpoints > 0)
+                if (action.selected_hero != null
+                    && action.single_target != null
+                    && action.selected_hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints > 0)
                 {
-                    global::_Scripts.Refactor.Hero.Hero _hero = action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
-                    global::_Scripts.Refactor.Hero.Hero _target = action.single_target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                    var heroView =
+                        action.selected_hero.GetComponent<HeroView>();
+                    var _target =
+                        action.single_target.GetComponent<HeroView>();
 
                     switch (action.action_type)
                     {
                         case ActionType.attack:
                             //deal damage to target
-                            //amount of damage determined by seleted hero
+                            //amount of damage determined by selected hero
                             //difference between one target and multiple
                             //see if target is still alive
-                            switch (_hero.main_class)
+                            switch (heroView.main_class)
                             {
                                 case MainClass.Scout:
 
                                     //instance arrow from hero to target
-                                    _hero.RangedAttack(action.single_target, _hero.Damage);
+                                    heroView.RangedAttack(action.single_target, heroView.HeroStatsModel.AttackDamage);
 
                                     //set checkmark to green on action prefab                            
-                                    action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                                    _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                                        .SetCheckmark(true, Color.green);
 
                                     break;
 
@@ -680,8 +733,9 @@ namespace _Scripts.Refactor.PlayerScripts
                                     //send a raycast from hero to target
                                     //if another hero is in the way, new target
 
-                                    var direction = _target.transform.position - _hero.transform.position;
-                                    RaycastHit2D[] hit = Physics2D.RaycastAll(_hero.transform.position, direction, 10f);
+                                    var direction = _target.transform.position - heroView.transform.position;
+                                    RaycastHit2D[] hit =
+                                        Physics2D.RaycastAll(heroView.transform.position, direction, 10f);
 
                                     if (hit != null)
                                     {
@@ -691,37 +745,45 @@ namespace _Scripts.Refactor.PlayerScripts
                                             if (_hit.collider.tag == _target.tag)
                                             {
                                                 //not target, set new target
-                                                _target = _hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                                _target = _hit.transform
+                                                    .GetComponent<HeroView>();
                                                 break;
                                             }
                                         }
                                     }
+
                                     //check if target is still on same row
-                                    if (_target.y_position_grid == _hero.y_position_grid)
+                                    if (_target.y_position_grid == heroView.y_position_grid)
                                     {
                                         int damage;
 
                                         if (_target.main_class != MainClass.Warrior)
-                                            damage = _hero.Damage * 2;
+                                        {
+                                            damage = heroView.HeroStatsModel.AttackDamage * 2;
+                                        }
                                         else
-                                            damage = _hero.Damage;
-                                        //action.single_target.GetComponent<Hero>().TakeDamage(damage);
-                                        _hero.MeleeAttack(_target.gameObject, damage);
+                                        {
+                                            damage = heroView.HeroStatsModel.AttackDamage;
+                                        }
+                                        
+                                        heroView.MeleeAttack(_target.gameObject, damage);
 
                                         //set checkmark to green on action prefab                            
-                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                                        _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                                            .SetCheckmark(true, Color.green);
                                     }
                                     else //action fails
                                     {
                                         //set checkmark to red on action prefab                            
-                                        action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                                        _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                                            .SetCheckmark(true, Color.red);
 
                                         GameManager.Instance.action_ended = true;
                                     }
 
                                     break;
-                            }  
-                        
+                            }
+
                             break;
 
                         case ActionType.movement:
@@ -733,54 +795,74 @@ namespace _Scripts.Refactor.PlayerScripts
                                 switch (action.player)
                                 {
                                     case PlayerTurn.Player1:
-                                        GameManager.Instance.GridPlayerOne.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
-                                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid]
+                                        GameManager.Instance.GridPlayerOne.Grid[
+                                                action.selected_hero
+                                                    .GetComponent<HeroView>()
+                                                    .x_position_grid,
+                                                action.selected_hero
+                                                    .GetComponent<HeroView>()
+                                                    .y_position_grid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                     case PlayerTurn.Player2:
-                                        GameManager.Instance.GridPlayerTwo.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
-                                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid]
+                                        GameManager.Instance.GridPlayerTwo.Grid[
+                                                action.selected_hero
+                                                    .GetComponent<HeroView>()
+                                                    .x_position_grid,
+                                                action.selected_hero
+                                                    .GetComponent<HeroView>()
+                                                    .y_position_grid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                 }
 
                                 //move hero
-                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().target_position = action.single_target.transform.position;
-                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().move_hero = true;
+                                action.selected_hero.GetComponent<HeroView>()
+                                    .target_position = action.single_target.transform.position;
+                                action.selected_hero.GetComponent<HeroView>().move_hero =
+                                    true;
 
                                 //update heros position on grid
-                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_x;
-                                action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid = action.single_target.transform.GetComponent<GridTile>().pos_grid_y;
+                                action.selected_hero.GetComponent<HeroView>()
+                                    .x_position_grid = action.single_target.transform.GetComponent<GridTile>()
+                                    .pos_grid_x;
+                                action.selected_hero.GetComponent<HeroView>()
+                                    .y_position_grid = action.single_target.transform.GetComponent<GridTile>()
+                                    .pos_grid_y;
 
                                 //set new tile as occupied
                                 action.single_target.transform.GetComponent<GridTile>().isOccupied = true;
                                 action.single_target.transform.GetComponent<GridTile>().SetMovementRing(false);
 
                                 //set checkmark to green on action prefab
-                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
-                            
+                                _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                                    .SetCheckmark(true, Color.green);
                             }
                             //tile already occupied
                             else
                             {
                                 //set checkmark to red on action prefab
-                                action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                                _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                                    .SetCheckmark(true, Color.red);
 
                                 GameManager.Instance.action_ended = true;
                             }
+
                             break;
                     }
                 }
                 //multiple targets actions
-                else if(action.selected_hero != null && action.targets.Count > 0 && action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Healthpoints > 0)
+                else if (action.selected_hero != null && action.targets.Count > 0 && action.selected_hero
+                             .GetComponent<HeroView>().HeroStatsModel.HealthPoints > 0)
                 {
-                    global::_Scripts.Refactor.Hero.Hero _hero = action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
-                
-                    switch(action.action_type)
+                    var heroView =
+                        action.selected_hero.GetComponent<HeroView>();
+
+                    switch (action.action_type)
                     {
                         case ActionType.attack:
-                        
-                            switch(_hero.main_class)
+
+                            switch (heroView.main_class)
                             {
                                 case MainClass.Scout:
 
@@ -792,10 +874,10 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                 case MainClass.Mage:
 
-                                    string target_tag = "";
-                                    int direction = 0;
+                                    var target_tag = "";
+                                    var direction = 0;
 
-                                    switch(action.player)
+                                    switch (action.player)
                                     {
                                         case PlayerTurn.Player1:
                                             direction = 1;
@@ -808,33 +890,14 @@ namespace _Scripts.Refactor.PlayerScripts
                                             break;
                                     }
 
-                                    _hero.MagicAttack(_hero.Damage, direction, target_tag);
-                                
+                                    heroView.MagicAttack(heroView.HeroStatsModel.AttackDamage, direction, target_tag);
+
                                     break;
                             }
 
                             break;
 
                         case ActionType.ability:
-
-                            //implementation of duration and delay
-                            /*
-                        //perform action only if delay is 0
-                        if(action.casting_delay == 0)
-                        {                            
-                            //keep performing action if duration > 0
-                            if(action.duration_of_effect > 0)
-                            {
-                                //lower duration by 1 turn
-                                action.duration_of_effect--;
-                            }
-                        }
-                        else if(action.casting_delay > 0)
-                        {
-                            //lower delay by 1 turn
-                            action.casting_delay--;
-                        }
-                        */
 
                             //!!multiple targets
                             switch (action.ability.Ability_effect)
@@ -843,75 +906,87 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                     //hit all the targets in the action target list
                                     //based on the ability power
-                                    foreach(GameObject target in action.targets)
+                                    foreach (GameObject target in action.targets)
                                     {
-                                        global::_Scripts.Refactor.Hero.Hero _target = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                        var _target =
+                                            target.GetComponent<HeroView>();
 
                                         //later use with animation
                                         //_target.TakeDamage(action.ability.strength);
 
-                                        switch(_hero.main_class)
+                                        switch (heroView.main_class)
                                         {
                                             case MainClass.Warrior:
                                                 if (action.ability.Ability_aoe == AbilityAOE.chain)
                                                 {
                                                     //melee chain ability
-                                                    StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                    StartCoroutine(heroView.RangedAttack_Chain(target,
+                                                        action.ability.strength));
                                                     yield return new WaitForSeconds(.2f);
                                                 }
                                                 else
                                                 {
                                                     //melee AoE ability
-                                                    _hero.MeleeAbilityAttack(target, action.ability.strength);
+                                                    heroView.MeleeAbilityAttack(target, action.ability.strength);
                                                     yield return new WaitForSeconds(.2f);
                                                 }
+
                                                 break;
                                             case MainClass.Scout:
-                                                if(action.ability.Ability_aoe == AbilityAOE.chain)
+                                                if (action.ability.Ability_aoe == AbilityAOE.chain)
                                                 {
                                                     //ranged chain ability
-                                                    StartCoroutine(_hero.RangedAttack_Chain(target, action.ability.strength));
+                                                    StartCoroutine(heroView.RangedAttack_Chain(target,
+                                                        action.ability.strength));
                                                     yield return new WaitForSeconds(.2f);
                                                 }
                                                 else
                                                 {
                                                     //ranged AoE ability
-                                                    StartCoroutine(_hero.RangedAbilityAttack(target, action.ability.strength));                                                
+                                                    StartCoroutine(heroView.RangedAbilityAttack(target,
+                                                        action.ability.strength));
                                                 }
+
                                                 break;
                                             case MainClass.Mage:
                                                 if (action.ability.Ability_aoe == AbilityAOE.chain)
                                                 {
                                                     //magic chain ability
-                                                    StartCoroutine(_hero.MagicAttack_Chain(target, action.ability.strength));
+                                                    StartCoroutine(heroView.MagicAttack_Chain(target,
+                                                        action.ability.strength));
                                                     yield return new WaitForSeconds(.2f);
                                                 }
                                                 else
                                                 {
                                                     //magic AoE ability
-                                                    StartCoroutine(_hero.MageAbilityAttack(target, action.ability.strength));
+                                                    StartCoroutine(heroView.MageAbilityAttack(target,
+                                                        action.ability.strength));
                                                 }
+
                                                 break;
                                         }
                                     }
 
                                     if (action.ability.Ability_aoe == AbilityAOE.chain)
-                                        yield return new WaitUntil(() => _hero.chain_ended == true);
+                                        yield return new WaitUntil(() => heroView.chain_ended);
                                     else
                                         yield return new WaitForSeconds(1f);
-                                
+
                                     break;
 
                                 case AbilityEffect.heal:
 
                                     foreach (GameObject target in action.targets)
                                     {
-                                        global::_Scripts.Refactor.Hero.Hero _target = target.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                                        var _target =
+                                            target.GetComponent<HeroView>();
 
                                         //later use with animation
                                         //check if target is not dead already
-                                        if(_target.Healthpoints > 0)
-                                            _target.HealHero(action.ability.strength);
+                                        if (_target.HeroStatsModel.HealthPoints > 0)
+                                        {
+                                            _target.HeroStatsController.HealHero(action.ability.strength);
+                                        }
                                     }
 
                                     break;
@@ -929,7 +1004,8 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
 
                     //set checkmark to green on action prefab
-                    action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.green);
+                    _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                        .SetCheckmark(true, Color.green);
                     GameManager.Instance.action_ended = true;
 
                     //temp
@@ -938,35 +1014,35 @@ namespace _Scripts.Refactor.PlayerScripts
                 else
                 {
                     //set checkmark to red on action prefab
-                    action_icons_list[list_of_actions.IndexOf(action)].GetComponent<ActionPrefab>().SetCheckmark(true, Color.red);
+                    _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
+                        .SetCheckmark(true, Color.red);
                     GameManager.Instance.action_ended = true;
                 }
             }
 
             //clear list of actions after all actions have been resolved
             ClearActionsList();
-        
+
             //build in wait buffer for heroes hp
             yield return new WaitForSeconds(1f);
 
             //clear the field
             StartCoroutine(GameManager.Instance.ClearKilledHeroes());
-                
         }
-    
+
         private void IncrementActions(int value)
         {
             switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
-                    p1_actions += value;
+                    PlayerOneActionCount += value;
 
                     DeselectHero();
 
-                    GameManager.Instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions;
-                      
+                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions;
+
                     //check if player one has max actions
-                    if (p1_actions == max_actions)
+                    if (PlayerOneActionCount == MaxPlayerActions)
                     {
                         //disable all movement and targeting circles
                         GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
@@ -979,14 +1055,14 @@ namespace _Scripts.Refactor.PlayerScripts
                     break;
 
                 case PlayerTurn.Player2:
-                    p2_actions += value;
+                    PlayerTwoActionCount += value;
 
                     DeselectHero();
 
-                    GameManager.Instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
+                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
 
                     //check if player two has max actions
-                    if (p2_actions == max_actions)
+                    if (PlayerTwoActionCount == MaxPlayerActions)
                     {
                         //change phase to resolve
                         GameManager.Instance.SetCurrentPhase(Phase.ResolvePhase);
@@ -997,7 +1073,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
             DisplayActionList();
         }
-    
+
         private void DisplayActionList()
         {
             //sort actions list by initiative descending
@@ -1005,267 +1081,189 @@ namespace _Scripts.Refactor.PlayerScripts
 
             ClearActionIcons();
 
-            int position_y = 0;
+            var position_y = 0;
 
-            foreach(Action action in list_of_actions)
+            foreach (HeroAction action in ListOfActions)
             {
                 //set instance position
-                Vector2 icon_position = new Vector2();
-                icon_position.x = Plan_list.transform.position.x;
-                icon_position.y = Plan_list.transform.position.y - position_y;
+                var icon_position = new Vector2
+                {
+                    x = _planningList.transform.position.x, 
+                    y = _planningList.transform.position.y - position_y
+                };
 
                 //instance action prefab
-                action_icons_list.Add(Instantiate(action_icon_prefab, icon_position, Quaternion.identity, Plan_list.transform));
+                _actionIconsList.Add(Instantiate(_actionIconPrefab, icon_position, Quaternion.identity,
+                    _planningList.transform));
 
                 //set player
-                action_icons_list[action_icons_list.Count - 1].GetComponent<ActionPrefab>().player = action.player;
+                _actionIconsList[_actionIconsList.Count - 1].GetComponent<ActionPrefab>().player = action.player;
 
                 //increment position y
                 position_y++;
 
-                SpriteRenderer sRend = action_icons_list[action_icons_list.Count - 1].GetComponent<SpriteRenderer>();
+                SpriteRenderer sRend = _actionIconsList[_actionIconsList.Count - 1].GetComponent<SpriteRenderer>();
 
                 //set sprite icon
                 switch (action.action_type)
                 {
                     case ActionType.attack:
-                        switch(action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class)
+                        switch (action.selected_hero.GetComponent<HeroView>().main_class)
                         {
-
+                            case MainClass.Warrior:
+                                break;
+                            case MainClass.Scout:
+                                break;
+                            case MainClass.Mage:
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
                         }
-                        sRend.sprite = action_icon_sprites[0];
+                        sRend.sprite = _actionIconSprites[0];
                         break;
                     case ActionType.ability:
-                        sRend.sprite = action_icon_sprites[1];
+                        sRend.sprite = _actionIconSprites[1];
                         break;
                     case ActionType.movement:
-                        sRend.sprite = action_icon_sprites[2];
+                        sRend.sprite = _actionIconSprites[2];
                         break;
                 }
 
                 //set sprite icon color and player
-                switch(action.player)
+                switch (action.player)
                 {
                     case PlayerTurn.Player1:
-                        sRend.color = GameManager.Instance.ColorPlayer1;                    
+                        sRend.color = GameManager.Instance.ColorPlayer1;
                         break;
                     case PlayerTurn.Player2:
                         sRend.color = GameManager.Instance.ColorPlayer2;
                         break;
                 }
-            
             }
         }
 
         public void ClearActionIcons()
         {
-            foreach (GameObject action in action_icons_list)
+            foreach (GameObject action in _actionIconsList)
             {
                 Destroy(action);
             }
-            action_icons_list.Clear();
+
+            _actionIconsList.Clear();
         }
 
         public void ClearActionsList()
         {
-            foreach (Action action in list_of_actions)
-            {
-                //remove action if attack or movement
-
-                //ability
-                //remove if duration is 0 and delay is 0
-            }
-
-            list_of_actions.Clear();
+            ListOfActions.Clear();
         }
 
         public void OnUndoAction()
         {
             //local list, gets set based on player turn
-            List<GameObject> hero_list = new List<GameObject>();
+            var listOfHeroes = new List<GameObject>();
 
             switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if actions lower or equal to 0, if they are then no undo left
-                    if (p1_actions <= 0)
+                    if (PlayerOneActionCount <= 0)
                         return;
 
-                    p1_actions--; //lower actions amount
-                    GameManager.Instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
-                    hero_list = GameManager.Instance.HeroListP1; //set local list    
+                    PlayerOneActionCount--; //lower actions amount
+                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
+                    listOfHeroes = GameManager.Instance.HeroListP1; //set local list    
 
 
                     break;
 
                 case PlayerTurn.Player2:
                     //check if actions lower or equal to 0, if they are then no undo left
-                    if (p2_actions <= 0)
+                    if (PlayerTwoActionCount <= 0)
                         return;
 
-                    p2_actions--;
-                    GameManager.Instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
-                    hero_list = GameManager.Instance.HeroListP2;
+                    PlayerTwoActionCount--;
+                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
+                    listOfHeroes = GameManager.Instance.HeroListP2;
                     break;
             }
-               
+
             //remove last added action from the list based on whos turn it is
             //check if last action belongs to current player
-            if (list_of_actions[list_of_actions.Count - 1].player == GameManager.Instance.CurrentPlayerTurn)
+            if (ListOfActions[ListOfActions.Count - 1].player == GameManager.Instance.CurrentPlayerTurn)
             {
                 //reset checkmark and has action on hero
-                list_of_actions[list_of_actions.Count - 1].selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetAction(false);
+                ListOfActions[ListOfActions.Count - 1].selected_hero
+                    .GetComponent<HeroView>().SetAction(false);
 
                 //destroy icon from plan list
-                Destroy(action_icons_list[list_of_actions.IndexOf(list_of_actions[list_of_actions.Count - 1])]);
-            
+                Destroy(_actionIconsList[ListOfActions.IndexOf(ListOfActions[ListOfActions.Count - 1])]);
+
                 //remove action from list
-                list_of_actions.Remove(list_of_actions[list_of_actions.Count - 1]);
+                ListOfActions.Remove(ListOfActions[ListOfActions.Count - 1]);
             }
 
             //clean up icons list
-            action_icons_list.RemoveAll(item => item == null);
-
+            _actionIconsList.RemoveAll(item => item == null);
         }
 
         public void OnUndoAllActions()
         {
             //local list, gets set based on player turn
-            List<GameObject> hero_list = new List<GameObject>();
+            var listOfHeroes = new List<GameObject>();
 
-            switch(GameManager.Instance.CurrentPlayerTurn)
+            switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if any actions for player, otherwise it will throw error
-                    if (p1_actions <= 0)
+                    if (PlayerOneActionCount <= 0)
+                    {
                         return;
+                    }
 
-                    p1_actions = 0; //reset actions amount
-                    GameManager.Instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
-                    hero_list = GameManager.Instance.HeroListP1; //set local list                
+                    PlayerOneActionCount = 0; //reset actions amount
+                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
+                    listOfHeroes = GameManager.Instance.HeroListP1; //set local list                
                     break;
 
                 case PlayerTurn.Player2:
 
-                    if (p2_actions <= 0)
+                    if (PlayerTwoActionCount <= 0)
+                    {
                         return;
+                    }
 
-                    p2_actions = 0;
-                    GameManager.Instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
-                    hero_list = GameManager.Instance.HeroListP2;
+                    PlayerTwoActionCount = 0;
+                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
+                    listOfHeroes = GameManager.Instance.HeroListP2;
                     break;
             }
-        
+
             //remove all actions from the list based on whos turn it is
-            list_of_actions.RemoveAll(item => item.player == GameManager.Instance.CurrentPlayerTurn);
+            ListOfActions.RemoveAll(item => item.player == GameManager.Instance.CurrentPlayerTurn);
 
             //remove icons from plan list
-            foreach (GameObject action in action_icons_list)
+            foreach (GameObject action in _actionIconsList)
             {
-                ActionPrefab _action = action.GetComponent<ActionPrefab>();
+                var _action = action.GetComponent<ActionPrefab>();
 
-                if(_action.player == GameManager.Instance.CurrentPlayerTurn)
+                if (_action.player == GameManager.Instance.CurrentPlayerTurn)
                 {
                     Destroy(action);
                 }
             }
 
-            action_icons_list.RemoveAll(item => item == null);
+            _actionIconsList.RemoveAll(item => item == null);
 
             //reset checkmark and has action on heroes
-            foreach (GameObject hero in hero_list)
+            foreach (GameObject hero in listOfHeroes)
             {
-                global::_Scripts.Refactor.Hero.Hero _hero = hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
+                var heroView =
+                    hero.GetComponent<HeroView>();
 
-                if (_hero.hasAction)
+                if (heroView.hasAction)
                 {
-                    _hero.SetAction(false);
+                    heroView.SetAction(false);
                 }
-            }        
-        }
-    }
-
-    public enum ActionType
-    {
-        attack,
-        ability,
-        movement
-    }
-
-    public class Action
-    {
-        //type of action, attack, ability, move
-        //action initiative
-        //target or targets
-        public PlayerTurn player;
-        public ActionType action_type;
-        public int initiative;
-        public GameObject selected_hero;
-        public GameObject single_target;
-        public List<GameObject> targets = new List<GameObject>();    
-        public AbilityBase ability;
-
-        public int casting_delay;
-        public int duration_of_effect;
-   
-        //single target basic attack
-        public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
-        {
-            selected_hero = _selected_hero;
-            player = _player;
-            action_type = _action;
-            single_target = _single_target;
-
-            //set hero has action to true
-            selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetAction(true);
-
-            initiative = selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Initiative;
-            //temp fix to coin flip for same initiative
-            if (Random.Range(0, 2) == 0)
-            {
-                initiative++;
-            }
-        }
-
-        //multiple targets, basic attack
-        public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets)
-        {
-            selected_hero = _selected_hero;
-            player = _player;
-            action_type = _action;
-            targets = _targets;
-
-            //set hero has action to true
-            selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetAction(true);
-
-            initiative = selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Initiative;
-            //temp fix to coin flip for same initiative
-            if (Random.Range(0, 2) == 0)
-            {
-                initiative++;
-            }
-        }
-    
-        //abilities
-        public Action(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets, AbilityBase _ability)
-        {
-            selected_hero = _selected_hero;
-            player = _player;
-            action_type = _action;
-            targets = _targets;
-            ability = _ability;
-
-            casting_delay = _ability.delay;
-            duration_of_effect = _ability.duration;
-
-            //set hero has action to true
-            selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetAction(true);
-
-            initiative = selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().Initiative;
-            //temp fix to coin flip for same initiative
-            if (Random.Range(0, 2) == 0)
-            {
-                initiative++;
             }
         }
     }

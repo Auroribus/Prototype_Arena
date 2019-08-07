@@ -1,23 +1,24 @@
 ﻿using _Scripts.Refactor.Game;
+using _Scripts.Refactor.Hero;
 using _Scripts.Refactor.SFX;
 using UnityEngine;
 
 namespace _Scripts.Refactor.Projectile
 {
-    public class Projectile : MonoBehaviour {
-
+    public class Projectile : MonoBehaviour
+    {
         public GameObject target;
         public float movement_speed = 1f;
         public int damage;
         public float rotation_correction = 180f;
-        public bool rotate_towards_target = false;
+        public bool rotate_towards_target;
 
         public GameObject HitEffect;
 
         public ProjectileType Projectile_type;
         public string Target_tag;
 
-        public bool projectile_reached_end = false;
+        public bool projectile_reached_end;
 
         private void Start()
         {
@@ -36,19 +37,20 @@ namespace _Scripts.Refactor.Projectile
         }
 
         // Update is called once per frame
-        void Update () {
-
+        void Update()
+        {
             switch (Projectile_type)
             {
                 case ProjectileType.Arrow:
                     if (rotate_towards_target)
                         RotateTowardsTarget();
 
-                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position,
+                        movement_speed * Time.deltaTime);
 
                     if (Vector2.Distance(transform.position, target.transform.position) == 0)
                     {
-                        target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
+                        target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
                         GameManager.Instance.action_ended = true;
@@ -59,11 +61,12 @@ namespace _Scripts.Refactor.Projectile
                     break;
                 case ProjectileType.BounceArrow:
 
-                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position,
+                        movement_speed * Time.deltaTime);
 
                     if (Vector2.Distance(transform.position, target.transform.position) == 0)
                     {
-                        target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
+                        target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
                         GameManager.Instance.action_ended = true;
@@ -75,7 +78,8 @@ namespace _Scripts.Refactor.Projectile
                     break;
                 case ProjectileType.Fireball:
 
-                    transform.position = new Vector2(transform.position.x + (movement_speed * Time.deltaTime), transform.position.y);
+                    transform.position = new Vector2(transform.position.x + (movement_speed * Time.deltaTime),
+                        transform.position.y);
 
                     break;
 
@@ -84,11 +88,12 @@ namespace _Scripts.Refactor.Projectile
                     if (rotate_towards_target)
                         RotateTowardsTarget();
 
-                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position,
+                        movement_speed * Time.deltaTime);
 
                     if (Vector2.Distance(transform.position, target.transform.position) == 0)
                     {
-                        target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
+                        target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
                     }
@@ -97,11 +102,12 @@ namespace _Scripts.Refactor.Projectile
 
                 case ProjectileType.ChainLightning:
 
-                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position, movement_speed * Time.deltaTime);
+                    transform.position = Vector2.MoveTowards(transform.position, target.transform.position,
+                        movement_speed * Time.deltaTime);
 
                     if (Vector2.Distance(transform.position, target.transform.position) == 0)
                     {
-                        target.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
+                        target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
                         GameManager.Instance.action_ended = true;
@@ -127,10 +133,11 @@ namespace _Scripts.Refactor.Projectile
             {
                 case ProjectileType.Fireball:
                     if (collision.tag == Target_tag)
-                    {                    
-                        collision.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().TakeDamage(damage);
+                    {
+                        collision.transform.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
                         Instantiate(HitEffect, collision.transform.position, Quaternion.identity);
                     }
+
                     break;
             }
         }

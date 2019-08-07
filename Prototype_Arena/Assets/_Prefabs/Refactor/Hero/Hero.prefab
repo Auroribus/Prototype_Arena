@@ -738,10 +738,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c23f2a1d9aa4e14da9affc7e3abe864, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Healthpoints: 10
-  Damage: 2
-  Defense: 1
-  Initiative: 12
+  Healthpoints: 0
+  Damage: 0
+  Defense: 0
+  Initiative: 0
   main_class: 1
   isDrafted: 0
   hasAction: 0
