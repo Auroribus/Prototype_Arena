@@ -143,7 +143,7 @@ namespace _Scripts.Refactor.Hero
             //set movement rings on tiles in same row
             for (int i = 0; i < 3; i++)
             {
-                GameManager.Instance.Grid_P1.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
+                GameManager.Instance.GridPlayerOne.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
             }
 
             //display hero info
@@ -282,11 +282,11 @@ namespace _Scripts.Refactor.Hero
                 switch (gameObject.tag)
                 {
                     case "HeroP1":
-                        GameManager.Instance.Grid_P1.Grid[x_position_grid, y_position_grid]
+                        GameManager.Instance.GridPlayerOne.Grid[x_position_grid, y_position_grid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                     case "HeroP2":
-                        GameManager.Instance.Grid_P2.Grid[x_position_grid, y_position_grid]
+                        GameManager.Instance.GridPlayerTwo.Grid[x_position_grid, y_position_grid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                 }
@@ -366,10 +366,10 @@ namespace _Scripts.Refactor.Hero
             switch(tag)
             {
                 case "HeroP1":
-                    targets = GameManager.Instance.HeroList_P2;
+                    targets = GameManager.Instance.HeroListP2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.Instance.HeroList_P1;
+                    targets = GameManager.Instance.HeroListP1;
                     break;
             }
 
@@ -422,10 +422,10 @@ namespace _Scripts.Refactor.Hero
             switch (tag)
             {
                 case "HeroP1":
-                    targets = GameManager.Instance.HeroList_P2;
+                    targets = GameManager.Instance.HeroListP2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.Instance.HeroList_P1;
+                    targets = GameManager.Instance.HeroListP1;
                     break;
             }
 

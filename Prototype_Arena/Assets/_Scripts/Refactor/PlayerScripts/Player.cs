@@ -142,13 +142,13 @@ namespace _Scripts.Refactor.PlayerScripts
             {
                 if(!hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isDrafted)
                 {
-                    if (GameManager.Instance.HeroList_P1.Count < GameManager.Instance.max_amount_units)
+                    if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.max_amount_units)
                     {
                         global::_Scripts.Refactor.Hero.Hero _hero = hit.transform.gameObject.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
 
                         int amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach(GameObject hero in GameManager.Instance.HeroList_P1)
+                        foreach(GameObject hero in GameManager.Instance.HeroListP1)
                         {
                             if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class == _hero.main_class)
                                 amount_of_class++;
@@ -157,8 +157,8 @@ namespace _Scripts.Refactor.PlayerScripts
                         if (amount_of_class < 3)
                         {
                             _hero.SetDrafted(true);
-                            GameManager.Instance.HeroList_P1.Add(_hero.transform.gameObject);
-                            GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroList_P1.Count + "/" + GameManager.Instance.max_amount_units;
+                            GameManager.Instance.HeroListP1.Add(_hero.transform.gameObject);
+                            GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" + GameManager.Instance.max_amount_units;
 
                             /* now set in hero on draft and on select
                         AbilityBase ability = _hero.HeroAbility;
@@ -179,21 +179,21 @@ namespace _Scripts.Refactor.PlayerScripts
                 else
                 {
                     hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetDrafted(false);
-                    GameManager.Instance.HeroList_P1.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroList_P1.Count + "/" + GameManager.Instance.max_amount_units;
+                    GameManager.Instance.HeroListP1.Remove(hit.transform.gameObject);
+                    GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" + GameManager.Instance.max_amount_units;
                 }
             }
             else if(hit.collider.tag == "HeroP2")
             {
                 if (!hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().isDrafted)
                 {
-                    if (GameManager.Instance.HeroList_P2.Count < GameManager.Instance.max_amount_units)
+                    if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.max_amount_units)
                     {
                         global::_Scripts.Refactor.Hero.Hero _hero = hit.transform.gameObject.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
 
                         int amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach (GameObject hero in GameManager.Instance.HeroList_P2)
+                        foreach (GameObject hero in GameManager.Instance.HeroListP2)
                         {
                             if (hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().main_class == _hero.main_class)
                                 amount_of_class++;
@@ -202,8 +202,8 @@ namespace _Scripts.Refactor.PlayerScripts
                         if (amount_of_class < 3)
                         {
                             _hero.SetDrafted(true);
-                            GameManager.Instance.HeroList_P2.Add(_hero.transform.gameObject);
-                            GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroList_P2.Count + "/" + GameManager.Instance.max_amount_units;
+                            GameManager.Instance.HeroListP2.Add(_hero.transform.gameObject);
+                            GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" + GameManager.Instance.max_amount_units;
 
                             /*see p1 comment for more info
                         AbilityBase ability = _hero.HeroAbility;
@@ -224,8 +224,8 @@ namespace _Scripts.Refactor.PlayerScripts
                 else
                 {
                     hit.transform.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetDrafted(false);
-                    GameManager.Instance.HeroList_P2.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroList_P2.Count + "/" + GameManager.Instance.max_amount_units;
+                    GameManager.Instance.HeroListP2.Remove(hit.transform.gameObject);
+                    GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" + GameManager.Instance.max_amount_units;
                 }
             }
         }
@@ -499,14 +499,14 @@ namespace _Scripts.Refactor.PlayerScripts
                 */
 
                 //deselect all previously targeted heroes
-                foreach (GameObject g in GameManager.Instance.HeroList_P1)
+                foreach (GameObject g in GameManager.Instance.HeroListP1)
                 {
                     global::_Scripts.Refactor.Hero.Hero _h = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
 
                     if (_h.isTargeted)
                         _h.SetTargeted(false);
                 }
-                foreach (GameObject g in GameManager.Instance.HeroList_P2)
+                foreach (GameObject g in GameManager.Instance.HeroListP2)
                 {
                     global::_Scripts.Refactor.Hero.Hero _h = g.GetComponent<global::_Scripts.Refactor.Hero.Hero>();
 
@@ -517,8 +517,8 @@ namespace _Scripts.Refactor.PlayerScripts
                 //hide all movement rings unless ability has to do with movement
                 if (ability.Ability_effect != AbilityEffect.movement)
                 {
-                    GameManager.Instance.Grid_P1.SetMovementRings(-1, -1);
-                    GameManager.Instance.Grid_P2.SetMovementRings(-1, -1);
+                    GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
+                    GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
                 }
             
                 //set bool to true on using ability
@@ -590,8 +590,8 @@ namespace _Scripts.Refactor.PlayerScripts
                 SelectedHero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetSelected(false);
 
                 //reset movement rings
-                GameManager.Instance.Grid_P1.SetMovementRings(-1, -1);
-                GameManager.Instance.Grid_P2.SetMovementRings(-1, -1);
+                GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
+                GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
 
                 //deselect all previously selected heroes
                 foreach (GameObject hero in allies_list)
@@ -614,17 +614,17 @@ namespace _Scripts.Refactor.PlayerScripts
                 case PlayerTurn.Player1:
                     own_tag = "HeroP1";
                     target_tag = "HeroP2";
-                    enemy_list = GameManager.Instance.HeroList_P2;
-                    allies_list = GameManager.Instance.HeroList_P1;
-                    player_grid = GameManager.Instance.Grid_P1;
+                    enemy_list = GameManager.Instance.HeroListP2;
+                    allies_list = GameManager.Instance.HeroListP1;
+                    player_grid = GameManager.Instance.GridPlayerOne;
                     player_actions = p1_actions;
                     break;
                 case PlayerTurn.Player2:
                     own_tag = "HeroP2";
                     target_tag = "HeroP1";
-                    enemy_list = GameManager.Instance.HeroList_P1;
-                    allies_list = GameManager.Instance.HeroList_P2;
-                    player_grid = GameManager.Instance.Grid_P2;
+                    enemy_list = GameManager.Instance.HeroListP1;
+                    allies_list = GameManager.Instance.HeroListP2;
+                    player_grid = GameManager.Instance.GridPlayerTwo;
                     player_actions = p2_actions;
                     break;
             }
@@ -733,12 +733,12 @@ namespace _Scripts.Refactor.PlayerScripts
                                 switch (action.player)
                                 {
                                     case PlayerTurn.Player1:
-                                        GameManager.Instance.Grid_P1.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
+                                        GameManager.Instance.GridPlayerOne.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
                                                 action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                     case PlayerTurn.Player2:
-                                        GameManager.Instance.Grid_P2.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
+                                        GameManager.Instance.GridPlayerTwo.Grid[action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().x_position_grid,
                                                 action.selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().y_position_grid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
@@ -969,8 +969,8 @@ namespace _Scripts.Refactor.PlayerScripts
                     if (p1_actions == max_actions)
                     {
                         //disable all movement and targeting circles
-                        GameManager.Instance.Grid_P1.SetMovementRings(-1, -1);
-                        GameManager.Instance.Grid_P2.SetMovementRings(-1, -1);
+                        GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
+                        GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
 
                         //change turn to player 2
                         GameManager.Instance.SetPlayerTurn(PlayerTurn.Player2);
@@ -1093,7 +1093,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     p1_actions--; //lower actions amount
                     GameManager.Instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
-                    hero_list = GameManager.Instance.HeroList_P1; //set local list    
+                    hero_list = GameManager.Instance.HeroListP1; //set local list    
 
 
                     break;
@@ -1105,7 +1105,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     p2_actions--;
                     GameManager.Instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
-                    hero_list = GameManager.Instance.HeroList_P2;
+                    hero_list = GameManager.Instance.HeroListP2;
                     break;
             }
                
@@ -1142,7 +1142,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     p1_actions = 0; //reset actions amount
                     GameManager.Instance.P1_actions.text = "Actions: " + p1_actions + "/" + max_actions; //set text
-                    hero_list = GameManager.Instance.HeroList_P1; //set local list                
+                    hero_list = GameManager.Instance.HeroListP1; //set local list                
                     break;
 
                 case PlayerTurn.Player2:
@@ -1152,7 +1152,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     p2_actions = 0;
                     GameManager.Instance.P2_actions.text = "Actions: " + p2_actions + "/" + max_actions;
-                    hero_list = GameManager.Instance.HeroList_P2;
+                    hero_list = GameManager.Instance.HeroListP2;
                     break;
             }
         

@@ -10,7 +10,7 @@ namespace _Scripts.Refactor.Grid
         public GameObject[,] Grid;
 
         //Reference to prefab of grid tile
-        private GridTile _gridTile;
+        [SerializeField] private GridTile _gridTile;
 
         //Amount Grid tiles to spawn per row and column
         public int rows = 3;
@@ -27,7 +27,6 @@ namespace _Scripts.Refactor.Grid
         // Use this for initialization
         void Start()
         {
-            _gridTile = GameManager.Instance.GridTilePrefab;
             Grid = new GameObject[rows, columns];
             BuildGrid();
         }
