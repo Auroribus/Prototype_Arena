@@ -7,6 +7,7 @@ using _Scripts.Refactor.SFX;
 using _Scripts.Refactor.UI;
 using _Scripts.Refactor.Utility;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace _Scripts.Refactor.Hero
 {
@@ -17,17 +18,17 @@ namespace _Scripts.Refactor.Hero
         
         #region variables
 
-        public MainClass main_class = MainClass.Scout;
+        [FormerlySerializedAs("main_class")] public MainClass MainClass = MainClass.Scout;
 
-        private Transform selection_ring;
-        private Transform targeting_ring;
-        private Transform IsDrafted;
+        private Transform _selectionRing;
+        private Transform _targetingRing;
+        private Transform _isDrafted;
 
-        public bool isDrafted;
-        public bool hasAction;
+        [FormerlySerializedAs("isDrafted")] public bool IsHeroDrafted;
+        [FormerlySerializedAs("hasAction")] public bool HasAction;
 
         //used for when the hero can be targeted by an enemy hero
-        public bool isTargeted;
+        [FormerlySerializedAs("isTargeted")] public bool IsTargeted;
 
         public GameObject BloodSplashPrefab;
         public GameObject BloodParticles;
@@ -45,49 +46,49 @@ namespace _Scripts.Refactor.Hero
         public GameObject WindSlashPrefab;
 
         //for storing the position of the hero in the level grids
-        [System.NonSerialized] public int x_position_grid = 0;
-        [System.NonSerialized] public int y_position_grid = 0;
+        [System.NonSerialized] public int XPositionGrid = 0;
+        [System.NonSerialized] public int YPositionGrid = 0;
 
         //bool for moving the hero from tile to tile
-        [System.NonSerialized] public bool move_hero;
+        [System.NonSerialized] public bool MoveHero;
         //end position for the movement of the hero
-        [System.NonSerialized] public Vector2 target_position;
+        [System.NonSerialized] public Vector2 TargetPosition;
 
-        [System.NonSerialized] public bool attack_move_hero;
-        [System.NonSerialized] public Vector2 original_position;
+        [System.NonSerialized] public bool AttackMoveHero;
+        [System.NonSerialized] public Vector2 OriginalPosition;
 
         //speed the characters move at from tile to tile
-        public float movement_speed = 2f;
+        [FormerlySerializedAs("movement_speed")] public float MovementSpeed = 2f;
 
         //reference to text meshes
-        [System.NonSerialized] public Transform UiText;
-        [System.NonSerialized] public Transform UiImages;
+        [System.NonSerialized] public Transform UiTextTransform;
+        [System.NonSerialized] public Transform UiImagesTransform;
 
-        private TextMesh health_text;
-        private TextMesh damage_text;
-        private TextMesh initiative_text;
+        private TextMesh _healthText;
+        private TextMesh _damageText;
+        private TextMesh _initiativeText;
 
         public GameObject DamageTextPrefab;
 
-        private GameObject target_enemy;
-        private int current_damage;
+        private GameObject _targetEnemy;
+        private int _currentDamage;
 
         public AbilityBase HeroAbility;
-        public bool isUsingAbility;
+        [FormerlySerializedAs("isUsingAbility")] public bool IsUsingAbility;
 
-        private SpriteRenderer sprite_renderer;
+        private SpriteRenderer _spriteRenderer;
 
-        private Transform AbilityUI;
+        private Transform _abilityUiTransform;
 
-        private BoxCollider2D draft_collider;
-        private CircleCollider2D main_collider;
+        private BoxCollider2D _draftCollider;
+        private CircleCollider2D _mainCollider;
        
-        private GameObject projectile;
+        private GameObject _projectile;
        
-        private float current_y;
-        private float old_y;
+        private float _currentYPosition;
+        private float _oldYPosition;
 
-        public bool chain_ended;
+        [FormerlySerializedAs("chain_ended")] public bool HasChainEnded;
         #endregion
 
         private void Awake()
@@ -99,31 +100,31 @@ namespace _Scripts.Refactor.Hero
                 BloodSplashPrefab,
                 DamageTextPrefab);
             
-            selection_ring = transform.Find("SelectionRing");
-            selection_ring.gameObject.SetActive(false);
+            _selectionRing = transform.Find("SelectionRing");
+            _selectionRing.gameObject.SetActive(false);
 
-            targeting_ring = transform.Find("TargetingRing");
-            targeting_ring.gameObject.SetActive(false);
+            _targetingRing = transform.Find("TargetingRing");
+            _targetingRing.gameObject.SetActive(false);
 
-            UiText = transform.Find("UI Text");
-            UiImages = transform.Find("UI Images");
+            UiTextTransform = transform.Find("UI Text");
+            UiImagesTransform = transform.Find("UI Images");
 
-            IsDrafted = transform.Find("IsDrafted");
-            IsDrafted.gameObject.SetActive(false);
+            _isDrafted = transform.Find("IsDrafted");
+            _isDrafted.gameObject.SetActive(false);
 
-            health_text = UiText.Find("HealthText").GetComponent<TextMesh>();
-            damage_text = UiText.Find("DamageText").GetComponent<TextMesh>();
-            initiative_text = UiText.Find("InitiativeText").GetComponent<TextMesh>();
+            _healthText = UiTextTransform.Find("HealthText").GetComponent<TextMesh>();
+            _damageText = UiTextTransform.Find("DamageText").GetComponent<TextMesh>();
+            _initiativeText = UiTextTransform.Find("InitiativeText").GetComponent<TextMesh>();
 
-            AbilityUI = transform.Find("Ability");
+            _abilityUiTransform = transform.Find("Ability");
             SetUI(false);
 
-            sprite_renderer = GetComponentInChildren<SpriteRenderer>();    
+            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();    
 
-            draft_collider = GetComponent<BoxCollider2D>();
-            main_collider = GetComponent<CircleCollider2D>();
+            _draftCollider = GetComponent<BoxCollider2D>();
+            _mainCollider = GetComponent<CircleCollider2D>();
 
-            main_collider.enabled = false;
+            _mainCollider.enabled = false;
         }
 
         private void Start()
@@ -134,16 +135,16 @@ namespace _Scripts.Refactor.Hero
 
         public void SetSelected(bool is_selected)
         {
-            selection_ring.gameObject.SetActive(is_selected);
+            _selectionRing.gameObject.SetActive(is_selected);
 
             //reset using ability
-            if(isUsingAbility)
-                isUsingAbility = false;
+            if(IsUsingAbility)
+                IsUsingAbility = false;
 
             //set movement rings on tiles in same row
             for (int i = 0; i < 3; i++)
             {
-                GameManager.Instance.GridPlayerOne.Grid[x_position_grid, i].GetComponent<GridTile>().SetMovementRing(true);
+                GameManager.Instance.GridPlayerOne.Grid[XPositionGrid, i].GetComponent<GridTile>().SetMovementRing(true);
             }
 
             //display hero info
@@ -159,7 +160,7 @@ namespace _Scripts.Refactor.Hero
                 "Strength: " + HeroAbility.strength; 
 
             GameManager.Instance.SetHeroInfo(
-                main_class, 
+                MainClass, 
                 HeroStatsModel.HealthPoints, 
                 HeroStatsModel.AttackDamage, 
                 HeroStatsModel.Initiative, 
@@ -168,35 +169,35 @@ namespace _Scripts.Refactor.Hero
 
         public void SetTargeted(bool is_targeted)
         {
-            targeting_ring.gameObject.SetActive(is_targeted);
-            isTargeted = is_targeted;
+            _targetingRing.gameObject.SetActive(is_targeted);
+            IsTargeted = is_targeted;
         }
 
         public void SetDrafted(bool is_drafted)
         {
-            IsDrafted.gameObject.SetActive(is_drafted);
-            isDrafted = is_drafted;
+            _isDrafted.gameObject.SetActive(is_drafted);
+            IsHeroDrafted = is_drafted;
 
             SetHeroInfo();
         }
 
         public void SetAction(bool has_action)
         {
-            IsDrafted.gameObject.SetActive(has_action);
-            hasAction = has_action;
+            _isDrafted.gameObject.SetActive(has_action);
+            HasAction = has_action;
         }
 
         public void SetUI(bool show)
         {
-            UiText.gameObject.SetActive(show);
-            UiImages.gameObject.SetActive(show);
-            AbilityUI.gameObject.SetActive(show);
+            UiTextTransform.gameObject.SetActive(show);
+            UiImagesTransform.gameObject.SetActive(show);
+            _abilityUiTransform.gameObject.SetActive(show);
 
             if(show)
             { 
                 //disable draft collider and enable main collider
-                draft_collider.enabled = false;
-                main_collider.enabled = true;
+                _draftCollider.enabled = false;
+                _mainCollider.enabled = true;
             }
         }
 
@@ -205,44 +206,44 @@ namespace _Scripts.Refactor.Hero
         {
             SetRenderOrder();
 
-            health_text.text = HeroStatsModel.HealthPoints.ToString();
-            damage_text.text = HeroStatsModel.AttackDamage.ToString();
-            initiative_text.text = HeroStatsModel.Initiative.ToString();
+            _healthText.text = HeroStatsModel.HealthPoints.ToString();
+            _damageText.text = HeroStatsModel.AttackDamage.ToString();
+            _initiativeText.text = HeroStatsModel.Initiative.ToString();
 
-            if (move_hero)
+            if (MoveHero)
             {
-                transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime);
+                transform.position = Vector2.MoveTowards(transform.position, TargetPosition, MovementSpeed * Time.deltaTime);
 
-                float distance = Vector2.Distance(transform.position, target_position);
+                float distance = Vector2.Distance(transform.position, TargetPosition);
 
                 if (distance == 0)
                 {
                     //disable move bool
-                    move_hero = false;
+                    MoveHero = false;
                     //set action ended, so next animation can play
                     GameManager.Instance.action_ended = true;
                 }
             }
-            else if(attack_move_hero)
+            else if(AttackMoveHero)
             {
-                transform.position = Vector2.MoveTowards(transform.position, target_position, movement_speed * Time.deltaTime * 3);
+                transform.position = Vector2.MoveTowards(transform.position, TargetPosition, MovementSpeed * Time.deltaTime * 3);
 
-                float distance = Vector2.Distance(transform.position, target_position);
+                float distance = Vector2.Distance(transform.position, TargetPosition);
 
                 if (distance <= 1)
                 {
                     //disable attack move bool
-                    attack_move_hero = false;
+                    AttackMoveHero = false;
 
                     //play melee attack sfx
                     SFXController.instance.PlaySFXClip("sword slash");
 
                     //apply damage to target
-                    target_enemy.GetComponent<HeroView>().HeroStatsController.TakeDamage(current_damage);
+                    _targetEnemy.GetComponent<HeroView>().HeroStatsController.TakeDamage(_currentDamage);
 
                     //set target position back to original, so the hero can move back
-                    target_position = original_position;
-                    move_hero = true;
+                    TargetPosition = OriginalPosition;
+                    MoveHero = true;
                 }
             }
         }
@@ -250,12 +251,12 @@ namespace _Scripts.Refactor.Hero
     
         private void SetRenderOrder()
         {
-            current_y = transform.position.y;
+            _currentYPosition = transform.position.y;
 
-            if(current_y != old_y)
+            if(_currentYPosition != _oldYPosition)
             {
-                old_y = current_y;
-                sprite_renderer.sortingOrder = Mathf.RoundToInt(transform.position.y * 100f) * -1;            
+                _oldYPosition = _currentYPosition;
+                _spriteRenderer.sortingOrder = Mathf.RoundToInt(transform.position.y * 100f) * -1;            
             }
         }
     
@@ -263,35 +264,35 @@ namespace _Scripts.Refactor.Hero
         #region basic attacks
         public void RangedAttack(GameObject _target, int damage)
         {
-            projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
-            projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().target = _target;
+            _projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
+            _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+            _projectile.GetComponent<Projectile.Projectile>().target = _target;
         }
 
         public void MagicAttack(int damage, int direction, string target_tag)
         {
-            projectile = Instantiate(FireballPrefab, transform.position, Quaternion.identity);
-            projectile.GetComponent<Projectile.Projectile>().Target_tag = target_tag;
-            projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().movement_speed *= direction;
+            _projectile = Instantiate(FireballPrefab, transform.position, Quaternion.identity);
+            _projectile.GetComponent<Projectile.Projectile>().Target_tag = target_tag;
+            _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+            _projectile.GetComponent<Projectile.Projectile>().movement_speed *= direction;
         }
 
         public void MeleeAttack(GameObject _target, int _damage)
         {
             //save original position
-            original_position = transform.position;
+            OriginalPosition = transform.position;
 
             //set enemy target
-            target_enemy = _target;
+            _targetEnemy = _target;
 
             //set current damage
-            current_damage = _damage;
+            _currentDamage = _damage;
 
             //make unit tackle enemy and then move back
-            attack_move_hero = true;
+            AttackMoveHero = true;
 
             //set target position
-            target_position = _target.transform.position;
+            TargetPosition = _target.transform.position;
         }
         #endregion
 
@@ -300,7 +301,7 @@ namespace _Scripts.Refactor.Hero
         public IEnumerator RangedAttack_Chain(GameObject _target, int damage)
         {
             //reset chain ended
-            chain_ended = false;
+            HasChainEnded = false;
 
             //set targets list of enemies
             //set start position and target object
@@ -309,9 +310,9 @@ namespace _Scripts.Refactor.Hero
             GameObject target_object = _target;
 
             //instantiate prefab
-            projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
-            projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().target = target_object;
+            _projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
+            _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+            _projectile.GetComponent<Projectile.Projectile>().target = target_object;
 
             switch(tag)
             {
@@ -340,9 +341,9 @@ namespace _Scripts.Refactor.Hero
                     //set new target object
                     target_object = g;
 
-                    projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
-                    projectile.GetComponent<Projectile.Projectile>().damage = damage;
-                    projectile.GetComponent<Projectile.Projectile>().target = target_object;
+                    _projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
+                    _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+                    _projectile.GetComponent<Projectile.Projectile>().target = target_object;
 
                     //set start position from previous hit target
                     start_position = target_object.transform.position;
@@ -350,13 +351,13 @@ namespace _Scripts.Refactor.Hero
             }
 
             //set chain ended to true
-            chain_ended = true;
+            HasChainEnded = true;
         }
 
         public IEnumerator MagicAttack_Chain(GameObject _target, int damage)
         {
             //reset chain ended
-            chain_ended = false;
+            HasChainEnded = false;
 
             //set targets list of enemies
             //set start position and target object
@@ -365,9 +366,9 @@ namespace _Scripts.Refactor.Hero
             GameObject target_object = _target;
 
             //instantiate prefab
-            projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
-            projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().target = target_object;
+            _projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
+            _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+            _projectile.GetComponent<Projectile.Projectile>().target = target_object;
 
             switch (tag)
             {
@@ -396,10 +397,10 @@ namespace _Scripts.Refactor.Hero
                     //set new target object
                     target_object = g;
 
-                    projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
-                    projectile.GetComponent<Projectile.Projectile>().damage = damage;
-                    projectile.GetComponent<Projectile.Projectile>().target = target_object;
-                    projectile.GetComponent<Projectile.Projectile>().movement_speed =  10;
+                    _projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
+                    _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+                    _projectile.GetComponent<Projectile.Projectile>().target = target_object;
+                    _projectile.GetComponent<Projectile.Projectile>().movement_speed =  10;
 
                     //set start position from previous hit target
                     start_position = target_object.transform.position;
@@ -407,7 +408,7 @@ namespace _Scripts.Refactor.Hero
             }
 
             //set chain ended to true
-            chain_ended = true;
+            HasChainEnded = true;
         }
 
         public void MeleeAttack_Chain()
@@ -430,9 +431,9 @@ namespace _Scripts.Refactor.Hero
         public void MeleeAbilityAttack(GameObject target, int damage)
         {
             //windslash projectile
-            projectile = Instantiate(WindSlashPrefab, transform.position, Quaternion.identity);
-            projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            projectile.GetComponent<Projectile.Projectile>().target = target;
+            _projectile = Instantiate(WindSlashPrefab, transform.position, Quaternion.identity);
+            _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+            _projectile.GetComponent<Projectile.Projectile>().target = target;
         }
 
         public IEnumerator MageAbilityAttack(GameObject target, int damage)

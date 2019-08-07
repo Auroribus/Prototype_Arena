@@ -210,7 +210,7 @@ namespace _Scripts.Refactor.Game
                     heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
                     heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
                     heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    heroView.main_class = Heroes[random].Main_class;
+                    heroView.MainClass = Heroes[random].Main_class;
 
                     HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer1;
                     HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
@@ -234,7 +234,7 @@ namespace _Scripts.Refactor.Game
                     heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
                     heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
                     heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    heroView.main_class = Heroes[random].Main_class;
+                    heroView.MainClass = Heroes[random].Main_class;
 
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer2;
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
@@ -277,7 +277,7 @@ namespace _Scripts.Refactor.Game
                 HeroView heroView = HeroListP1[i].GetComponent<HeroView>();
 
                 //check the class and select the column
-                switch (heroView.main_class)
+                switch (heroView.MainClass)
                 {
                     case MainClass.Warrior:
                         column = 2;
@@ -292,7 +292,7 @@ namespace _Scripts.Refactor.Game
 
                 //put character on random tile in set column
                 //loop till no longer drafted
-                while (heroView.isDrafted)
+                while (heroView.IsHeroDrafted)
                 {
                     //select random y
                     var random_y = Random.Range(0, 3);
@@ -317,8 +317,8 @@ namespace _Scripts.Refactor.Game
                         //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                         _gridPlayerOne.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        heroView.x_position_grid = tile_x;
-                        heroView.y_position_grid = tile_y;
+                        heroView.XPositionGrid = tile_x;
+                        heroView.YPositionGrid = tile_y;
 
                         //enable ui text and images
                         heroView.SetUI(true);
@@ -331,7 +331,7 @@ namespace _Scripts.Refactor.Game
                 HeroView heroView = HeroListP2[i].GetComponent<HeroView>();
 
                 //check the class and select the column
-                switch (heroView.main_class)
+                switch (heroView.MainClass)
                 {
                     case MainClass.Warrior:
                         column = 2;
@@ -346,7 +346,7 @@ namespace _Scripts.Refactor.Game
 
                 //put character on random tile in set column
                 //loop till no longer drafted
-                while (heroView.isDrafted)
+                while (heroView.IsHeroDrafted)
                 {
                     //select random y
                     var random_y = Random.Range(0, 3);
@@ -371,8 +371,8 @@ namespace _Scripts.Refactor.Game
                         //bool for the grid tile gets set to true so that no other unit can be spawned on top at the same time
                         _gridPlayerTwo.Grid[tile_x, tile_y].GetComponent<GridTile>().isOccupied = true;
 
-                        heroView.x_position_grid = tile_x;
-                        heroView.y_position_grid = tile_y;
+                        heroView.XPositionGrid = tile_x;
+                        heroView.YPositionGrid = tile_y;
                     
                         //enable ui text and images
                         heroView.SetUI(true);
