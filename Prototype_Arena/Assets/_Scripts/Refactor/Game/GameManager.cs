@@ -19,6 +19,12 @@ namespace _Scripts.Refactor.Game
 
         [SerializeField] private FadingBannerView _fadingBannerPrefab;
         private FadingBannerView _fadingBannerView;
+
+        [SerializeField] private GridTile _gridTilePrefab;
+        public GridTile GridTilePrefab
+        {
+            get { return _gridTilePrefab; }
+        }
         
         #region Variables
     
@@ -28,14 +34,14 @@ namespace _Scripts.Refactor.Game
         //References to enums
         public GameState CurrentState = GameState.Game;
         public Phase CurrentPhase = Phase.DraftPhase;
-        public PlayerTurn CurrentTurn = PlayerTurn.Player1;
+        public PlayerTurn CurrentPlayerTurn = PlayerTurn.Player1;
 
         //Reference to each player
         [NonSerialized] public GameObject Player1, Player2;
 
         //Reference to the grid parents for each player
-        [NonSerialized] public GridParent Grid_P1;
-        [NonSerialized] public GridParent Grid_P2;
+        [NonSerialized] public GridCreator Grid_P1;
+        [NonSerialized] public GridCreator Grid_P2;
 
         //max units that each player can have
         public int max_amount_units = 5;
@@ -108,11 +114,11 @@ namespace _Scripts.Refactor.Game
 
             MenuUI = GameObject.Find("Menu UI");
 
-            Grid_P2 = GameObject.Find("GridParent P2").GetComponent<GridParent>();
+            Grid_P2 = GameObject.Find("GridParent P2").GetComponent<GridCreator>();
             //flip grid parent 2, so that the column orientation is the same as grid p1
             Grid_P2.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
-            Grid_P1 = GameObject.Find("GridParent P1").GetComponent<GridParent>();
+            Grid_P1 = GameObject.Find("GridParent P1").GetComponent<GridCreator>();
 
             phase_text = GameObject.Find("Phase").GetComponent<Text>();
             player_turn_text = GameObject.Find("Turn").GetComponent<Text>();
@@ -432,6 +438,7 @@ namespace _Scripts.Refactor.Game
 
         public void SetPlayerTurn(PlayerTurn playerTurn)
         {
+            CurrentPlayerTurn = playerTurn;
             switch(playerTurn)
             {
                 case PlayerTurn.Player1:
@@ -448,24 +455,22 @@ namespace _Scripts.Refactor.Game
 
                             foreach (GameObject g in HeroList_P1)
                             {
-                                Hero.Hero _hero = g.GetComponent<Hero.Hero>();
+                                var hero = g.GetComponent<Hero.Hero>();
 
-                                _hero.SetUI(false);
-                                _hero.SetAction(false);
+                                hero.SetUI(false);
+                                hero.SetAction(false);
                             }
 
-                            P1_actions.text = "";
+                            P1_actions.text = string.Empty;
                             P2_actions.text = "Actions: 0/" + Player.Instance.max_actions;
                             break;
                     }
                 
                     //fade animation ui
-                    _fadingBannerView.SetAnimationUI(true, CurrentPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, CurrentPhase, CurrentPlayerTurn);
 
                     break;
             }
-        
-            CurrentTurn = playerTurn;
         }
 
         public void SetCurrentGameState(GameState active_state)
@@ -500,7 +505,7 @@ namespace _Scripts.Refactor.Game
                 case Phase.DraftPhase:
 
                     //fade in/out animation ui
-                    _fadingBannerView.SetAnimationUI(true, Phase.DraftPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.DraftPhase, CurrentPlayerTurn);
 
                     //set turn to 1
                     Current_turn_number = 1;
@@ -525,10 +530,10 @@ namespace _Scripts.Refactor.Game
                     Player.Instance.ClearActionIcons();
 
                     //check if turn is player 1s turn
-                    SetPlayerTurn(PlayerTurn.Player1);
+                    SetPlayerTurn(CurrentPlayerTurn);
 
                     //fade in/out animation ui
-                    _fadingBannerView.SetAnimationUI(true, Phase.PlanPhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.PlanPhase, CurrentPlayerTurn);
                 
                     CleanLists();
 
@@ -573,7 +578,7 @@ namespace _Scripts.Refactor.Game
                     player_turn_text.text = "";
 
                     //fade in/out animation ui
-                    _fadingBannerView.SetAnimationUI(true, Phase.ResolvePhase, CurrentTurn);
+                    _fadingBannerView.SetAnimationUI(true, Phase.ResolvePhase, CurrentPlayerTurn);
 
                     //disable plan ui
                     PlanUI.SetActive(false);
@@ -675,7 +680,7 @@ namespace _Scripts.Refactor.Game
 
         public void OnPlanReady()
         {
-            switch(CurrentTurn)
+            switch(CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //set players turn to player 2

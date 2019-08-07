@@ -25,7 +25,7 @@ namespace _Scripts.Refactor.PlayerScripts
         private string own_tag = "";
         private List<GameObject> enemy_list;
         private List<GameObject> allies_list;
-        private GridParent player_grid;
+        private GridCreator player_grid;
         private int player_actions = 0;
 
         //action based variables
@@ -313,7 +313,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //add action to list
                     list_of_actions.Add(new Action(
                         SelectedHero,
-                        GameManager.Instance.CurrentTurn,
+                        GameManager.Instance.CurrentPlayerTurn,
                         ActionType.ability,
                         target_heroes,
                         ability
@@ -417,7 +417,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             //add action to list
                             list_of_actions.Add(new Action(
                                 SelectedHero,
-                                GameManager.Instance.CurrentTurn,
+                                GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.attack,
                                 hit.transform.gameObject
                             ));
@@ -444,7 +444,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             //add action to the list
                             list_of_actions.Add(new Action(
                                 SelectedHero,
-                                GameManager.Instance.CurrentTurn,
+                                GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.attack,
                                 target_heroes
                             ));
@@ -464,7 +464,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             //add movement action to the list
                             list_of_actions.Add(new Action(
                                 SelectedHero,
-                                GameManager.Instance.CurrentTurn,
+                                GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.movement,
                                 hit.transform.gameObject
                             ));
@@ -609,7 +609,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
         private void SetPlayerTurnActionPhase()
         {
-            switch (GameManager.Instance.CurrentTurn)
+            switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     own_tag = "HeroP1";
@@ -956,7 +956,7 @@ namespace _Scripts.Refactor.PlayerScripts
     
         private void IncrementActions(int value)
         {
-            switch (GameManager.Instance.CurrentTurn)
+            switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     p1_actions += value;
@@ -1084,7 +1084,7 @@ namespace _Scripts.Refactor.PlayerScripts
             //local list, gets set based on player turn
             List<GameObject> hero_list = new List<GameObject>();
 
-            switch (GameManager.Instance.CurrentTurn)
+            switch (GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if actions lower or equal to 0, if they are then no undo left
@@ -1111,7 +1111,7 @@ namespace _Scripts.Refactor.PlayerScripts
                
             //remove last added action from the list based on whos turn it is
             //check if last action belongs to current player
-            if (list_of_actions[list_of_actions.Count - 1].player == GameManager.Instance.CurrentTurn)
+            if (list_of_actions[list_of_actions.Count - 1].player == GameManager.Instance.CurrentPlayerTurn)
             {
                 //reset checkmark and has action on hero
                 list_of_actions[list_of_actions.Count - 1].selected_hero.GetComponent<global::_Scripts.Refactor.Hero.Hero>().SetAction(false);
@@ -1133,7 +1133,7 @@ namespace _Scripts.Refactor.PlayerScripts
             //local list, gets set based on player turn
             List<GameObject> hero_list = new List<GameObject>();
 
-            switch(GameManager.Instance.CurrentTurn)
+            switch(GameManager.Instance.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if any actions for player, otherwise it will throw error
@@ -1157,14 +1157,14 @@ namespace _Scripts.Refactor.PlayerScripts
             }
         
             //remove all actions from the list based on whos turn it is
-            list_of_actions.RemoveAll(item => item.player == GameManager.Instance.CurrentTurn);
+            list_of_actions.RemoveAll(item => item.player == GameManager.Instance.CurrentPlayerTurn);
 
             //remove icons from plan list
             foreach (GameObject action in action_icons_list)
             {
                 ActionPrefab _action = action.GetComponent<ActionPrefab>();
 
-                if(_action.player == GameManager.Instance.CurrentTurn)
+                if(_action.player == GameManager.Instance.CurrentPlayerTurn)
                 {
                     Destroy(action);
                 }
