@@ -221,7 +221,7 @@ namespace _Scripts.Refactor.Hero
                     //disable move bool
                     MoveHero = false;
                     //set action ended, so next animation can play
-                    GameManager.Instance.action_ended = true;
+                    GameManager.Instance.HasActionEnded = true;
                 }
             }
             else if(AttackMoveHero)
@@ -334,9 +334,9 @@ namespace _Scripts.Refactor.Hero
                 if(g != _target)
                 { 
                     //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.Instance.action_ended == true);
+                    yield return new WaitUntil(() => GameManager.Instance.HasActionEnded == true);
 
-                    GameManager.Instance.action_ended = false;
+                    GameManager.Instance.HasActionEnded = false;
 
                     //set new target object
                     target_object = g;
@@ -390,9 +390,9 @@ namespace _Scripts.Refactor.Hero
                 if (g != _target)
                 {
                     //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.Instance.action_ended == true);
+                    yield return new WaitUntil(() => GameManager.Instance.HasActionEnded == true);
 
-                    GameManager.Instance.action_ended = false;
+                    GameManager.Instance.HasActionEnded = false;
 
                     //set new target object
                     target_object = g;

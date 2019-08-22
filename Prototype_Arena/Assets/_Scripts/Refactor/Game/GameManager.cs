@@ -6,7 +6,6 @@ using _Scripts.Refactor.Hero;
 using _Scripts.Refactor.PlayerScripts;
 using _Scripts.Refactor.UI;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -14,30 +13,30 @@ namespace _Scripts.Refactor.Game
 {
     public class GameManager : MonoBehaviour
     {
+        [Header("Scriptable Objects")] 
+        [SerializeField] private HeroBaseConfig _heroBaseConfig;
+        
+        [Header("Prefabs")]
         [SerializeField] private HeroInfoPanel _heroInfoPanelPrefab;
         private HeroInfoPanel _heroInfoPanel;
 
         [SerializeField] private FadingBannerView _fadingBannerPrefab;
         private FadingBannerView _fadingBannerView;
 
-        #region Variables
-    
-        //static reference which can be accessed in all other scripts by calling GameManager.instance
-        public static GameManager Instance;
-
-        //References to enums
-        public GameState CurrentState = GameState.Game;
-        public Phase CurrentPhase = Phase.DraftPhase;
-        public PlayerTurn CurrentPlayerTurn = PlayerTurn.Player1;
-
-        //Reference to the grid parents for each player
+        [Header("UI References")]
+        [SerializeField] private GameObject _resolveUi;
+        [SerializeField] private GameObject _endScreenUi;
+        [SerializeField] private GameObject _gridUi;
+        [SerializeField] private GameObject _menuUi;
+        [SerializeField] private GameObject _draftUi;
+        [SerializeField] private GameObject _planUi;
+        
+        [Header("Grid")]
         [SerializeField] private GridCreator _gridPrefab;
         private GridCreator _gridPlayerOne;
         private GridCreator _gridPlayerTwo;
-
         [SerializeField] private Transform _gridPlayerOneAnchor;
         [SerializeField] private Transform _gridPlayerTwoAnchor;
-        
         public GridCreator GridPlayerOne
         {
             get { return _gridPlayerOne; }
@@ -47,9 +46,54 @@ namespace _Scripts.Refactor.Game
         {
             get { return _gridPlayerTwo; }
         }
+        
+        [Header("Draft")]
+        [SerializeField] private Transform _draftPlayerOneAnchor;
+        [SerializeField] private Transform _draftPlayerTwoAnchor;
+        
+        [Header("Text")]
+        [SerializeField] private Text _phaseText;
+        [SerializeField] private Text _playerTurnText;
+        [SerializeField] private Text _turnNumberText;
+        [SerializeField] private Text _winnerNameText;
 
+        [SerializeField] private Text playerOneDraftedTextText;
+        [SerializeField] private Text playerTwoDraftedTextText;
+        [SerializeField] private Text playerOneActionsTextText;
+        [SerializeField] private Text playerTwoActionsTextText;
+
+        public Text PlayerOneDraftedText
+        {
+            get { return playerOneDraftedTextText; }
+        }
+
+        public Text PlayerTwoDraftedText
+        {
+            get { return playerTwoDraftedTextText; }
+        }
+
+        public Text PlayerOneActionsText
+        {
+            get { return playerOneActionsTextText; }
+        }
+
+        public Text PlayerTwoActionsText
+        {
+            get { return playerTwoActionsTextText; }
+        }
+        
+        #region Variables
+    
+        //static reference which can be accessed in all other scripts by calling GameManager.instance
+        public static GameManager Instance;
+
+        [Header("Further clean up:")]
+        //References to enums
+        public Phase CurrentPhase = Phase.DraftPhase;
+        public PlayerTurn CurrentPlayerTurn = PlayerTurn.Player1;
+        
         //max units that each player can have
-        public int max_amount_units = 5;
+        public int MaxAmountOfUnits = 5;
 
         //temp reference to hero prefab
         public GameObject HeroPrefab;
@@ -63,40 +107,14 @@ namespace _Scripts.Refactor.Game
 
         //temp spawn point for randomly spawning heros
         private Vector2 hero_spawnpoint;
-
-        private Text phase_text;
-        private Text player_turn_text;
-        private Text turn_number_text;
-        private Text Winner_playername_text;
-
-        public List<HeroBase> Heroes = new List<HeroBase>();
     
-        public int Current_turn_number;
-
-        private Transform DraftP1;
-        private Transform DraftP2;
-
-        private GameObject DraftUI;
-        [NonSerialized] public Text P1_drafted, P2_drafted;
-        
-        private GameObject PlanUI;
-        [NonSerialized] public Text P1_actions, P2_actions;
-
-        private GameObject ResolveUI;
-
-        private GameObject EndUI;
-
-        private GameObject GridUI;
-
-        private GameObject MenuUI;
+        private int _currentTurnCount;
 
         //bool to keep track if an action has ended so that resolving can continue
-        public bool action_ended = true;
+        public bool HasActionEnded;
 
         //player colors
-        [FormerlySerializedAs("Player1_color")] 
         public Color ColorPlayer1;
-        [FormerlySerializedAs("Player2_color")] 
         public Color ColorPlayer2;
 
         #endregion
@@ -105,7 +123,9 @@ namespace _Scripts.Refactor.Game
         {
             //check if no instance already exists of game manager
             if (Instance == null)
+            {
                 Instance = this;
+            }
         }
 
         // Use this for initialization
@@ -114,44 +134,20 @@ namespace _Scripts.Refactor.Game
             _heroInfoPanel = Instantiate(_heroInfoPanelPrefab);
             _fadingBannerView = Instantiate(_fadingBannerPrefab);
 
-            _gridPlayerOne = Instantiate(_gridPrefab);
-            _gridPlayerOne.transform.SetParent(_gridPlayerOneAnchor);
-            _gridPlayerTwo = Instantiate(_gridPrefab);
-            _gridPlayerTwo.transform.SetParent(_gridPlayerTwoAnchor);
+            _gridPlayerOne = Instantiate(_gridPrefab, _gridPlayerOneAnchor);
+            _gridPlayerTwo = Instantiate(_gridPrefab, _gridPlayerTwoAnchor);
             
-            MenuUI = GameObject.Find("Menu UI");
-
             //flip grid parent 2, so that the column orientation is the same as grid p1
             _gridPlayerTwo.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
-            phase_text = GameObject.Find("Phase").GetComponent<Text>();
-            player_turn_text = GameObject.Find("Turn").GetComponent<Text>();
-            turn_number_text = GameObject.Find("Turn number").GetComponent<Text>();
+            _winnerNameText = _endScreenUi.transform.Find("Winner Playername").GetComponent<Text>();
 
-            DraftP1 = GameObject.Find("DraftP1").transform;
-            DraftP2 = GameObject.Find("DraftP2").transform;
-
-            DraftUI = GameObject.Find("Draft UI");
-            P1_drafted = DraftUI.transform.Find("P1 drafted").GetComponent<Text>();
-            P2_drafted = DraftUI.transform.Find("P2 drafted").GetComponent<Text>();
-        
-            PlanUI = GameObject.Find("Plan UI");
-            P1_actions = PlanUI.transform.Find("P1_actions").GetComponent<Text>();
-            P2_actions = PlanUI.transform.Find("P2_actions").GetComponent<Text>();
-
-            ResolveUI = GameObject.Find("Resolve UI");
-            ResolveUI.SetActive(true);
-
-            EndUI = GameObject.Find("End UI");
-            Winner_playername_text = EndUI.transform.Find("Winner Playername").GetComponent<Text>();
-
-            GridUI = GameObject.Find("Grid UI");
-
-            GridUI.SetActive(false);
-            EndUI.SetActive(false);
-            PlanUI.SetActive(false);
-            DraftUI.SetActive(false);
-            ResolveUI.SetActive(false);
+            _resolveUi.SetActive(true);
+            _gridUi.SetActive(false);
+            _endScreenUi.SetActive(false);
+            _planUi.SetActive(false);
+            _draftUi.SetActive(false);
+            _resolveUi.SetActive(false);
 
             //set first state
             SetCurrentGameState(GameState.Menu);
@@ -193,24 +189,26 @@ namespace _Scripts.Refactor.Game
         //Function for handling the players drafting heroes
         private void DraftHeroUnits()
         {
+            var heroBases = _heroBaseConfig.HeroBases;
+            
             //spawn 10 random heroes for player 1
             for (var j = 0; j < 5; j++)
             {
                 for (var i = 0; i < 2; i++)
                 {
-                    hero_spawnpoint.x = i * 1.2f + DraftP1.transform.position.x;
-                    hero_spawnpoint.y = j * 1.2f + DraftP1.transform.position.y;
+                    hero_spawnpoint.x = i * 1.2f + _draftPlayerOneAnchor.transform.position.x;
+                    hero_spawnpoint.y = j * 1.2f + _draftPlayerOneAnchor.transform.position.y;
 
-                    var random = Random.Range(0, Heroes.Count);
-                    HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP1));
+                    var random = Random.Range(0, heroBases.Count);
+                    HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerOneAnchor));
                     var heroView = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
-                    heroView.HeroStatsModel.SetHealthPoints(Heroes[random].HealthPoints);
-                    heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
-                    heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
-                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    heroView.MainClass = Heroes[random].Main_class;
+                    heroView.HeroStatsModel.SetHealthPoints(heroBases[random].HealthPoints);
+                    heroView.HeroStatsModel.SetAttackDamage(heroBases[random].Damage);
+                    heroView.HeroStatsModel.SetInitiative(heroBases[random].Initiative);
+                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = heroBases[random].DraftSprite;
+                    heroView.MainClass = heroBases[random].MainClass;
 
                     HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer1;
                     HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
@@ -222,19 +220,19 @@ namespace _Scripts.Refactor.Game
             {
                 for (var i = 0; i < 2; i++)
                 {
-                    hero_spawnpoint.x = i * 1.2f + DraftP2.transform.position.x;
-                    hero_spawnpoint.y = j * 1.2f + DraftP2.transform.position.y;
+                    hero_spawnpoint.x = i * 1.2f + _draftPlayerTwoAnchor.transform.position.x;
+                    hero_spawnpoint.y = j * 1.2f + _draftPlayerTwoAnchor.transform.position.y;
 
-                    var random = Random.Range(0, Heroes.Count);
-                    HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, DraftP2));
+                    var random = Random.Range(0, heroBases.Count);
+                    HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerTwoAnchor));
                     var heroView = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
-                    heroView.HeroStatsModel.SetHealthPoints(Heroes[random].HealthPoints);
-                    heroView.HeroStatsModel.SetAttackDamage(Heroes[random].Damage);
-                    heroView.HeroStatsModel.SetInitiative(Heroes[random].Initiative);
-                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = Heroes[random].Draft_sprite;
-                    heroView.MainClass = Heroes[random].Main_class;
+                    heroView.HeroStatsModel.SetHealthPoints(heroBases[random].HealthPoints);
+                    heroView.HeroStatsModel.SetAttackDamage(heroBases[random].Damage);
+                    heroView.HeroStatsModel.SetInitiative(heroBases[random].Initiative);
+                    heroView.GetComponentInChildren<SpriteRenderer>().sprite = heroBases[random].DraftSprite;
+                    heroView.MainClass = heroBases[random].MainClass;
 
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer2;
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
@@ -272,9 +270,9 @@ namespace _Scripts.Refactor.Game
             var column = 0;
 
             //instantiate heroes in the hero list in the grid system
-            for (var i = 0; i < HeroListP1.Count; i++)
+            foreach (var hero in HeroListP1)
             {
-                HeroView heroView = HeroListP1[i].GetComponent<HeroView>();
+                var heroView = hero.GetComponent<HeroView>();
 
                 //check the class and select the column
                 switch (heroView.MainClass)
@@ -297,19 +295,19 @@ namespace _Scripts.Refactor.Game
                     //select random y
                     var random_y = Random.Range(0, 3);
 
-                    GridTile _tile = _gridPlayerOne.Grid[column, random_y].GetComponent<GridTile>();
+                    var _tile = _gridPlayerOne.Grid[column, random_y].GetComponent<GridTile>();
 
                     if (!_tile.isOccupied)
                     {
-                        int tile_x = _tile.pos_grid_x;
-                        int tile_y = _tile.pos_grid_y;
+                        var tile_x = _tile.pos_grid_x;
+                        var tile_y = _tile.pos_grid_y;
 
                         //remove unit from pool list                                                                      
-                        HeroPool_P1.Remove(HeroListP1[i]);
+                        HeroPool_P1.Remove(hero);
 
                         //place unit and set spawnpoint
                         hero_spawnpoint = _gridPlayerOne.Grid[tile_x, tile_y].transform.position;
-                        HeroListP1[i].transform.position = hero_spawnpoint;
+                        hero.transform.position = hero_spawnpoint;
 
                         //disable drafted visual
                         heroView.SetDrafted(false);
@@ -323,12 +321,12 @@ namespace _Scripts.Refactor.Game
                         //enable ui text and images
                         heroView.SetUI(true);
                     }                
-                }            
+                }
             }
 
-            for (var i = 0; i < HeroListP2.Count; i++)
+            foreach (var hero in HeroListP2)
             {
-                HeroView heroView = HeroListP2[i].GetComponent<HeroView>();
+                var heroView = hero.GetComponent<HeroView>();
 
                 //check the class and select the column
                 switch (heroView.MainClass)
@@ -359,11 +357,11 @@ namespace _Scripts.Refactor.Game
                         var tile_y = _tile.pos_grid_y;
 
                         //remove unit from pool list                                                                      
-                        HeroPool_P2.Remove(HeroListP2[i]);
+                        HeroPool_P2.Remove(hero);
 
                         //place unit and set spawnpoint
                         hero_spawnpoint = _gridPlayerTwo.Grid[tile_x, tile_y].transform.position;
-                        HeroListP2[i].transform.position = hero_spawnpoint;
+                        hero.transform.position = hero_spawnpoint;
 
                         //disable drafted visual
                         heroView.SetDrafted(false);
@@ -446,12 +444,12 @@ namespace _Scripts.Refactor.Game
             switch(playerTurn)
             {
                 case PlayerTurn.Player1:
-                    player_turn_text.text = "Player 1";
-                    player_turn_text.color = ColorPlayer1;
+                    _playerTurnText.text = "Player 1";
+                    _playerTurnText.color = ColorPlayer1;
                     break;
                 case PlayerTurn.Player2:
-                    player_turn_text.text = "Player 2";
-                    player_turn_text.color = ColorPlayer2;
+                    _playerTurnText.text = "Player 2";
+                    _playerTurnText.color = ColorPlayer2;
                                 
                     switch (CurrentPhase)
                     {
@@ -465,8 +463,8 @@ namespace _Scripts.Refactor.Game
                                 hero.SetAction(false);
                             }
 
-                            P1_actions.text = string.Empty;
-                            P2_actions.text = "Actions: 0/" + Player.Instance.MaxPlayerActions;
+                            PlayerOneActionsText.text = string.Empty;
+                            PlayerTwoActionsText.text = "Actions: 0/" + Player.Instance.MaxPlayerActions;
                             break;
                     }
                 
@@ -485,8 +483,8 @@ namespace _Scripts.Refactor.Game
                 case GameState.Menu:
                     break;
                 case GameState.Game:
-                    MenuUI.SetActive(false);
-                    EndUI.SetActive(false);
+                    _menuUi.SetActive(false);
+                    _endScreenUi.SetActive(false);
                     SetCurrentPhase(Phase.DraftPhase);
                     break;
                 case GameState.Paused:
@@ -494,9 +492,9 @@ namespace _Scripts.Refactor.Game
                 case GameState.Ended:
                     SetEndScreen();
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException("No game state found for: " + active_state);
             }
-
-            CurrentState = active_state;
         }
 
         public void SetCurrentPhase(Phase active_phase)
@@ -512,18 +510,18 @@ namespace _Scripts.Refactor.Game
                     _fadingBannerView.SetAnimationUI(true, Phase.DraftPhase, CurrentPlayerTurn);
 
                     //set turn to 1
-                    Current_turn_number = 1;
-                    turn_number_text.text = "turn: " + Current_turn_number;
+                    _currentTurnCount = 1;
+                    _turnNumberText.text = "turn: " + _currentTurnCount;
 
-                    DraftUI.SetActive(true);
-                    phase_text.text = "Draft Phase";
+                    _draftUi.SetActive(true);
+                    _phaseText.text = "Draft Phase";
 
                     //reset draft text
-                    P1_drafted.text = "Drafted: 0/5";
-                    P2_drafted.text = "Drafted: 0/5";
+                    PlayerOneDraftedText.text = "Drafted: 0/5";
+                    PlayerTwoDraftedText.text = "Drafted: 0/5";
                 
                     //disable plan ui
-                    PlanUI.SetActive(false);
+                    _planUi.SetActive(false);
 
                     DraftHeroUnits();
 
@@ -542,17 +540,17 @@ namespace _Scripts.Refactor.Game
                     CleanLists();
 
                     //enable grid ui
-                    GridUI.SetActive(true);
+                    _gridUi.SetActive(true);
                 
-                    DraftUI.SetActive(false);
-                    ResolveUI.SetActive(false);
-                    phase_text.text = "Planning Phase";
+                    _draftUi.SetActive(false);
+                    _resolveUi.SetActive(false);
+                    _phaseText.text = "Planning Phase";
 
-                    PlanUI.SetActive(true);
+                    _planUi.SetActive(true);
 
                     //reset player actions on new turn
-                    P1_actions.text = "Actions: 0/3";
-                    P2_actions.text = "";
+                    PlayerOneActionsText.text = "Actions: 0/3";
+                    PlayerTwoActionsText.text = "";
 
                     Player.Instance.PlayerOneActionCount = 0;
                     Player.Instance.PlayerTwoActionCount = 0;
@@ -579,19 +577,19 @@ namespace _Scripts.Refactor.Game
                 case Phase.ResolvePhase:
 
                     //hide player turn text/set empty
-                    player_turn_text.text = "";
+                    _playerTurnText.text = "";
 
                     //fade in/out animation ui
                     _fadingBannerView.SetAnimationUI(true, Phase.ResolvePhase, CurrentPlayerTurn);
 
                     //disable plan ui
-                    PlanUI.SetActive(false);
+                    _planUi.SetActive(false);
 
                     //enable resolve ui
-                    ResolveUI.SetActive(true);
+                    _resolveUi.SetActive(true);
 
                     //set action ended to true so that animations can play
-                    action_ended = true;
+                    HasActionEnded = true;
 
                     //hide stats on heroes and green check                
                     foreach(GameObject g in HeroListP2)
@@ -602,9 +600,12 @@ namespace _Scripts.Refactor.Game
                         heroView.SetAction(false);
                     }
 
-                    phase_text.text = "Resolve Phase";
+                    _phaseText.text = "Resolve Phase";
                     StartCoroutine(Player.Instance.ResolveActions());
                     break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException("no phase found for: " + active_phase);
             }
 
             //set current phase to active phase
@@ -613,7 +614,7 @@ namespace _Scripts.Refactor.Game
 
         public IEnumerator ClearKilledHeroes()
         {
-            foreach(GameObject hero in HeroListP1)
+            foreach(var hero in HeroListP1)
             {
                 if(hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
                 {
@@ -621,7 +622,7 @@ namespace _Scripts.Refactor.Game
                 }
             }
 
-            foreach(GameObject hero in HeroListP2)
+            foreach(var hero in HeroListP2)
             {
                 if (hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
                 {
@@ -642,8 +643,8 @@ namespace _Scripts.Refactor.Game
             {
                 SetCurrentPhase(Phase.PlanPhase);
                 //increment turn
-                Current_turn_number++;
-                turn_number_text.text = "turn: " + Current_turn_number;
+                _currentTurnCount++;
+                _turnNumberText.text = "turn: " + _currentTurnCount;
             }
         }
 
@@ -656,25 +657,25 @@ namespace _Scripts.Refactor.Game
         private void SetEndScreen()
         {
             //enable end ui
-            EndUI.SetActive(true);
+            _endScreenUi.SetActive(true);
 
             //set winners name
             if(HeroListP2.Count == 0)
             {
-                Winner_playername_text.text = "Player 1";
-                Winner_playername_text.color = ColorPlayer1;
+                _winnerNameText.text = "Player 1";
+                _winnerNameText.color = ColorPlayer1;
             }
             else if(HeroListP1.Count == 0)
             {
-                Winner_playername_text.text = "Player 2";
-                Winner_playername_text.color = ColorPlayer2;
+                _winnerNameText.text = "Player 2";
+                _winnerNameText.color = ColorPlayer2;
             }
         }
 
         public void OnDraftReady()
         {
             //check if both players selected the max amount of units to continue to planning phase
-            if (HeroListP1.Count == max_amount_units && HeroListP2.Count == max_amount_units)
+            if (HeroListP1.Count == MaxAmountOfUnits && HeroListP2.Count == MaxAmountOfUnits)
             {
                 //temp SetCurrentPhase(Phase.PlanPhase);
             }
@@ -703,8 +704,8 @@ namespace _Scripts.Refactor.Game
         public void OnResolveReady()
         {
             //increment turn
-            Current_turn_number++;
-            turn_number_text.text = "turn: " + Current_turn_number;
+            _currentTurnCount++;
+            _turnNumberText.text = "turn: " + _currentTurnCount;
 
             //set phase back to planning phase, or end screen if game over
             SetCurrentPhase(Phase.PlanPhase);
@@ -722,18 +723,5 @@ namespace _Scripts.Refactor.Game
         {
             SetCurrentGameState(GameState.Game);
         }
-    }
-
-    [Serializable]
-    public class HeroBase
-    {
-        public string Hero_name;
-        public int HealthPoints;
-        public int Damage;
-        public int Initiative;
-        public MainClass Main_class;
-        public SubClass Sub_clas;
-        public Sprite Draft_sprite;
-        public Sprite Main_sprite;
     }
 }

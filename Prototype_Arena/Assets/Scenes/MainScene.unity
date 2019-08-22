@@ -579,12 +579,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayerNumber: 1
-  max_actions: 3
-  p1_actions: 0
-  p2_actions: 0
-  action_icon_prefab: {fileID: 1245255559930988, guid: 1859a3561c791ce4ea249cc12b95aac7,
+  MaxPlayerActions: 3
+  PlayerOneActionCount: 0
+  PlayerTwoActionCount: 0
+  _actionIconPrefab: {fileID: 1245255559930988, guid: 1859a3561c791ce4ea249cc12b95aac7,
     type: 2}
-  action_icon_sprites:
+  _actionIconSprites:
   - {fileID: 21300000, guid: ced59e0144d6fd84d8cf957661ed6486, type: 3}
   - {fileID: 21300000, guid: 7047c93d8eda2c1459c2e3fd6e64972f, type: 3}
   - {fileID: 21300000, guid: de311ebe35cdf3c49b77f9842f349536, type: 3}
@@ -2660,6 +2660,56 @@ Prefab:
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _resolveUi
+      value: 
+      objectReference: {fileID: 1023696023}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _endScreenUi
+      value: 
+      objectReference: {fileID: 1927043425}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _gridUi
+      value: 
+      objectReference: {fileID: 294186107}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _menuUi
+      value: 
+      objectReference: {fileID: 1856624030}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _draftUi
+      value: 
+      objectReference: {fileID: 452979511}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _planUi
+      value: 
+      objectReference: {fileID: 1349781664}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _phaseText
+      value: 
+      objectReference: {fileID: 1360018570}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _playerTurnText
+      value: 
+      objectReference: {fileID: 998864260}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _turnNumberText
+      value: 
+      objectReference: {fileID: 1003530675}
+    - target: {fileID: 114814918697838070, guid: 4e5bb759481a02449b53837fcc2d353e,
+        type: 2}
+      propertyPath: _winnerNameText
+      value: 
+      objectReference: {fileID: 1403776914}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e5bb759481a02449b53837fcc2d353e, type: 2}
   m_IsPrefabAsset: 0

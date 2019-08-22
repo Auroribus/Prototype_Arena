@@ -146,7 +146,7 @@ namespace _Scripts.Refactor.PlayerScripts
             {
                 if (!hit.transform.GetComponent<HeroView>().IsHeroDrafted)
                 {
-                    if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.max_amount_units)
+                    if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.MaxAmountOfUnits)
                     {
                         HeroView heroView = hit.transform.gameObject
                             .GetComponent<HeroView>();
@@ -164,9 +164,9 @@ namespace _Scripts.Refactor.PlayerScripts
                         {
                             heroView.SetDrafted(true);
                             GameManager.Instance.HeroListP1.Add(heroView.transform.gameObject);
-                            GameManager.Instance.P1_drafted.text =
+                            GameManager.Instance.PlayerOneDraftedText.text =
                                 "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
-                                GameManager.Instance.max_amount_units;
+                                GameManager.Instance.MaxAmountOfUnits;
 
                             /* now set in hero on draft and on select
                         AbilityBase ability = _hero.HeroAbility;
@@ -188,15 +188,15 @@ namespace _Scripts.Refactor.PlayerScripts
                 {
                     hit.transform.GetComponent<HeroView>().SetDrafted(false);
                     GameManager.Instance.HeroListP1.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P1_drafted.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
-                                                           GameManager.Instance.max_amount_units;
+                    GameManager.Instance.PlayerOneDraftedText.text = "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
+                                                           GameManager.Instance.MaxAmountOfUnits;
                 }
             }
             else if (hit.collider.tag == "HeroP2")
             {
                 if (!hit.transform.GetComponent<HeroView>().IsHeroDrafted)
                 {
-                    if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.max_amount_units)
+                    if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.MaxAmountOfUnits)
                     {
                         HeroView heroView = hit.transform.gameObject
                             .GetComponent<HeroView>();
@@ -214,9 +214,9 @@ namespace _Scripts.Refactor.PlayerScripts
                         {
                             heroView.SetDrafted(true);
                             GameManager.Instance.HeroListP2.Add(heroView.transform.gameObject);
-                            GameManager.Instance.P2_drafted.text =
+                            GameManager.Instance.PlayerTwoDraftedText.text =
                                 "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
-                                GameManager.Instance.max_amount_units;
+                                GameManager.Instance.MaxAmountOfUnits;
 
                             /*see p1 comment for more info
                         AbilityBase ability = _hero.HeroAbility;
@@ -238,8 +238,8 @@ namespace _Scripts.Refactor.PlayerScripts
                 {
                     hit.transform.GetComponent<HeroView>().SetDrafted(false);
                     GameManager.Instance.HeroListP2.Remove(hit.transform.gameObject);
-                    GameManager.Instance.P2_drafted.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
-                                                           GameManager.Instance.max_amount_units;
+                    GameManager.Instance.PlayerTwoDraftedText.text = "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
+                                                           GameManager.Instance.MaxAmountOfUnits;
                 }
             }
         }
@@ -687,12 +687,12 @@ namespace _Scripts.Refactor.PlayerScripts
 
             yield return new WaitForSeconds(1f);
 
-            foreach (HeroAction action in ListOfActions)
+            foreach (var action in ListOfActions)
             {
                 //wait till action is finished
-                yield return new WaitUntil(() => GameManager.Instance.action_ended);
+                yield return new WaitUntil(() => GameManager.Instance.HasActionEnded);
                 //set action ended to false
-                GameManager.Instance.action_ended = false;
+                GameManager.Instance.HasActionEnded = false;
 
                 yield return new WaitForSeconds(.5f);
 
@@ -778,7 +778,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                         _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                                             .SetCheckmark(true, Color.red);
 
-                                        GameManager.Instance.action_ended = true;
+                                        GameManager.Instance.HasActionEnded = true;
                                     }
 
                                     break;
@@ -845,7 +845,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                 _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                                     .SetCheckmark(true, Color.red);
 
-                                GameManager.Instance.action_ended = true;
+                                GameManager.Instance.HasActionEnded = true;
                             }
 
                             break;
@@ -1006,7 +1006,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //set checkmark to green on action prefab
                     _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                         .SetCheckmark(true, Color.green);
-                    GameManager.Instance.action_ended = true;
+                    GameManager.Instance.HasActionEnded = true;
 
                     //temp
                     yield return new WaitForSeconds(1f);
@@ -1016,7 +1016,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //set checkmark to red on action prefab
                     _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                         .SetCheckmark(true, Color.red);
-                    GameManager.Instance.action_ended = true;
+                    GameManager.Instance.HasActionEnded = true;
                 }
             }
 
@@ -1039,7 +1039,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     DeselectHero();
 
-                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions;
+                    GameManager.Instance.PlayerOneActionsText.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions;
 
                     //check if player one has max actions
                     if (PlayerOneActionCount == MaxPlayerActions)
@@ -1059,7 +1059,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     DeselectHero();
 
-                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
+                    GameManager.Instance.PlayerTwoActionsText.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
 
                     //check if player two has max actions
                     if (PlayerTwoActionCount == MaxPlayerActions)
@@ -1170,7 +1170,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         return;
 
                     PlayerOneActionCount--; //lower actions amount
-                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
+                    GameManager.Instance.PlayerOneActionsText.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
                     listOfHeroes = GameManager.Instance.HeroListP1; //set local list    
 
 
@@ -1182,7 +1182,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         return;
 
                     PlayerTwoActionCount--;
-                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
+                    GameManager.Instance.PlayerTwoActionsText.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
                     listOfHeroes = GameManager.Instance.HeroListP2;
                     break;
             }
@@ -1221,7 +1221,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
 
                     PlayerOneActionCount = 0; //reset actions amount
-                    GameManager.Instance.P1_actions.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
+                    GameManager.Instance.PlayerOneActionsText.text = "Actions: " + PlayerOneActionCount + "/" + MaxPlayerActions; //set text
                     listOfHeroes = GameManager.Instance.HeroListP1; //set local list                
                     break;
 
@@ -1233,7 +1233,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
 
                     PlayerTwoActionCount = 0;
-                    GameManager.Instance.P2_actions.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
+                    GameManager.Instance.PlayerTwoActionsText.text = "Actions: " + PlayerTwoActionCount + "/" + MaxPlayerActions;
                     listOfHeroes = GameManager.Instance.HeroListP2;
                     break;
             }

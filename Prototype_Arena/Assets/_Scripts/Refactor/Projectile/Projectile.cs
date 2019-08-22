@@ -53,7 +53,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.action_ended = true;
+                        GameManager.Instance.HasActionEnded = true;
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
                     }
@@ -69,7 +69,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.action_ended = true;
+                        GameManager.Instance.HasActionEnded = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
@@ -110,7 +110,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.action_ended = true;
+                        GameManager.Instance.HasActionEnded = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);

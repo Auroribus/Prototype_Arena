@@ -11,6 +11,36 @@ Prefab:
   m_SourcePrefab: {fileID: 0}
   m_RootGameObject: {fileID: 1848764782707628}
   m_IsPrefabAsset: 1
+--- !u!1 &1176177903957518
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4028807562744260}
+  m_Layer: 0
+  m_Name: draft_player_one_anchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1297650955311342
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4389782981430952}
+  m_Layer: 0
+  m_Name: draft_player_two_anchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1376418411474962
 GameObject:
   m_ObjectHideFlags: 0
@@ -57,6 +87,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!4 &4028807562744260
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1176177903957518}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.8, y: -3.95, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4699339318166154}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4240245186395348
 Transform:
   m_ObjectHideFlags: 1
@@ -69,6 +112,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4699339318166154}
   m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4389782981430952
+Transform:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1297650955311342}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4.65, y: -3.95, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4699339318166154}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4588526502111176
 Transform:
@@ -95,6 +151,8 @@ Transform:
   m_Children:
   - {fileID: 4588526502111176}
   - {fileID: 4240245186395348}
+  - {fileID: 4028807562744260}
+  - {fileID: 4389782981430952}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -109,45 +167,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e20a29647caf5f54fb94186198ef7166, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _heroBaseConfig: {fileID: 11400000, guid: a6050a32a65d3784e87781aede8732b5, type: 2}
   _heroInfoPanelPrefab: {fileID: 114013170734343080, guid: 33891325f760c9948a55268bfc942ce7,
     type: 2}
   _fadingBannerPrefab: {fileID: 114732873555445776, guid: 9962b6bf66651534ead325379a3d572f,
     type: 2}
-  CurrentState: 1
-  CurrentPhase: 1
-  CurrentPlayerTurn: 0
+  _resolveUi: {fileID: 0}
+  _endScreenUi: {fileID: 0}
+  _gridUi: {fileID: 0}
+  _menuUi: {fileID: 0}
+  _draftUi: {fileID: 0}
+  _planUi: {fileID: 0}
   _gridPrefab: {fileID: 114454972218261796, guid: ee0679034f3c45a4db87f8f0d1a441e1,
     type: 2}
   _gridPlayerOneAnchor: {fileID: 4588526502111176}
   _gridPlayerTwoAnchor: {fileID: 4240245186395348}
+  _draftPlayerOneAnchor: {fileID: 4028807562744260}
+  _draftPlayerTwoAnchor: {fileID: 4389782981430952}
+  _phaseText: {fileID: 0}
+  _playerTurnText: {fileID: 0}
+  _turnNumberText: {fileID: 0}
+  _winnerNameText: {fileID: 0}
+  playerOneDraftedTextText: {fileID: 0}
+  playerTwoDraftedTextText: {fileID: 0}
+  playerOneActionsTextText: {fileID: 0}
+  playerTwoActionsTextText: {fileID: 0}
+  CurrentPhase: 1
+  CurrentPlayerTurn: 0
   max_amount_units: 5
   HeroPrefab: {fileID: 1327947859329566, guid: a7671478ff743754e98ec43489137285, type: 2}
-  Heroes:
-  - Hero_name: Scout1
-    HealthPoints: 10
-    Damage: 2
-    Initiative: 12
-    Main_class: 1
-    Sub_clas: 0
-    Draft_sprite: {fileID: 21300000, guid: e42867d19b947f041bd0ce5cebeb8c6f, type: 3}
-    Main_sprite: {fileID: 21300000, guid: c4d6ec3fb247ab749885061b830ba562, type: 3}
-  - Hero_name: Warrior1
-    HealthPoints: 12
-    Damage: 3
-    Initiative: 10
-    Main_class: 0
-    Sub_clas: 3
-    Draft_sprite: {fileID: 21300000, guid: 11bad298950114547a4f41265ca9cb0f, type: 3}
-    Main_sprite: {fileID: 21300000, guid: c4d6ec3fb247ab749885061b830ba562, type: 3}
-  - Hero_name: Mage1
-    HealthPoints: 8
-    Damage: 1
-    Initiative: 8
-    Main_class: 2
-    Sub_clas: 6
-    Draft_sprite: {fileID: 21300000, guid: 91b03dece7b11444c8767af64d38badd, type: 3}
-    Main_sprite: {fileID: 21300000, guid: c4d6ec3fb247ab749885061b830ba562, type: 3}
-  Current_turn_number: 0
+  CurrentTurnCount: 0
   action_ended: 0
   ColorPlayer1: {r: 0, g: 0.69803923, b: 1, a: 1}
   ColorPlayer2: {r: 1, g: 0.32941177, b: 0, a: 1}
