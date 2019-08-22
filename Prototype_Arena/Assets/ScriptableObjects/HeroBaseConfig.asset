@@ -12,27 +12,27 @@ MonoBehaviour:
   m_Name: HeroBaseConfig
   m_EditorClassIdentifier: 
   _heroBases:
-  - HeroName: 0
-    HealthPoints: 0
-    Damage: 0
-    Initiative: 0
-    MainClass: 0
+  - HeroName: 1
+    HealthPoints: 5
+    Damage: 1
+    Initiative: 3
+    MainClass: 1
     SubClass: 0
-    DraftSprite: {fileID: 0}
-    MainSprite: {fileID: 0}
-  - HeroName: 0
-    HealthPoints: 0
-    Damage: 0
-    Initiative: 0
+    DraftSprite: {fileID: 21300000, guid: e42867d19b947f041bd0ce5cebeb8c6f, type: 3}
+    MainSprite: {fileID: 21300000, guid: e42867d19b947f041bd0ce5cebeb8c6f, type: 3}
+  - HeroName: 11
+    HealthPoints: 8
+    Damage: 1
+    Initiative: 1
     MainClass: 0
-    SubClass: 0
-    DraftSprite: {fileID: 0}
-    MainSprite: {fileID: 0}
-  - HeroName: 0
-    HealthPoints: 0
-    Damage: 0
-    Initiative: 0
-    MainClass: 0
-    SubClass: 0
-    DraftSprite: {fileID: 0}
-    MainSprite: {fileID: 0}
+    SubClass: 3
+    DraftSprite: {fileID: 21300000, guid: 11bad298950114547a4f41265ca9cb0f, type: 3}
+    MainSprite: {fileID: 21300000, guid: 11bad298950114547a4f41265ca9cb0f, type: 3}
+  - HeroName: 21
+    HealthPoints: 6
+    Damage: 2
+    Initiative: 2
+    MainClass: 2
+    SubClass: 6
+    DraftSprite: {fileID: 21300000, guid: 91b03dece7b11444c8767af64d38badd, type: 3}
+    MainSprite: {fileID: 21300000, guid: 91b03dece7b11444c8767af64d38badd, type: 3}

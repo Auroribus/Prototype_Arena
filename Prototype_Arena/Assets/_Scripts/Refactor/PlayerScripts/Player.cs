@@ -1157,7 +1157,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
         public void ClearActionIcons()
         {
-            foreach (GameObject action in _actionIconsList)
+            foreach (var action in _actionIconsList)
             {
                 Destroy(action);
             }
