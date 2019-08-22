@@ -464,7 +464,7 @@ namespace _Scripts.Refactor.Game
                             }
 
                             PlayerOneActionsText.text = string.Empty;
-                            PlayerTwoActionsText.text = "Actions: 0/" + Player.Instance.MaxPlayerActions;
+                            PlayerTwoActionsText.text = "Actions: 0/" + Player.MaxNumberOfPlayerActions;
                             break;
                     }
                 
@@ -552,17 +552,16 @@ namespace _Scripts.Refactor.Game
                     PlayerOneActionsText.text = "Actions: 0/3";
                     PlayerTwoActionsText.text = "";
 
-                    Player.Instance.PlayerOneActionCount = 0;
-                    Player.Instance.PlayerTwoActionCount = 0;
+                    Player.Instance.ResetPlayerActionCounts();
 
-                    foreach(GameObject hero in HeroListP1)
+                    foreach(var hero in HeroListP1)
                     {
-                        HeroView heroView = hero.GetComponent<HeroView>();
+                        var heroView = hero.GetComponent<HeroView>();
                         heroView.SetUI(true);
                     }
-                    foreach (GameObject hero in HeroListP2)
+                    foreach (var hero in HeroListP2)
                     {
-                        HeroView heroView = hero.GetComponent<HeroView>();
+                        var heroView = hero.GetComponent<HeroView>();
                         heroView.SetUI(true);
                     }
 
