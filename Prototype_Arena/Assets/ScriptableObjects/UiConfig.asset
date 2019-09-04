@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb25203e81444d299e134bff7d52a104, type: 3}
+  m_Name: UiConfig
+  m_EditorClassIdentifier: 
+  _mainUiPrefab: {fileID: 114787744148356518, guid: 59dc0ab48b430544491de22dd7607a7d,
+    type: 2}
+  _resolveUiPrefab: {fileID: 114694805372453274, guid: 268acb73142cd2948b62c6b10c3c60dc,
+    type: 2}
+  _endScreenUiPrefab: {fileID: 114254247949093180, guid: c0a1a903e45b54b4c9a1d32c94765e76,
+    type: 2}
+  _gridUiPrefab: {fileID: 114086295799611382, guid: 3b59061c11a468d43a00dc69d3b9cd25,
+    type: 2}
+  _menuUiPrefab: {fileID: 114911519365141546, guid: a048e1da0951d5342a97889e8c59f12b,
+    type: 2}
+  _draftUiPrefab: {fileID: 114951139912729642, guid: 84880f733aba18b4c9f5466ff4bf37b8,
+    type: 2}
+  _planUiPrefab: {fileID: 114681560981339090, guid: 8263b51339865a04ba85b1b5e7df4abc,
+    type: 2}
