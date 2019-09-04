@@ -57,29 +57,30 @@ namespace _Scripts.Refactor.Game
         private Text _turnNumberText;
         private Text _winnerNameText;
 
-        [SerializeField] private Text playerOneDraftedTextText;
-        [SerializeField] private Text playerTwoDraftedTextText;
-        [SerializeField] private Text playerOneActionsTextText;
-        [SerializeField] private Text playerTwoActionsTextText;
+        private Text _playerOneDraftedText;
+        private Text _playerTwoDraftedText;
+        
+        private Text _playerOneActionsText;
+        private Text _playerTwoActionsText;
 
         public Text PlayerOneDraftedText
         {
-            get { return playerOneDraftedTextText; }
+            get { return _playerOneDraftedText; }
         }
 
         public Text PlayerTwoDraftedText
         {
-            get { return playerTwoDraftedTextText; }
+            get { return _playerTwoDraftedText; }
         }
 
         public Text PlayerOneActionsText
         {
-            get { return playerOneActionsTextText; }
+            get { return _playerOneActionsText; }
         }
 
         public Text PlayerTwoActionsText
         {
-            get { return playerTwoActionsTextText; }
+            get { return _playerTwoActionsText; }
         }
         
         #region Variables
@@ -153,6 +154,12 @@ namespace _Scripts.Refactor.Game
             _playerTurnText = _mainUi.PlayerTurnText;
             _turnNumberText = _mainUi.TurnNumberText;
             _winnerNameText = _endScreenUi.WinnersNameText;
+
+            _playerOneDraftedText = _draftUi.PlayerOneDraftedText;
+            _playerTwoDraftedText = _draftUi.PlayerTwoDraftedText;
+
+            _playerOneActionsText = _planUi.PlayerOneActionsText;
+            _playerTwoActionsText = _planUi.PlayerTwoActionsText;
 
             _gridUi.gameObject.SetActive(false);
             _endScreenUi.gameObject.SetActive(false);
@@ -486,10 +493,10 @@ namespace _Scripts.Refactor.Game
             }
         }
 
-        public void SetCurrentGameState(GameState active_state)
+        public void SetCurrentGameState(GameState activeState)
         {        
             //do stuff with new state
-            switch (active_state)
+            switch (activeState)
             {
                 case GameState.Menu:
                     break;
@@ -504,7 +511,7 @@ namespace _Scripts.Refactor.Game
                     SetEndScreen();
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("No game state found for: " + active_state);
+                    throw new ArgumentOutOfRangeException("No game state found for: " + activeState);
             }
         }
 
