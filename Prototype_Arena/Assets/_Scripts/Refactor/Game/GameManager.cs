@@ -15,6 +15,7 @@ namespace _Scripts.Refactor.Game
     {
         [Header("Scriptable Objects")] 
         [SerializeField] private HeroBaseConfig _heroBaseConfig;
+        [SerializeField] private UiConfig _uiConfig;
         
         [Header("Prefabs")]
         [SerializeField] private HeroInfoPanel _heroInfoPanelPrefab;
@@ -23,13 +24,13 @@ namespace _Scripts.Refactor.Game
         [SerializeField] private FadingBannerView _fadingBannerPrefab;
         private FadingBannerView _fadingBannerView;
 
-        [Header("UI References")]
-        [SerializeField] private GameObject _resolveUi;
-        [SerializeField] private GameObject _endScreenUi;
-        [SerializeField] private GameObject _gridUi;
-        [SerializeField] private GameObject _menuUi;
-        [SerializeField] private GameObject _draftUi;
-        [SerializeField] private GameObject _planUi;
+        private MainUiView _mainUi;
+        private ResolveUiView _resolveUi;
+        private EndScreenUiView _endScreenUi;
+        private GridUiView _gridUi;
+        private MenuUiView _menuUi;
+        private DraftUiView _draftUi;
+        private PlanUiView _planUi;
         
         [Header("Grid")]
         [SerializeField] private GridCreator _gridPrefab;
@@ -51,11 +52,10 @@ namespace _Scripts.Refactor.Game
         [SerializeField] private Transform _draftPlayerOneAnchor;
         [SerializeField] private Transform _draftPlayerTwoAnchor;
         
-        [Header("Text")]
-        [SerializeField] private Text _phaseText;
-        [SerializeField] private Text _playerTurnText;
-        [SerializeField] private Text _turnNumberText;
-        [SerializeField] private Text _winnerNameText;
+        private Text _phaseText;
+        private Text _playerTurnText;
+        private Text _turnNumberText;
+        private Text _winnerNameText;
 
         [SerializeField] private Text playerOneDraftedTextText;
         [SerializeField] private Text playerTwoDraftedTextText;
@@ -140,14 +140,25 @@ namespace _Scripts.Refactor.Game
             //flip grid parent 2, so that the column orientation is the same as grid p1
             _gridPlayerTwo.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
 
-            _winnerNameText = _endScreenUi.transform.Find("Winner Playername").GetComponent<Text>();
+            _mainUi = Instantiate(_uiConfig.MainUiPrefab);
+            _menuUi = Instantiate(_uiConfig.MenuUiPrefab);
+            _resolveUi = Instantiate(_uiConfig.ResolveUiPrefab);
+            _gridUi = Instantiate(_uiConfig.GridUiPrefab);
+            _endScreenUi = Instantiate(_uiConfig.EndScreenUiPrefab);
+            _planUi = Instantiate(_uiConfig.PlanUiPrefab);
+            _draftUi = Instantiate(_uiConfig.DraftUiPrefab);
+            _resolveUi = Instantiate(_uiConfig.ResolveUiPrefab);
 
-            _resolveUi.SetActive(true);
-            _gridUi.SetActive(false);
-            _endScreenUi.SetActive(false);
-            _planUi.SetActive(false);
-            _draftUi.SetActive(false);
-            _resolveUi.SetActive(false);
+            _phaseText = _mainUi.PhaseText;
+            _playerTurnText = _mainUi.PlayerTurnText;
+            _turnNumberText = _mainUi.TurnNumberText;
+            _winnerNameText = _endScreenUi.WinnersNameText;
+
+            _gridUi.gameObject.SetActive(false);
+            _endScreenUi.gameObject.SetActive(false);
+            _planUi.gameObject.SetActive(false);
+            _draftUi.gameObject.SetActive(false);
+            _resolveUi.gameObject.SetActive(false);
 
             //set first state
             SetCurrentGameState(GameState.Menu);
@@ -483,8 +494,8 @@ namespace _Scripts.Refactor.Game
                 case GameState.Menu:
                     break;
                 case GameState.Game:
-                    _menuUi.SetActive(false);
-                    _endScreenUi.SetActive(false);
+                    _menuUi.gameObject.SetActive(false);
+                    _endScreenUi.gameObject.SetActive(false);
                     SetCurrentPhase(Phase.DraftPhase);
                     break;
                 case GameState.Paused:
@@ -513,7 +524,7 @@ namespace _Scripts.Refactor.Game
                     _currentTurnCount = 1;
                     _turnNumberText.text = "turn: " + _currentTurnCount;
 
-                    _draftUi.SetActive(true);
+                    _draftUi.gameObject.SetActive(true);
                     _phaseText.text = "Draft Phase";
 
                     //reset draft text
@@ -521,7 +532,7 @@ namespace _Scripts.Refactor.Game
                     PlayerTwoDraftedText.text = "Drafted: 0/5";
                 
                     //disable plan ui
-                    _planUi.SetActive(false);
+                    _planUi.gameObject.SetActive(false);
 
                     DraftHeroUnits();
 
@@ -540,13 +551,13 @@ namespace _Scripts.Refactor.Game
                     CleanLists();
 
                     //enable grid ui
-                    _gridUi.SetActive(true);
+                    _gridUi.gameObject.SetActive(true);
                 
-                    _draftUi.SetActive(false);
-                    _resolveUi.SetActive(false);
+                    _draftUi.gameObject.SetActive(false);
+                    _resolveUi.gameObject.SetActive(false);
                     _phaseText.text = "Planning Phase";
 
-                    _planUi.SetActive(true);
+                    _planUi.gameObject.SetActive(true);
 
                     //reset player actions on new turn
                     PlayerOneActionsText.text = "Actions: 0/3";
@@ -582,10 +593,10 @@ namespace _Scripts.Refactor.Game
                     _fadingBannerView.SetAnimationUI(true, Phase.ResolvePhase, CurrentPlayerTurn);
 
                     //disable plan ui
-                    _planUi.SetActive(false);
+                    _planUi.gameObject.SetActive(false);
 
                     //enable resolve ui
-                    _resolveUi.SetActive(true);
+                    _resolveUi.gameObject.SetActive(true);
 
                     //set action ended to true so that animations can play
                     HasActionEnded = true;
@@ -656,7 +667,7 @@ namespace _Scripts.Refactor.Game
         private void SetEndScreen()
         {
             //enable end ui
-            _endScreenUi.SetActive(true);
+            _endScreenUi.gameObject.SetActive(true);
 
             //set winners name
             if(HeroListP2.Count == 0)
