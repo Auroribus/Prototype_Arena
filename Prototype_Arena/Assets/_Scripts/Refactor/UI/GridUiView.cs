@@ -1,7 +1,9 @@
+using UnityEngine;
+
 namespace _Scripts.Refactor.UI
 {
-    public class GridUiView
-    {
+    public class GridUiView : MonoBehaviour
+    { 
         
     }
 }
