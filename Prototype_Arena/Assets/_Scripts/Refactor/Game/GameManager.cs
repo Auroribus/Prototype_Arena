@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero;
+using _Scripts.Refactor.Hero.Abilities;
 using _Scripts.Refactor.PlayerScripts;
 using _Scripts.Refactor.UI;
 using UnityEngine;
@@ -13,17 +14,26 @@ namespace _Scripts.Refactor.Game
 {
     public class GameManager : MonoBehaviour
     {
-        [Header("Scriptable Objects")] 
+        [Header("Configs")] 
         [SerializeField] private HeroBaseConfig _heroBaseConfig;
         [SerializeField] private UiConfig _uiConfig;
         
         [Header("Prefabs")]
         [SerializeField] private HeroInfoPanel _heroInfoPanelPrefab;
-        private HeroInfoPanel _heroInfoPanel;
-
         [SerializeField] private FadingBannerView _fadingBannerPrefab;
+        [SerializeField] private GridCreator _gridPrefab;
+        [SerializeField] private HeroView _heroPrefab;
+        [SerializeField] private HeroAbilities _heroAbilityGeneratorPrefab;
+        
+        [Header("Anchors")]
+        [SerializeField] private Transform _gridPlayerOneAnchor;
+        [SerializeField] private Transform _gridPlayerTwoAnchor;
+        [SerializeField] private Transform _draftPlayerOneAnchor;
+        [SerializeField] private Transform _draftPlayerTwoAnchor;
+        
         private FadingBannerView _fadingBannerView;
-
+        private HeroInfoPanel _heroInfoPanel;
+        
         private MainUiView _mainUi;
         private ResolveUiView _resolveUi;
         private EndScreenUiView _endScreenUi;
@@ -31,26 +41,6 @@ namespace _Scripts.Refactor.Game
         private MenuUiView _menuUi;
         private DraftUiView _draftUi;
         private PlanUiView _planUi;
-        
-        [Header("Grid")]
-        [SerializeField] private GridCreator _gridPrefab;
-        private GridCreator _gridPlayerOne;
-        private GridCreator _gridPlayerTwo;
-        [SerializeField] private Transform _gridPlayerOneAnchor;
-        [SerializeField] private Transform _gridPlayerTwoAnchor;
-        public GridCreator GridPlayerOne
-        {
-            get { return _gridPlayerOne; }
-        }
-
-        public GridCreator GridPlayerTwo
-        {
-            get { return _gridPlayerTwo; }
-        }
-        
-        [Header("Draft")]
-        [SerializeField] private Transform _draftPlayerOneAnchor;
-        [SerializeField] private Transform _draftPlayerTwoAnchor;
         
         private Text _phaseText;
         private Text _playerTurnText;
@@ -62,6 +52,23 @@ namespace _Scripts.Refactor.Game
         
         private Text _playerOneActionsText;
         private Text _playerTwoActionsText;
+        
+        private GridCreator _gridPlayerOne;
+        private GridCreator _gridPlayerTwo;
+        
+        private int _currentTurnCount;
+
+        private HeroAbilities _heroAbilityGenerator;
+        
+        public GridCreator GridPlayerOne
+        {
+            get { return _gridPlayerOne; }
+        }
+
+        public GridCreator GridPlayerTwo
+        {
+            get { return _gridPlayerTwo; }
+        }
 
         public Text PlayerOneDraftedText
         {
@@ -82,9 +89,12 @@ namespace _Scripts.Refactor.Game
         {
             get { return _playerTwoActionsText; }
         }
+
+        public HeroAbilities HeroAbilityGenerator
+        {
+            get { return _heroAbilityGenerator; }
+        }
         
-        #region Variables
-    
         //static reference which can be accessed in all other scripts by calling GameManager.instance
         public static GameManager Instance;
 
@@ -96,20 +106,16 @@ namespace _Scripts.Refactor.Game
         //max units that each player can have
         public int MaxAmountOfUnits = 5;
 
-        //temp reference to hero prefab
-        public GameObject HeroPrefab;
-
         //Lists of all the hero units per player that are on the board
-        [NonSerialized] public List<GameObject> HeroListP1 = new List<GameObject>();
-        [NonSerialized] public List<GameObject> HeroListP2 = new List<GameObject>();
+        [NonSerialized] public List<HeroView> HeroListP1 = new List<HeroView>();
+        [NonSerialized] public List<HeroView> HeroListP2 = new List<HeroView>();
 
-        private List<GameObject> HeroPool_P1 = new List<GameObject>();
-        private List<GameObject> HeroPool_P2 = new List<GameObject>();
+        private List<HeroView> HeroPool_P1 = new List<HeroView>();
+        private List<HeroView> HeroPool_P2 = new List<HeroView>();
 
         //temp spawn point for randomly spawning heros
         private Vector2 hero_spawnpoint;
     
-        private int _currentTurnCount;
 
         //bool to keep track if an action has ended so that resolving can continue
         public bool HasActionEnded;
@@ -117,8 +123,6 @@ namespace _Scripts.Refactor.Game
         //player colors
         public Color ColorPlayer1;
         public Color ColorPlayer2;
-
-        #endregion
 
         private void Awake()
         {
@@ -161,6 +165,8 @@ namespace _Scripts.Refactor.Game
             _playerOneActionsText = _planUi.PlayerOneActionsText;
             _playerTwoActionsText = _planUi.PlayerTwoActionsText;
 
+            _heroAbilityGenerator = Instantiate(_heroAbilityGeneratorPrefab);
+            
             _gridUi.gameObject.SetActive(false);
             _endScreenUi.gameObject.SetActive(false);
             _planUi.gameObject.SetActive(false);
@@ -218,7 +224,7 @@ namespace _Scripts.Refactor.Game
                     hero_spawnpoint.y = j * 1.2f + _draftPlayerOneAnchor.transform.position.y;
 
                     var random = Random.Range(0, heroBases.Count);
-                    HeroPool_P1.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerOneAnchor));
+                    HeroPool_P1.Add(Instantiate(_heroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerOneAnchor));
                     var heroView = HeroPool_P1[HeroPool_P1.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
@@ -242,7 +248,7 @@ namespace _Scripts.Refactor.Game
                     hero_spawnpoint.y = j * 1.2f + _draftPlayerTwoAnchor.transform.position.y;
 
                     var random = Random.Range(0, heroBases.Count);
-                    HeroPool_P2.Add(Instantiate(HeroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerTwoAnchor));
+                    HeroPool_P2.Add(Instantiate(_heroPrefab, hero_spawnpoint, Quaternion.identity, _draftPlayerTwoAnchor));
                     var heroView = HeroPool_P2[HeroPool_P2.Count - 1].GetComponent<HeroView>();
 
                     //assisgn hero specifics based on the hero base presets
@@ -473,12 +479,10 @@ namespace _Scripts.Refactor.Game
                     {
                         case Phase.PlanPhase:
 
-                            foreach (GameObject g in HeroListP1)
+                            foreach (var heroView in HeroListP1)
                             {
-                                var hero = g.GetComponent<HeroView>();
-
-                                hero.SetUI(false);
-                                hero.SetAction(false);
+                                heroView.SetUI(false);
+                                heroView.SetAction(false);
                             }
 
                             PlayerOneActionsText.text = string.Empty;
@@ -609,10 +613,8 @@ namespace _Scripts.Refactor.Game
                     HasActionEnded = true;
 
                     //hide stats on heroes and green check                
-                    foreach(GameObject g in HeroListP2)
+                    foreach(var heroView in HeroListP2)
                     {
-                        HeroView heroView = g.GetComponent<HeroView>();
-
                         heroView.SetUI(false);
                         heroView.SetAction(false);
                     }

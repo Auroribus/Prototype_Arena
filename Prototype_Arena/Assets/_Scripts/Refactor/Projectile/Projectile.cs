@@ -7,7 +7,7 @@ namespace _Scripts.Refactor.Projectile
 {
     public class Projectile : MonoBehaviour
     {
-        public GameObject target;
+        public HeroView target;
         public float movement_speed = 1f;
         public int damage;
         public float rotation_correction = 180f;

@@ -70,7 +70,7 @@ GameObject:
   - component: {fileID: 61000361943213902}
   - component: {fileID: 58488297276156834}
   m_Layer: 0
-  m_Name: Hero
+  m_Name: prefab_hero_view
   m_TagString: HeroP1
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -738,14 +738,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c23f2a1d9aa4e14da9affc7e3abe864, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Healthpoints: 0
-  Damage: 0
-  Defense: 0
-  Initiative: 0
-  main_class: 1
-  isDrafted: 0
-  hasAction: 0
-  isTargeted: 0
+  MainClass: 1
+  IsHeroDrafted: 0
+  HasAction: 0
+  IsTargeted: 0
   BloodSplashPrefab: {fileID: 1419592056843178, guid: 4e09634b3d185eb4eaa5f57fdd2044cb,
     type: 2}
   BloodParticles: {fileID: 1939838589753436, guid: 54fabd609fa4434409401cb6d50ca8f2,
@@ -766,11 +762,11 @@ MonoBehaviour:
     type: 2}
   WindSlashPrefab: {fileID: 1734390360588948, guid: 1dfa52fc98c5aad4480bfe52e0835795,
     type: 2}
-  movement_speed: 10
+  MovementSpeed: 10
   DamageTextPrefab: {fileID: 1882126085640910, guid: 7ef389cc6925b2140a4d485c1798b533,
     type: 2}
-  isUsingAbility: 0
-  chain_ended: 0
+  IsUsingAbility: 0
+  HasChainEnded: 0
 --- !u!198 &198313646097548108
 ParticleSystem:
   m_ObjectHideFlags: 1

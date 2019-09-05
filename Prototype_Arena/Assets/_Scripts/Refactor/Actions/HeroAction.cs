@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero;
 using _Scripts.Refactor.Hero.Abilities;
 using _Scripts.Refactor.PlayerScripts;
@@ -14,16 +15,17 @@ namespace _Scripts.Refactor.Actions
         public PlayerTurn player;
         public ActionType action_type;
         public int initiative;
-        public GameObject selected_hero;
-        public GameObject single_target;
-        public List<GameObject> targets = new List<GameObject>();
+        public HeroView selected_hero;
+        public HeroView single_target;
+        public List<HeroView> targets = new List<HeroView>();
         public AbilityBase ability;
+        public GridTile GridTile;
 
         public int casting_delay;
         public int duration_of_effect;
 
         //single target basic attack
-        public HeroAction(GameObject _selected_hero, PlayerTurn _player, ActionType _action, GameObject _single_target)
+        public HeroAction(HeroView _selected_hero, PlayerTurn _player, ActionType _action, HeroView _single_target)
         {
             selected_hero = _selected_hero;
             player = _player;
@@ -31,9 +33,27 @@ namespace _Scripts.Refactor.Actions
             single_target = _single_target;
 
             //set hero has action to true
-            selected_hero.GetComponent<HeroView>().SetAction(true);
+            selected_hero.SetAction(true);
 
-            initiative = selected_hero.GetComponent<HeroView>().HeroStatsModel.Initiative;
+            initiative = selected_hero.HeroStatsModel.Initiative;
+            //temp fix to coin flip for same initiative
+            if (Random.Range(0, 2) == 0)
+            {
+                initiative++;
+            }
+        }
+        
+        public HeroAction(HeroView _selected_hero, PlayerTurn _player, ActionType _action, GridTile gridTileTarget)
+        {
+            selected_hero = _selected_hero;
+            player = _player;
+            action_type = _action;
+            GridTile = gridTileTarget;
+
+            //set hero has action to true
+            selected_hero.SetAction(true);
+
+            initiative = selected_hero.HeroStatsModel.Initiative;
             //temp fix to coin flip for same initiative
             if (Random.Range(0, 2) == 0)
             {
@@ -42,7 +62,7 @@ namespace _Scripts.Refactor.Actions
         }
 
         //multiple targets, basic attack
-        public HeroAction(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets)
+        public HeroAction(HeroView _selected_hero, PlayerTurn _player, ActionType _action, List<HeroView> _targets)
         {
             selected_hero = _selected_hero;
             player = _player;
@@ -50,9 +70,9 @@ namespace _Scripts.Refactor.Actions
             targets = _targets;
 
             //set hero has action to true
-            selected_hero.GetComponent<HeroView>().SetAction(true);
+            selected_hero.SetAction(true);
 
-            initiative = selected_hero.GetComponent<HeroView>().HeroStatsModel.Initiative;
+            initiative = selected_hero.HeroStatsModel.Initiative;
             //temp fix to coin flip for same initiative
             if (Random.Range(0, 2) == 0)
             {
@@ -61,7 +81,11 @@ namespace _Scripts.Refactor.Actions
         }
 
         //abilities
-        public HeroAction(GameObject _selected_hero, PlayerTurn _player, ActionType _action, List<GameObject> _targets,
+        public HeroAction(
+            HeroView _selected_hero, 
+            PlayerTurn _player, 
+            ActionType _action, 
+            List<HeroView> _targets,
             AbilityBase _ability)
         {
             selected_hero = _selected_hero;
@@ -74,9 +98,9 @@ namespace _Scripts.Refactor.Actions
             duration_of_effect = _ability.duration;
 
             //set hero has action to true
-            selected_hero.GetComponent<HeroView>().SetAction(true);
+            selected_hero.SetAction(true);
 
-            initiative = selected_hero.GetComponent<HeroView>().HeroStatsModel.Initiative;
+            initiative = selected_hero.HeroStatsModel.Initiative;
             //temp fix to coin flip for same initiative
             if (Random.Range(0, 2) == 0)
             {

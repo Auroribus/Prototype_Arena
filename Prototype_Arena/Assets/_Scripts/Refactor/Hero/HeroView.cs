@@ -19,17 +19,17 @@ namespace _Scripts.Refactor.Hero
         
         #region variables
 
-        [FormerlySerializedAs("main_class")] public MainClass MainClass = MainClass.Scout;
+        public MainClass MainClass = MainClass.Scout;
 
         private Transform _selectionRing;
         private Transform _targetingRing;
         private Transform _isDrafted;
 
-        [FormerlySerializedAs("isDrafted")] public bool IsHeroDrafted;
-        [FormerlySerializedAs("hasAction")] public bool HasAction;
+        public bool IsHeroDrafted;
+        public bool HasAction;
 
         //used for when the hero can be targeted by an enemy hero
-        [FormerlySerializedAs("isTargeted")] public bool IsTargeted;
+        public bool IsTargeted;
 
         public GameObject BloodSplashPrefab;
         public GameObject BloodParticles;
@@ -71,11 +71,11 @@ namespace _Scripts.Refactor.Hero
 
         public GameObject DamageTextPrefab;
 
-        private GameObject _targetEnemy;
+        private HeroView _targetEnemy;
         private int _currentDamage;
 
         public AbilityBase HeroAbility;
-        [FormerlySerializedAs("isUsingAbility")] public bool IsUsingAbility;
+        public bool IsUsingAbility;
 
         private SpriteRenderer _spriteRenderer;
 
@@ -89,7 +89,7 @@ namespace _Scripts.Refactor.Hero
         private float _currentYPosition;
         private float _oldYPosition;
 
-        [FormerlySerializedAs("chain_ended")] public bool HasChainEnded;
+        public bool HasChainEnded;
         #endregion
 
         private void Awake()
@@ -263,11 +263,11 @@ namespace _Scripts.Refactor.Hero
     
         //basic attacks
         #region basic attacks
-        public void RangedAttack(GameObject _target, int damage)
+        public void RangedAttack(HeroView target, int damage)
         {
             _projectile = Instantiate(ArrowPrefab, transform.position, Quaternion.identity);
             _projectile.GetComponent<Projectile.Projectile>().damage = damage;
-            _projectile.GetComponent<Projectile.Projectile>().target = _target;
+            _projectile.GetComponent<Projectile.Projectile>().target = target;
         }
 
         public void MagicAttack(int damage, int direction, string target_tag)
@@ -278,37 +278,37 @@ namespace _Scripts.Refactor.Hero
             _projectile.GetComponent<Projectile.Projectile>().movement_speed *= direction;
         }
 
-        public void MeleeAttack(GameObject _target, int _damage)
+        public void MeleeAttack(HeroView target, int damage)
         {
             //save original position
             OriginalPosition = transform.position;
 
             //set enemy target
-            _targetEnemy = _target;
+            _targetEnemy = target;
 
             //set current damage
-            _currentDamage = _damage;
+            _currentDamage = damage;
 
             //make unit tackle enemy and then move back
             AttackMoveHero = true;
 
             //set target position
-            TargetPosition = _target.transform.position;
+            TargetPosition = target.transform.position;
         }
         #endregion
 
         //chain attacks
         #region Chain attacks
-        public IEnumerator RangedAttack_Chain(GameObject _target, int damage)
+        public IEnumerator RangedAttack_Chain(HeroView _target, int damage)
         {
             //reset chain ended
             HasChainEnded = false;
 
             //set targets list of enemies
             //set start position and target object
-            List<GameObject> targets = new List<GameObject>();
-            Vector2 start_position = transform.position;
-            GameObject target_object = _target;
+            var targets = new List<HeroView>();
+            var start_position = transform.position;
+            var target_object = _target;
 
             //instantiate prefab
             _projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
@@ -329,10 +329,10 @@ namespace _Scripts.Refactor.Hero
             start_position = _target.transform.position;
         
             //hit target, arrow to next target
-            foreach (GameObject g in targets)
+            foreach (var heroView in targets)
             {
                 //don't hit original target again
-                if(g != _target)
+                if(heroView != _target)
                 { 
                     //wait till arrow hits target
                     yield return new WaitUntil(() => GameManager.Instance.HasActionEnded == true);
@@ -340,7 +340,7 @@ namespace _Scripts.Refactor.Hero
                     GameManager.Instance.HasActionEnded = false;
 
                     //set new target object
-                    target_object = g;
+                    target_object = heroView;
 
                     _projectile = Instantiate(BouncingArrowPrefab, start_position, Quaternion.identity);
                     _projectile.GetComponent<Projectile.Projectile>().damage = damage;
@@ -355,16 +355,16 @@ namespace _Scripts.Refactor.Hero
             HasChainEnded = true;
         }
 
-        public IEnumerator MagicAttack_Chain(GameObject _target, int damage)
+        public IEnumerator MagicAttack_Chain(HeroView target, int damage)
         {
             //reset chain ended
             HasChainEnded = false;
 
             //set targets list of enemies
             //set start position and target object
-            List<GameObject> targets = new List<GameObject>();
-            Vector2 start_position = transform.position;
-            GameObject target_object = _target;
+            var targets = new List<HeroView>();
+            var start_position = transform.position;
+            var target_object = target;
 
             //instantiate prefab
             _projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
@@ -382,30 +382,31 @@ namespace _Scripts.Refactor.Hero
             }
 
             //to hit next target in list, set start position to previous targe
-            start_position = _target.transform.position;
+            start_position = target.transform.position;
 
             //hit target, arrow to next target
-            foreach (GameObject g in targets)
+            foreach (var heroView in targets)
             {
-                //don't hit original target again
-                if (g != _target)
+                if (heroView == target)
                 {
-                    //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.Instance.HasActionEnded == true);
-
-                    GameManager.Instance.HasActionEnded = false;
-
-                    //set new target object
-                    target_object = g;
-
-                    _projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
-                    _projectile.GetComponent<Projectile.Projectile>().damage = damage;
-                    _projectile.GetComponent<Projectile.Projectile>().target = target_object;
-                    _projectile.GetComponent<Projectile.Projectile>().movement_speed =  10;
-
-                    //set start position from previous hit target
-                    start_position = target_object.transform.position;
+                    continue;
                 }
+                
+                //wait till arrow hits target
+                yield return new WaitUntil(() => GameManager.Instance.HasActionEnded);
+
+                GameManager.Instance.HasActionEnded = false;
+
+                //set new target object
+                target_object = heroView;
+
+                _projectile = Instantiate(ChainLightningPrefab, start_position, Quaternion.identity);
+                _projectile.GetComponent<Projectile.Projectile>().damage = damage;
+                _projectile.GetComponent<Projectile.Projectile>().target = target_object;
+                _projectile.GetComponent<Projectile.Projectile>().movement_speed =  10;
+
+                //set start position from previous hit target
+                start_position = target_object.transform.position;
             }
 
             //set chain ended to true
@@ -416,16 +417,14 @@ namespace _Scripts.Refactor.Hero
 
         //other aoe ability attacks
         #region aoe attacks
-        public IEnumerator RangedAbilityAttack(GameObject _target, int damage)
+        public IEnumerator RangedAbilityAttack(HeroView target, int damage)
         {
-            Instantiate(ArrowRainPrefab, _target.transform.position, Quaternion.identity);
-
+            Instantiate(ArrowRainPrefab, target.transform.position, Quaternion.identity);
             yield return new WaitForSeconds(1f);
-
-            _target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
+            target.HeroStatsController.TakeDamage(damage);
         }
 
-        public void MeleeAbilityAttack(GameObject target, int damage)
+        public void MeleeAbilityAttack(HeroView target, int damage)
         {
             //windslash projectile
             _projectile = Instantiate(WindSlashPrefab, transform.position, Quaternion.identity);
@@ -433,12 +432,11 @@ namespace _Scripts.Refactor.Hero
             _projectile.GetComponent<Projectile.Projectile>().target = target;
         }
 
-        public IEnumerator MageAbilityAttack(GameObject target, int damage)
+        public IEnumerator MageAbilityAttack(HeroView target, int damage)
         {
             Instantiate(IceBurstPrefab, target.transform.position, Quaternion.identity);
-
             yield return new WaitForSeconds(1.5f);
-            target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
+            target.HeroStatsController.TakeDamage(damage);
         }
 
         #endregion

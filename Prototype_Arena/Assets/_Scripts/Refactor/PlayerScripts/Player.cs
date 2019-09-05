@@ -33,20 +33,20 @@ namespace _Scripts.Refactor.PlayerScripts
 
         private Vector2 _touchOrigin = -Vector2.one;
 
-        private GameObject SelectedHero;
+        private HeroView SelectedHero;
 
         //player specific variables that chance depending on the turn
         private string _targetTag;
         private string _ownTag;
-        private List<GameObject> _listOfEnemies;
-        private List<GameObject> _listOfAllies;
+        private List<HeroView> _listOfEnemies;
+        private List<HeroView> _listOfAllies;
         private GridCreator _playerGrid;
         private int _playerActionCount;
 
         public List<HeroAction> ListOfActions = new List<HeroAction>();
 
         //list of targets for ability
-        private List<GameObject> _listOfAbilityTargets = new List<GameObject>();
+        private List<HeroView> _listOfAbilityTargets = new List<HeroView>();
 
         private List<GameObject> _actionIconsList = new List<GameObject>();
 
@@ -154,50 +154,36 @@ namespace _Scripts.Refactor.PlayerScripts
         {
             if (hit.collider.tag == "HeroP1")
             {
-                if (!hit.transform.GetComponent<HeroView>().IsHeroDrafted)
+                var hitHeroView = hit.transform.GetComponent<HeroView>();
+                
+                if (!hitHeroView.IsHeroDrafted)
                 {
                     if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.MaxAmountOfUnits)
                     {
-                        HeroView heroView = hit.transform.gameObject
-                            .GetComponent<HeroView>();
-
-                        int amount_of_class = 0;
+                        var amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach (GameObject hero in GameManager.Instance.HeroListP1)
+                        foreach (var heroView in GameManager.Instance.HeroListP1)
                         {
-                            if (hero.GetComponent<HeroView>().MainClass ==
-                                heroView.MainClass)
+                            if (hitHeroView.MainClass == heroView.MainClass)
+                            {
                                 amount_of_class++;
+                            }
                         }
 
                         if (amount_of_class < 3)
                         {
-                            heroView.SetDrafted(true);
-                            GameManager.Instance.HeroListP1.Add(heroView.transform.gameObject);
+                            hitHeroView.SetDrafted(true);
+                            GameManager.Instance.HeroListP1.Add(hitHeroView);
                             GameManager.Instance.PlayerOneDraftedText.text =
                                 "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
                                 GameManager.Instance.MaxAmountOfUnits;
-
-                            /* now set in hero on draft and on select
-                        AbilityBase ability = _hero.HeroAbility;
-
-                        string ability_text =
-                            "Effect: " + ability.Ability_effect + "\n" +
-                            "Target: " + ability.Ability_target + "\n" +
-                            "AoE: " + ability.Ability_aoe + "\n" +
-                            "Strength: " + ability.strength;
-                            //"Duration: " + ability.duration + "\n" +
-                            //"Delay: " + ability.delay;
-
-                        GameManager.instance.SetHeroInfo(1, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
-                        */
                         }
                     }
                 }
                 else
                 {
-                    hit.transform.GetComponent<HeroView>().SetDrafted(false);
-                    GameManager.Instance.HeroListP1.Remove(hit.transform.gameObject);
+                    hitHeroView.SetDrafted(false);
+                    GameManager.Instance.HeroListP1.Remove(hitHeroView);
                     GameManager.Instance.PlayerOneDraftedText.text =
                         "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
                         GameManager.Instance.MaxAmountOfUnits;
@@ -205,50 +191,36 @@ namespace _Scripts.Refactor.PlayerScripts
             }
             else if (hit.collider.tag == "HeroP2")
             {
-                if (!hit.transform.GetComponent<HeroView>().IsHeroDrafted)
+                var hitHeroView = hit.transform.gameObject.GetComponent<HeroView>();
+
+                if (!hitHeroView.IsHeroDrafted)
                 {
                     if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.MaxAmountOfUnits)
                     {
-                        HeroView heroView = hit.transform.gameObject
-                            .GetComponent<HeroView>();
-
-                        int amount_of_class = 0;
+                        var amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach (GameObject hero in GameManager.Instance.HeroListP2)
+                        foreach (var hero in GameManager.Instance.HeroListP2)
                         {
-                            if (hero.GetComponent<HeroView>().MainClass ==
-                                heroView.MainClass)
+                            if (hero.MainClass == hitHeroView.MainClass)
+                            {
                                 amount_of_class++;
+                            }
                         }
 
                         if (amount_of_class < 3)
                         {
-                            heroView.SetDrafted(true);
-                            GameManager.Instance.HeroListP2.Add(heroView.transform.gameObject);
+                            hitHeroView.SetDrafted(true);
+                            GameManager.Instance.HeroListP2.Add(hitHeroView);
                             GameManager.Instance.PlayerTwoDraftedText.text =
                                 "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
                                 GameManager.Instance.MaxAmountOfUnits;
-
-                            /*see p1 comment for more info
-                        AbilityBase ability = _hero.HeroAbility;
-
-                        string ability_text =
-                            "Effect: " + ability.Ability_effect + "\n" +
-                            "Target: " + ability.Ability_target + "\n" +
-                            "AoE: " + ability.Ability_aoe + "\n" +
-                            "Strength: " + ability.strength; //+ "\n" +
-                            //"Duration: " + ability.duration + "\n" +
-                            //"Delay: " + ability.delay;
-
-                        GameManager.instance.SetHeroInfo(2, _hero.main_class, _hero.Healthpoints, _hero.Damage, _hero.Initiative, ability_text);
-                        */
                         }
                     }
                 }
                 else
                 {
-                    hit.transform.GetComponent<HeroView>().SetDrafted(false);
-                    GameManager.Instance.HeroListP2.Remove(hit.transform.gameObject);
+                    hitHeroView.SetDrafted(false);
+                    GameManager.Instance.HeroListP2.Remove(hitHeroView);
                     GameManager.Instance.PlayerTwoDraftedText.text =
                         "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
                         GameManager.Instance.MaxAmountOfUnits;
@@ -265,32 +237,28 @@ namespace _Scripts.Refactor.PlayerScripts
             }
             //deselect hero if clicking the same hero twice, without using an ability
             else if (SelectedHero != null &&
-                     !SelectedHero.GetComponent<HeroView>().IsUsingAbility &&
-                     SelectedHero == hit.transform.gameObject)
+                     !SelectedHero.IsUsingAbility &&
+                     SelectedHero.gameObject == hit.transform.gameObject)
             {
                 DeselectHero();
             }
             //see if selected hero not null and if not null, using ability
             else if (SelectedHero != null &&
-                     SelectedHero.GetComponent<HeroView>().IsUsingAbility &&
+                     SelectedHero.IsUsingAbility &&
                      _playerActionCount < MaxNumberOfPlayerActions)
             {
                 //local hit object
-                HeroView hit_heroView =
+                var hit_heroView =
                     hit.transform.GetComponent<HeroView>();
-
-                //local var of hero
-                HeroView heroView =
-                    SelectedHero.GetComponent<HeroView>();
 
                 //check if the hit hero is targeted
                 if (hit_heroView.IsTargeted)
                 {
                     //take the ability from hero
-                    AbilityBase ability = heroView.HeroAbility;
+                    var ability = SelectedHero.HeroAbility;
 
                     //local list of tarets
-                    List<GameObject> target_heroes = new List<GameObject>();
+                    var target_heroes = new List<HeroView>();
 
                     //actual adding of the targets and not just setting them as possible targets as done previously
                     switch (ability.AbilityAreaOfEffect)
@@ -306,17 +274,16 @@ namespace _Scripts.Refactor.PlayerScripts
 
                             //not sure yet how to implement
                             //add single target, rest of logic implemented in the resolve phase
-                            target_heroes.Add(hit_heroView.gameObject);
+                            target_heroes.Add(hit_heroView);
 
                             break;
 
                         case AbilityAreaOfEffect.Column:
 
                             //take the column from the targeted hero, and hit all the heroes in that column
-                            foreach (GameObject hero in _listOfAbilityTargets)
+                            foreach (var hero in _listOfAbilityTargets)
                             {
-                                if (hero.GetComponent<HeroView>().XPositionGrid ==
-                                    hit_heroView.XPositionGrid)
+                                if (hero.XPositionGrid == hit_heroView.XPositionGrid)
                                 {
                                     target_heroes.Add(hero);
                                 }
@@ -327,10 +294,9 @@ namespace _Scripts.Refactor.PlayerScripts
                         case AbilityAreaOfEffect.Row:
 
                             //take the row from the targeted hero, and hit all the heroes in that row
-                            foreach (GameObject hero in _listOfAbilityTargets)
+                            foreach (var hero in _listOfAbilityTargets)
                             {
-                                if (hero.GetComponent<HeroView>().YPositionGrid ==
-                                    hit_heroView.YPositionGrid)
+                                if (hero.YPositionGrid == hit_heroView.YPositionGrid)
                                 {
                                     target_heroes.Add(hero);
                                 }
@@ -341,7 +307,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         case AbilityAreaOfEffect.Single:
 
                             //add the single clicked hero
-                            target_heroes.Add(hit_heroView.gameObject);
+                            target_heroes.Add(hit_heroView);
 
                             break;
                     }
@@ -362,9 +328,13 @@ namespace _Scripts.Refactor.PlayerScripts
             //
             else
             {
+                var hit_heroView =
+                    hit.transform.GetComponent<HeroView>();
+                
                 //check if the unit already performing an action, less than max actions and does not already have an action
-                if (hit.collider.tag == _ownTag && _playerActionCount < MaxNumberOfPlayerActions &&
-                    !hit.transform.GetComponent<HeroView>().HasAction)
+                if (hit.collider.tag == _ownTag 
+                    && _playerActionCount < MaxNumberOfPlayerActions 
+                    && !hit_heroView.HasAction)
                 {
                     //&& !hit.transform.GetComponent<Hero>().isUsingAbility
 
@@ -372,26 +342,23 @@ namespace _Scripts.Refactor.PlayerScripts
                     DeselectHero();
 
                     //set new selected hero
-                    SelectedHero = hit.transform.gameObject;
-                    SelectedHero.GetComponent<HeroView>().SetSelected(true);
-
-                    HeroView selected_heroView =
-                        SelectedHero.GetComponent<HeroView>();
+                    SelectedHero = hit_heroView;
+                    SelectedHero.SetSelected(true);
 
                     //prevents modified list error for foreach after
                     GameManager.Instance.CleanLists();
 
                     //local var for main class
-                    MainClass main_class = selected_heroView.MainClass;
+                    var main_class = SelectedHero.MainClass;
 
                     switch (main_class)
                     {
                         case MainClass.Scout:
 
                             //ranged can hit any of the enemies heroes
-                            foreach (GameObject hero in _listOfEnemies)
+                            foreach (var hero in _listOfEnemies)
                             {
-                                hero.GetComponent<HeroView>().SetTargeted(true);
+                                hero.SetTargeted(true);
                             }
 
                             break;
@@ -399,31 +366,28 @@ namespace _Scripts.Refactor.PlayerScripts
                         case MainClass.Warrior:
 
                             //temp list to get the lanes from the hero's
-                            List<int> _max_list = new List<int>();
+                            var _max_list = new List<int>();
 
                             //put all int values into the max list if the hero is on the same row
-                            foreach (GameObject hero in _listOfEnemies)
+                            foreach (var heroView in _listOfEnemies)
                             {
-                                HeroView heroView =
-                                    hero.GetComponent<HeroView>();
-
-                                if (heroView.YPositionGrid == selected_heroView.YPositionGrid)
-                                    _max_list.Add(hero.GetComponent<HeroView>()
-                                        .XPositionGrid);
+                                if (heroView.YPositionGrid == SelectedHero.YPositionGrid)
+                                {
+                                    _max_list.Add(heroView.XPositionGrid);
+                                }
                             }
 
                             //get the max value, meaning the closest lane that has a unit on it
-                            int _max = Mathf.Max(_max_list.ToArray());
+                            var _max = Mathf.Max(_max_list.ToArray());
 
                             //melee can only hit the closest enemy in the same lane
-                            foreach (GameObject hero in _listOfEnemies)
+                            foreach (var heroView in _listOfEnemies)
                             {
-                                HeroView heroView =
-                                    hero.GetComponent<HeroView>();
-
-                                if (heroView.XPositionGrid == _max &&
-                                    heroView.YPositionGrid == selected_heroView.YPositionGrid)
+                                if (heroView.XPositionGrid == _max 
+                                    && heroView.YPositionGrid == SelectedHero.YPositionGrid)
+                                {
                                     heroView.SetTargeted(true);
+                                }
                             }
 
                             break;
@@ -431,91 +395,91 @@ namespace _Scripts.Refactor.PlayerScripts
                         case MainClass.Mage:
 
                             //hit a whole lane in a straight line, horizontaly
-                            foreach (GameObject hero in _listOfEnemies)
+                            foreach (var heroView in _listOfEnemies)
                             {
-                                HeroView heroView =
-                                    hero.GetComponent<HeroView>();
-
-                                if (heroView.YPositionGrid == selected_heroView.YPositionGrid)
+                                if (heroView.YPositionGrid == SelectedHero.YPositionGrid)
+                                {
                                     heroView.SetTargeted(true);
+                                }
                             }
 
                             break;
                     }
 
                     //set movement ring on tiles in same lane to active
-                    int x = selected_heroView.XPositionGrid;
-                    int y = selected_heroView.YPositionGrid;
+                    var x = SelectedHero.XPositionGrid;
+                    var y = SelectedHero.YPositionGrid;
                     _playerGrid.SetMovementRings(x, y);
                 }
                 //attacking, check if not null, not using ability, not at max actions
                 else if (SelectedHero != null && hit.collider.tag == _targetTag &&
                          _playerActionCount < MaxNumberOfPlayerActions &&
-                         !SelectedHero.GetComponent<HeroView>().IsUsingAbility)
+                         !SelectedHero.IsUsingAbility)
                 {
-                    if (hit.transform.GetComponent<HeroView>().IsTargeted)
+                    var hitHeroView = hit.transform.GetComponent<HeroView>();
+
+                    if (!hitHeroView.IsTargeted)
                     {
-                        //non magical attacks that only target one hero
-                        if (SelectedHero.GetComponent<HeroView>().MainClass !=
-                            MainClass.Mage)
-                        {
-                            //add action to list
-                            ListOfActions.Add(new HeroAction(
-                                SelectedHero,
-                                GameManager.Instance.CurrentPlayerTurn,
-                                ActionType.attack,
-                                hit.transform.gameObject
-                            ));
+                        return;
+                    }
+                    
+                    //non magical attacks that only target one hero
+                    if (SelectedHero.MainClass != MainClass.Mage)
+                    {
+                        //add action to list
+                        ListOfActions.Add(new HeroAction(
+                            SelectedHero,
+                            GameManager.Instance.CurrentPlayerTurn,
+                            ActionType.attack,
+                            hitHeroView
+                        ));
 
-                            //increment attack
-                            IncrementActions(+1);
-                        }
-                        //magical attacks that target a whole row of heros
-                        else if (SelectedHero.GetComponent<HeroView>().MainClass ==
-                                 MainClass.Mage)
+                        //increment attack
+                        IncrementActions(+1);
+                    }
+                    //magical attacks that target a whole row of heros
+                    else if (SelectedHero.MainClass == MainClass.Mage)
+                    {
+                        GameManager.Instance.CleanLists();
+                        var target_heroes = new List<HeroView>();
+                        foreach (var heroView in _listOfEnemies)
                         {
-                            GameManager.Instance.CleanLists();
-                            List<GameObject> target_heroes = new List<GameObject>();
-                            foreach (GameObject hero in _listOfEnemies)
+                            if (hitHeroView.YPositionGrid == heroView.YPositionGrid)
                             {
-                                HeroView heroView =
-                                    hero.GetComponent<HeroView>();
-
-                                if (hit.transform.GetComponent<HeroView>()
-                                        .YPositionGrid == heroView.YPositionGrid)
-                                {
-                                    //add hero to list
-                                    target_heroes.Add(hero);
-                                }
+                                target_heroes.Add(heroView);
                             }
-
-                            //add action to the list
-                            ListOfActions.Add(new HeroAction(
-                                SelectedHero,
-                                GameManager.Instance.CurrentPlayerTurn,
-                                ActionType.attack,
-                                target_heroes
-                            ));
-
-                            //increment attack
-                            IncrementActions(+1);
                         }
+
+                        //add action to the list
+                        ListOfActions.Add(new HeroAction(
+                            SelectedHero,
+                            GameManager.Instance.CurrentPlayerTurn,
+                            ActionType.attack,
+                            target_heroes
+                        ));
+
+                        //increment attack
+                        IncrementActions(+1);
                     }
                 }
                 //moving, check if not null, hit is tile, less than max actions, not using ability
-                else if (SelectedHero != null && hit.collider.tag == "Tile" && _playerActionCount < MaxNumberOfPlayerActions &&
-                         !SelectedHero.GetComponent<HeroView>().IsUsingAbility)
+                else if (SelectedHero != null 
+                         && hit.collider.tag == "Tile" 
+                         && _playerActionCount < MaxNumberOfPlayerActions 
+                         && !SelectedHero.IsUsingAbility)
                 {
-                    if (hit.transform.GetComponent<GridTile>().can_move_here)
+                    var hitGridTile = hit.transform.GetComponent<GridTile>();
+                    
+                    if (hitGridTile.can_move_here)
                     {
-                        if (!SelectedHero.GetComponent<HeroView>().MoveHero)
+                        if (!SelectedHero.MoveHero)
                         {
                             //add movement action to the list
                             ListOfActions.Add(new HeroAction(
                                 SelectedHero,
                                 GameManager.Instance.CurrentPlayerTurn,
                                 ActionType.movement,
-                                hit.transform.gameObject
+                                hitGridTile
                             ));
 
                             //increment attack
@@ -528,43 +492,25 @@ namespace _Scripts.Refactor.PlayerScripts
 
         private void AbilitySetTargets()
         {
-            //local var hero
-            HeroView selected_heroView =
-                SelectedHero.GetComponent<HeroView>();
-
-            if (!selected_heroView.IsUsingAbility)
+            if (!SelectedHero.IsUsingAbility)
             {
-                //local var ability
-                AbilityBase ability = selected_heroView.HeroAbility;
-
-                /*
-            Debug.Log(
-                "Effect: " + ability.Ability_effect + "\n" +
-                "Target: " + ability.Ability_target + "\n" +
-                "AoE: " + ability.Ability_aoe + "\n" +
-                "Strength: " + ability.strength + "\n" +
-                "Duration: " + ability.duration + "\n" +
-                "Delay: " + ability.delay
-                );
-                */
+                var ability = SelectedHero.HeroAbility;
 
                 //deselect all previously targeted heroes
-                foreach (GameObject g in GameManager.Instance.HeroListP1)
+                foreach (var heroView in GameManager.Instance.HeroListP1)
                 {
-                    HeroView _h =
-                        g.GetComponent<HeroView>();
-
-                    if (_h.IsTargeted)
-                        _h.SetTargeted(false);
+                    if (heroView.IsTargeted)
+                    {
+                        heroView.SetTargeted(false);
+                    }
                 }
 
-                foreach (GameObject g in GameManager.Instance.HeroListP2)
+                foreach (var heroView in GameManager.Instance.HeroListP2)
                 {
-                    HeroView _h =
-                        g.GetComponent<HeroView>();
-
-                    if (_h.IsTargeted)
-                        _h.SetTargeted(false);
+                    if (heroView.IsTargeted)
+                    {
+                        heroView.SetTargeted(false);
+                    }
                 }
 
                 //hide all movement rings unless ability has to do with movement
@@ -575,7 +521,7 @@ namespace _Scripts.Refactor.PlayerScripts
                 }
 
                 //set bool to true on using ability
-                selected_heroView.IsUsingAbility = true;
+                SelectedHero.IsUsingAbility = true;
 
                 //based on heal or damage, target enemies or allies
                 switch (ability.Ability_effect)
@@ -594,48 +540,36 @@ namespace _Scripts.Refactor.PlayerScripts
                 switch (ability.Ability_target)
                 {
                     case AbilityTarget.All:
-                        foreach (GameObject target in _listOfAbilityTargets)
+                        foreach (var heroView in _listOfAbilityTargets)
                         {
-                            HeroView heroView =
-                                target.GetComponent<HeroView>();
-
                             heroView.SetTargeted(true);
                         }
 
                         break;
                     case AbilityTarget.Row:
-                        foreach (GameObject target in _listOfAbilityTargets)
+                        foreach (var target in _listOfAbilityTargets)
                         {
-                            HeroView heroView =
-                                target.GetComponent<HeroView>();
-
-                            if (heroView.YPositionGrid == selected_heroView.YPositionGrid)
+                            if (target.YPositionGrid == SelectedHero.YPositionGrid)
                             {
-                                heroView.SetTargeted(true);
+                                target.SetTargeted(true);
                             }
                         }
 
                         break;
                     case AbilityTarget.Column:
-                        foreach (GameObject target in _listOfAbilityTargets)
+                        foreach (var target in _listOfAbilityTargets)
                         {
-                            HeroView heroView =
-                                target.GetComponent<HeroView>();
-
-                            if (heroView.XPositionGrid == selected_heroView.XPositionGrid)
+                            if (target.XPositionGrid == SelectedHero.XPositionGrid)
                             {
-                                heroView.SetTargeted(true);
+                                target.SetTargeted(true);
                             }
                         }
 
                         break;
                     case AbilityTarget.Any:
-                        foreach (GameObject target in _listOfAbilityTargets)
+                        foreach (var target in _listOfAbilityTargets)
                         {
-                            HeroView heroView =
-                                target.GetComponent<HeroView>();
-
-                            heroView.SetTargeted(true);
+                            target.SetTargeted(true);
                         }
 
                         break;
@@ -648,21 +582,21 @@ namespace _Scripts.Refactor.PlayerScripts
             if (SelectedHero != null)
             {
                 //set selected hero to false
-                SelectedHero.GetComponent<HeroView>().SetSelected(false);
+                SelectedHero.SetSelected(false);
 
                 //reset movement rings
                 GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
                 GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
 
                 //deselect all previously selected heroes
-                foreach (GameObject hero in _listOfAllies)
+                foreach (var hero in _listOfAllies)
                 {
-                    hero.GetComponent<HeroView>().SetTargeted(false);
+                    hero.SetTargeted(false);
                 }
 
-                foreach (GameObject hero in _listOfEnemies)
+                foreach (var hero in _listOfEnemies)
                 {
-                    hero.GetComponent<HeroView>().SetTargeted(false);
+                    hero.SetTargeted(false);
                 }
 
                 SelectedHero = null;
@@ -713,12 +647,10 @@ namespace _Scripts.Refactor.PlayerScripts
                 //single target actions
                 if (action.selected_hero != null
                     && action.single_target != null
-                    && action.selected_hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints > 0)
+                    && action.selected_hero.HeroStatsModel.HealthPoints > 0)
                 {
-                    var heroView =
-                        action.selected_hero.GetComponent<HeroView>();
-                    var _target =
-                        action.single_target.GetComponent<HeroView>();
+                    var heroView = action.selected_hero;
+                    var _target = action.single_target;
 
                     switch (action.action_type)
                     {
@@ -747,19 +679,18 @@ namespace _Scripts.Refactor.PlayerScripts
                                     //if another hero is in the way, new target
 
                                     var direction = _target.transform.position - heroView.transform.position;
-                                    RaycastHit2D[] hit =
+                                    var hit =
                                         Physics2D.RaycastAll(heroView.transform.position, direction, 10f);
 
                                     if (hit != null)
                                     {
-                                        foreach (RaycastHit2D _hit in hit)
+                                        foreach (var _hit in hit)
                                         {
                                             //see if they have the same collider tag
                                             if (_hit.collider.tag == _target.tag)
                                             {
                                                 //not target, set new target
-                                                _target = _hit.transform
-                                                    .GetComponent<HeroView>();
+                                                _target = _hit.transform.GetComponent<HeroView>();
                                                 break;
                                             }
                                         }
@@ -779,7 +710,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                             damage = heroView.HeroStatsModel.AttackDamage;
                                         }
 
-                                        heroView.MeleeAttack(_target.gameObject, damage);
+                                        heroView.MeleeAttack(_target, damage);
 
                                         //set checkmark to green on action prefab                            
                                         _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
@@ -802,50 +733,38 @@ namespace _Scripts.Refactor.PlayerScripts
                         case ActionType.movement:
 
                             //check if target tile is not occupied by other movement
-                            if (!action.single_target.GetComponent<GridTile>().isOccupied)
+                            if (!action.GridTile.isOccupied)
                             {
                                 //set old occupied tile to no longer occupied
                                 switch (action.player)
                                 {
                                     case PlayerTurn.Player1:
                                         GameManager.Instance.GridPlayerOne.Grid[
-                                                action.selected_hero
-                                                    .GetComponent<HeroView>()
-                                                    .XPositionGrid,
-                                                action.selected_hero
-                                                    .GetComponent<HeroView>()
-                                                    .YPositionGrid]
+                                                action.selected_hero.XPositionGrid,
+                                                action.selected_hero.YPositionGrid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                     case PlayerTurn.Player2:
                                         GameManager.Instance.GridPlayerTwo.Grid[
-                                                action.selected_hero
-                                                    .GetComponent<HeroView>()
-                                                    .XPositionGrid,
-                                                action.selected_hero
-                                                    .GetComponent<HeroView>()
-                                                    .YPositionGrid]
+                                                action.selected_hero.XPositionGrid,
+                                                action.selected_hero.YPositionGrid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                 }
 
                                 //move hero
-                                action.selected_hero.GetComponent<HeroView>()
-                                    .TargetPosition = action.single_target.transform.position;
-                                action.selected_hero.GetComponent<HeroView>().MoveHero =
-                                    true;
+                                action.selected_hero.TargetPosition = action.single_target.transform.position;
+                                action.selected_hero.MoveHero = true;
 
                                 //update heros position on grid
-                                action.selected_hero.GetComponent<HeroView>()
-                                    .XPositionGrid = action.single_target.transform.GetComponent<GridTile>()
+                                action.selected_hero.XPositionGrid = action.single_target.transform.GetComponent<GridTile>()
                                     .pos_grid_x;
-                                action.selected_hero.GetComponent<HeroView>()
-                                    .YPositionGrid = action.single_target.transform.GetComponent<GridTile>()
+                                action.selected_hero.YPositionGrid = action.single_target.transform.GetComponent<GridTile>()
                                     .pos_grid_y;
 
                                 //set new tile as occupied
-                                action.single_target.transform.GetComponent<GridTile>().isOccupied = true;
-                                action.single_target.transform.GetComponent<GridTile>().SetMovementRing(false);
+                                action.GridTile.isOccupied = true;
+                                action.GridTile.SetMovementRing(false);
 
                                 //set checkmark to green on action prefab
                                 _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
@@ -865,11 +784,11 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
                 }
                 //multiple targets actions
-                else if (action.selected_hero != null && action.targets.Count > 0 && action.selected_hero
-                             .GetComponent<HeroView>().HeroStatsModel.HealthPoints > 0)
+                else if (action.selected_hero != null 
+                         && action.targets.Count > 0 
+                         && action.selected_hero.HeroStatsModel.HealthPoints > 0)
                 {
-                    var heroView =
-                        action.selected_hero.GetComponent<HeroView>();
+                    var heroView = action.selected_hero;
 
                     switch (action.action_type)
                     {
@@ -919,11 +838,8 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                     //hit all the targets in the action target list
                                     //based on the ability power
-                                    foreach (GameObject target in action.targets)
+                                    foreach (var target in action.targets)
                                     {
-                                        var _target =
-                                            target.GetComponent<HeroView>();
-
                                         //later use with animation
                                         //_target.TakeDamage(action.ability.strength);
 
@@ -989,16 +905,11 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                 case AbilityEffect.heal:
 
-                                    foreach (GameObject target in action.targets)
+                                    foreach (var target in action.targets)
                                     {
-                                        var _target =
-                                            target.GetComponent<HeroView>();
-
-                                        //later use with animation
-                                        //check if target is not dead already
-                                        if (_target.HeroStatsModel.HealthPoints > 0)
+                                        if (target.HeroStatsModel.HealthPoints > 0)
                                         {
-                                            _target.HeroStatsController.HealHero(action.ability.strength);
+                                            target.HeroStatsController.HealHero(action.ability.strength);
                                         }
                                     }
 
@@ -1123,7 +1034,7 @@ namespace _Scripts.Refactor.PlayerScripts
                 switch (action.action_type)
                 {
                     case ActionType.attack:
-                        switch (action.selected_hero.GetComponent<HeroView>().MainClass)
+                        switch (action.selected_hero.MainClass)
                         {
                             case MainClass.Warrior:
                                 break;
@@ -1174,7 +1085,7 @@ namespace _Scripts.Refactor.PlayerScripts
         public void OnUndoAction()
         {
             //local list, gets set based on player turn
-            var listOfHeroes = new List<GameObject>();
+            var listOfHeroes = new List<HeroView>();
 
             switch (GameManager.Instance.CurrentPlayerTurn)
             {
@@ -1208,8 +1119,7 @@ namespace _Scripts.Refactor.PlayerScripts
             if (ListOfActions[ListOfActions.Count - 1].player == GameManager.Instance.CurrentPlayerTurn)
             {
                 //reset checkmark and has action on hero
-                ListOfActions[ListOfActions.Count - 1].selected_hero
-                    .GetComponent<HeroView>().SetAction(false);
+                ListOfActions[ListOfActions.Count - 1].selected_hero.SetAction(false);
 
                 //destroy icon from plan list
                 Destroy(_actionIconsList[ListOfActions.IndexOf(ListOfActions[ListOfActions.Count - 1])]);
@@ -1225,7 +1135,7 @@ namespace _Scripts.Refactor.PlayerScripts
         public void OnUndoAllActions()
         {
             //local list, gets set based on player turn
-            var listOfHeroes = new List<GameObject>();
+            var listOfHeroes = new List<HeroView>();
 
             switch (GameManager.Instance.CurrentPlayerTurn)
             {
@@ -1260,7 +1170,7 @@ namespace _Scripts.Refactor.PlayerScripts
             ListOfActions.RemoveAll(item => item.player == GameManager.Instance.CurrentPlayerTurn);
 
             //remove icons from plan list
-            foreach (GameObject action in _actionIconsList)
+            foreach (var action in _actionIconsList)
             {
                 var _action = action.GetComponent<ActionPrefab>();
 
@@ -1273,11 +1183,8 @@ namespace _Scripts.Refactor.PlayerScripts
             _actionIconsList.RemoveAll(item => item == null);
 
             //reset checkmark and has action on heroes
-            foreach (GameObject hero in listOfHeroes)
+            foreach (var heroView in listOfHeroes)
             {
-                var heroView =
-                    hero.GetComponent<HeroView>();
-
                 if (heroView.HasAction)
                 {
                     heroView.SetAction(false);
