@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using _Scripts.Refactor.Game;
 using _Scripts.Refactor.Grid;
+using _Scripts.Refactor.Hero.Abilities;
 using _Scripts.Refactor.Projectile;
 using _Scripts.Refactor.SFX;
 using _Scripts.Refactor.UI;
@@ -142,7 +143,7 @@ namespace _Scripts.Refactor.Hero
                 IsUsingAbility = false;
 
             //set movement rings on tiles in same row
-            for (int i = 0; i < 3; i++)
+            for (var i = 0; i < 3; i++)
             {
                 GameManager.Instance.GridPlayerOne.Grid[XPositionGrid, i].GetComponent<GridTile>().SetMovementRing(true);
             }
@@ -156,7 +157,7 @@ namespace _Scripts.Refactor.Hero
             var ability_text =
                 "Effect: " + HeroAbility.Ability_effect + "\n" +
                 "Target: " + HeroAbility.Ability_target + "\n" +
-                "AoE: " + HeroAbility.Ability_aoe + "\n" +
+                "AoE: " + HeroAbility.AbilityAreaOfEffect + "\n" +
                 "Strength: " + HeroAbility.strength; 
 
             GameManager.Instance.SetHeroInfo(
@@ -214,7 +215,7 @@ namespace _Scripts.Refactor.Hero
             {
                 transform.position = Vector2.MoveTowards(transform.position, TargetPosition, MovementSpeed * Time.deltaTime);
 
-                float distance = Vector2.Distance(transform.position, TargetPosition);
+                var distance = Vector2.Distance(transform.position, TargetPosition);
 
                 if (distance == 0)
                 {
@@ -228,7 +229,7 @@ namespace _Scripts.Refactor.Hero
             {
                 transform.position = Vector2.MoveTowards(transform.position, TargetPosition, MovementSpeed * Time.deltaTime * 3);
 
-                float distance = Vector2.Distance(transform.position, TargetPosition);
+                var distance = Vector2.Distance(transform.position, TargetPosition);
 
                 if (distance <= 1)
                 {
