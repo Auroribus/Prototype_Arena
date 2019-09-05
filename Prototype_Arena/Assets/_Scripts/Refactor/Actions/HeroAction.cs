@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using _Scripts.Refactor.Hero;
+using _Scripts.Refactor.Hero.Abilities;
 using _Scripts.Refactor.PlayerScripts;
 using UnityEngine;
 

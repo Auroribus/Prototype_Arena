@@ -6,6 +6,7 @@ using _Scripts.Refactor.Actions;
 using _Scripts.Refactor.Game;
 using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero;
+using _Scripts.Refactor.Hero.Abilities;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -292,16 +293,16 @@ namespace _Scripts.Refactor.PlayerScripts
                     List<GameObject> target_heroes = new List<GameObject>();
 
                     //actual adding of the targets and not just setting them as possible targets as done previously
-                    switch (ability.Ability_aoe)
+                    switch (ability.AbilityAreaOfEffect)
                     {
-                        case AbilityAOE.all:
+                        case AbilityAreaOfEffect.All:
 
                             //add all the targeted heroes
                             target_heroes = _listOfAbilityTargets;
 
                             break;
 
-                        case AbilityAOE.chain:
+                        case AbilityAreaOfEffect.Chain:
 
                             //not sure yet how to implement
                             //add single target, rest of logic implemented in the resolve phase
@@ -309,7 +310,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                             break;
 
-                        case AbilityAOE.column:
+                        case AbilityAreaOfEffect.Column:
 
                             //take the column from the targeted hero, and hit all the heroes in that column
                             foreach (GameObject hero in _listOfAbilityTargets)
@@ -323,7 +324,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                             break;
 
-                        case AbilityAOE.row:
+                        case AbilityAreaOfEffect.Row:
 
                             //take the row from the targeted hero, and hit all the heroes in that row
                             foreach (GameObject hero in _listOfAbilityTargets)
@@ -337,7 +338,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                             break;
 
-                        case AbilityAOE.single:
+                        case AbilityAreaOfEffect.Single:
 
                             //add the single clicked hero
                             target_heroes.Add(hit_heroView.gameObject);
@@ -592,7 +593,7 @@ namespace _Scripts.Refactor.PlayerScripts
                 //highlight targets based on the heroes ability
                 switch (ability.Ability_target)
                 {
-                    case AbilityTarget.all:
+                    case AbilityTarget.All:
                         foreach (GameObject target in _listOfAbilityTargets)
                         {
                             HeroView heroView =
@@ -602,7 +603,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         }
 
                         break;
-                    case AbilityTarget.row:
+                    case AbilityTarget.Row:
                         foreach (GameObject target in _listOfAbilityTargets)
                         {
                             HeroView heroView =
@@ -615,7 +616,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         }
 
                         break;
-                    case AbilityTarget.column:
+                    case AbilityTarget.Column:
                         foreach (GameObject target in _listOfAbilityTargets)
                         {
                             HeroView heroView =
@@ -628,7 +629,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         }
 
                         break;
-                    case AbilityTarget.any:
+                    case AbilityTarget.Any:
                         foreach (GameObject target in _listOfAbilityTargets)
                         {
                             HeroView heroView =
@@ -929,7 +930,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                         switch (heroView.MainClass)
                                         {
                                             case MainClass.Warrior:
-                                                if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                                if (action.ability.AbilityAreaOfEffect == AbilityAreaOfEffect.Chain)
                                                 {
                                                     //melee chain ability
                                                     StartCoroutine(heroView.RangedAttack_Chain(target,
@@ -945,7 +946,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                                 break;
                                             case MainClass.Scout:
-                                                if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                                if (action.ability.AbilityAreaOfEffect == AbilityAreaOfEffect.Chain)
                                                 {
                                                     //ranged chain ability
                                                     StartCoroutine(heroView.RangedAttack_Chain(target,
@@ -961,7 +962,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                                 break;
                                             case MainClass.Mage:
-                                                if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                                if (action.ability.AbilityAreaOfEffect == AbilityAreaOfEffect.Chain)
                                                 {
                                                     //magic chain ability
                                                     StartCoroutine(heroView.MagicAttack_Chain(target,
@@ -979,7 +980,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                         }
                                     }
 
-                                    if (action.ability.Ability_aoe == AbilityAOE.chain)
+                                    if (action.ability.AbilityAreaOfEffect == AbilityAreaOfEffect.Chain)
                                         yield return new WaitUntil(() => heroView.HasChainEnded);
                                     else
                                         yield return new WaitForSeconds(1f);
