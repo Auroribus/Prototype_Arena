@@ -94,7 +94,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1176177903957518}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -5.8, y: -3.95, z: 0}
+  m_LocalPosition: {x: -5.8, y: -4.41, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4699339318166154}
@@ -119,13 +119,13 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1297650955311342}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.65, y: -3.95, z: 0}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 4.65, y: -4.41, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4699339318166154}
   m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!4 &4588526502111176
 Transform:
   m_ObjectHideFlags: 1
@@ -178,6 +178,8 @@ MonoBehaviour:
   _heroPrefab: {fileID: 114533004543374368, guid: a7671478ff743754e98ec43489137285,
     type: 2}
   _heroAbilityGeneratorPrefab: {fileID: 114846500235787712, guid: 54c4d7bd216486646b92c294343501e1,
+    type: 2}
+  _playerControlPrefab: {fileID: 114847862884178726, guid: 58b34f5befefa964ca9e0fc536ab4319,
     type: 2}
   _gridPlayerOneAnchor: {fileID: 4588526502111176}
   _gridPlayerTwoAnchor: {fileID: 4240245186395348}

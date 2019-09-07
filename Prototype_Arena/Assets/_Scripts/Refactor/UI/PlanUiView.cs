@@ -10,6 +10,8 @@ namespace _Scripts.Refactor.UI
         [SerializeField] private Text _playerOneActionsText;
         [SerializeField] private Text _playerTwoActionsText;
 
+        public GameManager GameManager { private get; set; }
+        
         public Text PlayerOneActionsText
         {
             get { return _playerOneActionsText; }
@@ -22,7 +24,9 @@ namespace _Scripts.Refactor.UI
 
         private void Start()
         {
-            _readyButton.onClick.AddListener(() => GameManager.Instance.OnPlanReady());
+            _readyButton.onClick.AddListener(() => GameManager.OnPlanReady());
+            
+            gameObject.SetActive(false);
         }
     }
 }

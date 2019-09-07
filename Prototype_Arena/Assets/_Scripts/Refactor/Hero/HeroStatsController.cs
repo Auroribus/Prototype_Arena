@@ -15,17 +15,23 @@ namespace _Scripts.Refactor.Hero
         private GameObject _bloodParticlesPrefab;
         private GameObject _damageTextPrefab;
         private GameObject _instantHealPrefab;
+        private GridCreator _gridPlayerOne;
+        private GridCreator _gridPlayerTwo;
 
         public HeroStatsController(
             HeroView heroView,
             HeroStatsModel heroStatsModel,
             GameObject bloodParticlesPrefab,
-            GameObject damageTextPrefab)
+            GameObject damageTextPrefab,
+            GridCreator gridPlayerOne,
+            GridCreator gridPlayerTwo)
         {
             _heroView = heroView;
             _heroStatsModel = heroStatsModel;
             _bloodParticlesPrefab = bloodParticlesPrefab;
             _damageTextPrefab = damageTextPrefab;
+            _gridPlayerOne = gridPlayerOne;
+            _gridPlayerTwo = gridPlayerTwo;
 
             _cameraShake = Camera.main.GetComponent<CameraShake>();
         }
@@ -56,11 +62,11 @@ namespace _Scripts.Refactor.Hero
                 switch (_heroView.gameObject.tag)
                 {
                     case "HeroP1":
-                        GameManager.Instance.GridPlayerOne.Grid[xPositionInGrid, yPositionInGrid]
+                        _gridPlayerOne.Grid[xPositionInGrid, yPositionInGrid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                     case "HeroP2":
-                        GameManager.Instance.GridPlayerTwo.Grid[xPositionInGrid, yPositionInGrid]
+                        _gridPlayerTwo.Grid[xPositionInGrid, yPositionInGrid]
                             .GetComponent<GridTile>().isOccupied = false;
                         break;
                 }

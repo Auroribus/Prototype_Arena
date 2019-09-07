@@ -61,27 +61,31 @@ namespace _Scripts.Refactor.Grid
             }
         }
 
-        public void SetMovementRings(int unit_row, int unit_column)
+        public void SetMovementRings(int unitRow, int unitColumn, PlayerTurn currentPlayerTurn)
         {
             for (var row = 0; row < rows; row++)
             {
                 for (var column = 0; column < columns; column++)
                 {
+                    bool canSetRing;
+                    
                     if (!Grid[row, column].GetComponent<GridTile>().isOccupied)
                     {
-                        if (unit_row == row && Mathf.Abs(column - unit_column) < 2)
+                        if (unitRow == row && Mathf.Abs(column - unitColumn) < 2)
                         {
-                            Grid[row, column].GetComponent<GridTile>().SetMovementRing(true);
+                            canSetRing = true;
                         }
                         else
                         {
-                            Grid[row, column].GetComponent<GridTile>().SetMovementRing(false);
+                            canSetRing = false;
                         }
                     }
                     else
                     {
-                        Grid[row, column].GetComponent<GridTile>().SetMovementRing(false);
+                        canSetRing = false;
                     }
+                    
+                    Grid[row, column].GetComponent<GridTile>().SetMovementRing(canSetRing, currentPlayerTurn);
                 }
             }
         }

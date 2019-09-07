@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using _Scripts.Refactor.Game;
 using _Scripts.Refactor.Grid;
 using _Scripts.Refactor.Hero.Abilities;
+using _Scripts.Refactor.PlayerScripts;
 using _Scripts.Refactor.Projectile;
 using _Scripts.Refactor.SFX;
 using _Scripts.Refactor.UI;
@@ -14,6 +15,10 @@ namespace _Scripts.Refactor.Hero
 {
     public class HeroView : MonoBehaviour {
 
+        public GridCreator GridPlayerOne { private get; set; }
+        public GridCreator GridPlayerTwo { private get; set; }
+        public GameManager GameManager { private get; set; }
+        
         public HeroStatsController HeroStatsController { get; private set; }
         public HeroStatsModel HeroStatsModel { get; private set; }
         
@@ -99,7 +104,9 @@ namespace _Scripts.Refactor.Hero
                 this,
                 HeroStatsModel,
                 BloodSplashPrefab,
-                DamageTextPrefab);
+                DamageTextPrefab,
+                GridPlayerOne,
+                GridPlayerTwo);
             
             _selectionRing = transform.Find("SelectionRing");
             _selectionRing.gameObject.SetActive(false);
@@ -134,9 +141,9 @@ namespace _Scripts.Refactor.Hero
         }
 
 
-        public void SetSelected(bool is_selected)
+        public void SetSelected(bool isSelected)
         {
-            _selectionRing.gameObject.SetActive(is_selected);
+            _selectionRing.gameObject.SetActive(isSelected);
 
             //reset using ability
             if(IsUsingAbility)
@@ -145,7 +152,8 @@ namespace _Scripts.Refactor.Hero
             //set movement rings on tiles in same row
             for (var i = 0; i < 3; i++)
             {
-                GameManager.Instance.GridPlayerOne.Grid[XPositionGrid, i].GetComponent<GridTile>().SetMovementRing(true);
+                GridPlayerOne.Grid[XPositionGrid, i].GetComponent<GridTile>().SetMovementRing(true, 
+                    GameManager.CurrentPlayerTurn);
             }
 
             //display hero info
@@ -160,7 +168,7 @@ namespace _Scripts.Refactor.Hero
                 "AoE: " + HeroAbility.AbilityAreaOfEffect + "\n" +
                 "Strength: " + HeroAbility.strength; 
 
-            GameManager.Instance.SetHeroInfo(
+            GameManager.SetHeroInfo(
                 MainClass, 
                 HeroStatsModel.HealthPoints, 
                 HeroStatsModel.AttackDamage, 
@@ -222,7 +230,7 @@ namespace _Scripts.Refactor.Hero
                     //disable move bool
                     MoveHero = false;
                     //set action ended, so next animation can play
-                    GameManager.Instance.HasActionEnded = true;
+                    GameManager.HasActionEnded = true;
                 }
             }
             else if(AttackMoveHero)
@@ -318,10 +326,10 @@ namespace _Scripts.Refactor.Hero
             switch(tag)
             {
                 case "HeroP1":
-                    targets = GameManager.Instance.HeroListP2;
+                    targets = GameManager.HeroListP2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.Instance.HeroListP1;
+                    targets = GameManager.HeroListP1;
                     break;
             }
 
@@ -335,9 +343,9 @@ namespace _Scripts.Refactor.Hero
                 if(heroView != _target)
                 { 
                     //wait till arrow hits target
-                    yield return new WaitUntil(() => GameManager.Instance.HasActionEnded == true);
+                    yield return new WaitUntil(() => GameManager.HasActionEnded == true);
 
-                    GameManager.Instance.HasActionEnded = false;
+                    GameManager.HasActionEnded = false;
 
                     //set new target object
                     target_object = heroView;
@@ -374,10 +382,10 @@ namespace _Scripts.Refactor.Hero
             switch (tag)
             {
                 case "HeroP1":
-                    targets = GameManager.Instance.HeroListP2;
+                    targets = GameManager.HeroListP2;
                     break;
                 case "HeroP2":
-                    targets = GameManager.Instance.HeroListP1;
+                    targets = GameManager.HeroListP1;
                     break;
             }
 
@@ -393,9 +401,9 @@ namespace _Scripts.Refactor.Hero
                 }
                 
                 //wait till arrow hits target
-                yield return new WaitUntil(() => GameManager.Instance.HasActionEnded);
+                yield return new WaitUntil(() => GameManager.HasActionEnded);
 
-                GameManager.Instance.HasActionEnded = false;
+                GameManager.HasActionEnded = false;
 
                 //set new target object
                 target_object = heroView;

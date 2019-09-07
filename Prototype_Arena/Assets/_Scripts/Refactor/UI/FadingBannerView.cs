@@ -11,6 +11,8 @@ namespace _Scripts.Refactor.UI
         [SerializeField] private Text _phaseText;
         [SerializeField] private Text _turnText;
 
+        public GameManager GameManager { private get; set; }
+        
         public Animator Animator
         {
             get { return _animator; }
@@ -45,11 +47,11 @@ namespace _Scripts.Refactor.UI
             {
                 case PlayerTurn.Player1:
                     _turnText.text = "Player 1";
-                    _turnText.color = GameManager.Instance.ColorPlayer1;
+                    _turnText.color = GameManager.ColorPlayer1;
                     break;
                 case PlayerTurn.Player2:
                     _turnText.text = "Player 2";
-                    _turnText.color = GameManager.Instance.ColorPlayer2;
+                    _turnText.color = GameManager.ColorPlayer2;
                     break;
             }
             

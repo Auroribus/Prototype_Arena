@@ -7,6 +7,8 @@ namespace _Scripts.Refactor.Projectile
 {
     public class Projectile : MonoBehaviour
     {
+        public GameManager GameManager { private get; set; }
+        
         public HeroView target;
         public float movement_speed = 1f;
         public int damage;
@@ -31,7 +33,7 @@ namespace _Scripts.Refactor.Projectile
                     SFXController.instance.PlaySFXClip("fire spell");
                     break;
                 case ProjectileType.BounceArrow:
-                    //SFXController.instance.PlaySFXClip("boomerang");
+                    //SFXController.PlaySFXClip("boomerang");
                     break;
             }
         }
@@ -53,7 +55,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.HasActionEnded = true;
+                        GameManager.HasActionEnded = true;
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
                     }
@@ -69,7 +71,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.HasActionEnded = true;
+                        GameManager.HasActionEnded = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);
@@ -110,7 +112,7 @@ namespace _Scripts.Refactor.Projectile
                         target.GetComponent<HeroView>().HeroStatsController.TakeDamage(damage);
 
                         //projectile hit, action ends
-                        GameManager.Instance.HasActionEnded = true;
+                        GameManager.HasActionEnded = true;
 
                         Instantiate(HitEffect, transform.position, Quaternion.identity);
                         Destroy(gameObject);

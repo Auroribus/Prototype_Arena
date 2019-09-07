@@ -14,6 +14,8 @@ namespace _Scripts.Refactor.PlayerScripts
 {
     public class Player : MonoBehaviour
     {
+        public GameManager GameManager { private get; set; }
+        
         public const int MaxNumberOfPlayerActions = 3;
         private int _playerOneActionCount;
         private int _playerTwoActionCount;
@@ -28,8 +30,6 @@ namespace _Scripts.Refactor.PlayerScripts
         [SerializeField] private GameObject _actionIconPrefab;
         
         #region variables
-
-        public static Player Instance;
 
         private Vector2 _touchOrigin = -Vector2.one;
 
@@ -51,16 +51,6 @@ namespace _Scripts.Refactor.PlayerScripts
         private List<GameObject> _actionIconsList = new List<GameObject>();
 
         #endregion
-
-        private void Awake()
-        {
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-
-            //_planningList = GameObject.Find("Plan List");
-        }
 
         private void Update()
         {
@@ -89,7 +79,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         return;
                     }
 
-                    switch (GameManager.Instance.CurrentPhase)
+                    switch (GameManager.CurrentPhase)
                     {
                         case Phase.DraftPhase:
                             DraftPhase(hit);
@@ -128,7 +118,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             return;
                         }
 
-                        switch (GameManager.Instance.CurrentPhase)
+                        switch (GameManager.CurrentPhase)
                         {
                             case Phase.DraftPhase:
                                 DraftPhase(hit);
@@ -158,11 +148,11 @@ namespace _Scripts.Refactor.PlayerScripts
                 
                 if (!hitHeroView.IsHeroDrafted)
                 {
-                    if (GameManager.Instance.HeroListP1.Count < GameManager.Instance.MaxAmountOfUnits)
+                    if (GameManager.HeroListP1.Count < GameManager.MaxAmountOfUnits)
                     {
                         var amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach (var heroView in GameManager.Instance.HeroListP1)
+                        foreach (var heroView in GameManager.HeroListP1)
                         {
                             if (hitHeroView.MainClass == heroView.MainClass)
                             {
@@ -173,20 +163,20 @@ namespace _Scripts.Refactor.PlayerScripts
                         if (amount_of_class < 3)
                         {
                             hitHeroView.SetDrafted(true);
-                            GameManager.Instance.HeroListP1.Add(hitHeroView);
-                            GameManager.Instance.PlayerOneDraftedText.text =
-                                "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
-                                GameManager.Instance.MaxAmountOfUnits;
+                            GameManager.HeroListP1.Add(hitHeroView);
+                            GameManager.PlayerOneDraftedText.text =
+                                "Drafted: " + GameManager.HeroListP1.Count + "/" +
+                                GameManager.MaxAmountOfUnits;
                         }
                     }
                 }
                 else
                 {
                     hitHeroView.SetDrafted(false);
-                    GameManager.Instance.HeroListP1.Remove(hitHeroView);
-                    GameManager.Instance.PlayerOneDraftedText.text =
-                        "Drafted: " + GameManager.Instance.HeroListP1.Count + "/" +
-                        GameManager.Instance.MaxAmountOfUnits;
+                    GameManager.HeroListP1.Remove(hitHeroView);
+                    GameManager.PlayerOneDraftedText.text =
+                        "Drafted: " + GameManager.HeroListP1.Count + "/" +
+                        GameManager.MaxAmountOfUnits;
                 }
             }
             else if (hit.collider.tag == "HeroP2")
@@ -195,11 +185,11 @@ namespace _Scripts.Refactor.PlayerScripts
 
                 if (!hitHeroView.IsHeroDrafted)
                 {
-                    if (GameManager.Instance.HeroListP2.Count < GameManager.Instance.MaxAmountOfUnits)
+                    if (GameManager.HeroListP2.Count < GameManager.MaxAmountOfUnits)
                     {
                         var amount_of_class = 0;
                         //check if not already 3 of main class
-                        foreach (var hero in GameManager.Instance.HeroListP2)
+                        foreach (var hero in GameManager.HeroListP2)
                         {
                             if (hero.MainClass == hitHeroView.MainClass)
                             {
@@ -210,20 +200,20 @@ namespace _Scripts.Refactor.PlayerScripts
                         if (amount_of_class < 3)
                         {
                             hitHeroView.SetDrafted(true);
-                            GameManager.Instance.HeroListP2.Add(hitHeroView);
-                            GameManager.Instance.PlayerTwoDraftedText.text =
-                                "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
-                                GameManager.Instance.MaxAmountOfUnits;
+                            GameManager.HeroListP2.Add(hitHeroView);
+                            GameManager.PlayerTwoDraftedText.text =
+                                "Drafted: " + GameManager.HeroListP2.Count + "/" +
+                                GameManager.MaxAmountOfUnits;
                         }
                     }
                 }
                 else
                 {
                     hitHeroView.SetDrafted(false);
-                    GameManager.Instance.HeroListP2.Remove(hitHeroView);
-                    GameManager.Instance.PlayerTwoDraftedText.text =
-                        "Drafted: " + GameManager.Instance.HeroListP2.Count + "/" +
-                        GameManager.Instance.MaxAmountOfUnits;
+                    GameManager.HeroListP2.Remove(hitHeroView);
+                    GameManager.PlayerTwoDraftedText.text =
+                        "Drafted: " + GameManager.HeroListP2.Count + "/" +
+                        GameManager.MaxAmountOfUnits;
                 }
             }
         }
@@ -315,7 +305,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //add action to list
                     ListOfActions.Add(new HeroAction(
                         SelectedHero,
-                        GameManager.Instance.CurrentPlayerTurn,
+                        GameManager.CurrentPlayerTurn,
                         ActionType.ability,
                         target_heroes,
                         ability
@@ -346,7 +336,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     SelectedHero.SetSelected(true);
 
                     //prevents modified list error for foreach after
-                    GameManager.Instance.CleanLists();
+                    GameManager.CleanLists();
 
                     //local var for main class
                     var main_class = SelectedHero.MainClass;
@@ -409,7 +399,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //set movement ring on tiles in same lane to active
                     var x = SelectedHero.XPositionGrid;
                     var y = SelectedHero.YPositionGrid;
-                    _playerGrid.SetMovementRings(x, y);
+                    _playerGrid.SetMovementRings(x, y, GameManager.CurrentPlayerTurn);
                 }
                 //attacking, check if not null, not using ability, not at max actions
                 else if (SelectedHero != null && hit.collider.tag == _targetTag &&
@@ -429,7 +419,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         //add action to list
                         ListOfActions.Add(new HeroAction(
                             SelectedHero,
-                            GameManager.Instance.CurrentPlayerTurn,
+                            GameManager.CurrentPlayerTurn,
                             ActionType.attack,
                             hitHeroView
                         ));
@@ -440,7 +430,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //magical attacks that target a whole row of heros
                     else if (SelectedHero.MainClass == MainClass.Mage)
                     {
-                        GameManager.Instance.CleanLists();
+                        GameManager.CleanLists();
                         var target_heroes = new List<HeroView>();
                         foreach (var heroView in _listOfEnemies)
                         {
@@ -453,7 +443,7 @@ namespace _Scripts.Refactor.PlayerScripts
                         //add action to the list
                         ListOfActions.Add(new HeroAction(
                             SelectedHero,
-                            GameManager.Instance.CurrentPlayerTurn,
+                            GameManager.CurrentPlayerTurn,
                             ActionType.attack,
                             target_heroes
                         ));
@@ -477,7 +467,7 @@ namespace _Scripts.Refactor.PlayerScripts
                             //add movement action to the list
                             ListOfActions.Add(new HeroAction(
                                 SelectedHero,
-                                GameManager.Instance.CurrentPlayerTurn,
+                                GameManager.CurrentPlayerTurn,
                                 ActionType.movement,
                                 hitGridTile
                             ));
@@ -497,7 +487,7 @@ namespace _Scripts.Refactor.PlayerScripts
                 var ability = SelectedHero.HeroAbility;
 
                 //deselect all previously targeted heroes
-                foreach (var heroView in GameManager.Instance.HeroListP1)
+                foreach (var heroView in GameManager.HeroListP1)
                 {
                     if (heroView.IsTargeted)
                     {
@@ -505,7 +495,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
                 }
 
-                foreach (var heroView in GameManager.Instance.HeroListP2)
+                foreach (var heroView in GameManager.HeroListP2)
                 {
                     if (heroView.IsTargeted)
                     {
@@ -516,8 +506,10 @@ namespace _Scripts.Refactor.PlayerScripts
                 //hide all movement rings unless ability has to do with movement
                 if (ability.Ability_effect != AbilityEffect.movement)
                 {
-                    GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
-                    GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
+                    GameManager.GridPlayerOne.SetMovementRings(-1, -1,
+                        GameManager.CurrentPlayerTurn);
+                    GameManager.GridPlayerTwo.SetMovementRings(-1, -1,
+                        GameManager.CurrentPlayerTurn);
                 }
 
                 //set bool to true on using ability
@@ -585,8 +577,10 @@ namespace _Scripts.Refactor.PlayerScripts
                 SelectedHero.SetSelected(false);
 
                 //reset movement rings
-                GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
-                GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
+                GameManager.GridPlayerOne.SetMovementRings(-1, -1,
+                    GameManager.CurrentPlayerTurn);
+                GameManager.GridPlayerTwo.SetMovementRings(-1, -1,
+                    GameManager.CurrentPlayerTurn);
 
                 //deselect all previously selected heroes
                 foreach (var hero in _listOfAllies)
@@ -605,22 +599,22 @@ namespace _Scripts.Refactor.PlayerScripts
 
         private void SetPlayerTurnActionPhase()
         {
-            switch (GameManager.Instance.CurrentPlayerTurn)
+            switch (GameManager.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     _ownTag = "HeroP1";
                     _targetTag = "HeroP2";
-                    _listOfEnemies = GameManager.Instance.HeroListP2;
-                    _listOfAllies = GameManager.Instance.HeroListP1;
-                    _playerGrid = GameManager.Instance.GridPlayerOne;
+                    _listOfEnemies = GameManager.HeroListP2;
+                    _listOfAllies = GameManager.HeroListP1;
+                    _playerGrid = GameManager.GridPlayerOne;
                     _playerActionCount = _playerOneActionCount;
                     break;
                 case PlayerTurn.Player2:
                     _ownTag = "HeroP2";
                     _targetTag = "HeroP1";
-                    _listOfEnemies = GameManager.Instance.HeroListP1;
-                    _listOfAllies = GameManager.Instance.HeroListP2;
-                    _playerGrid = GameManager.Instance.GridPlayerTwo;
+                    _listOfEnemies = GameManager.HeroListP1;
+                    _listOfAllies = GameManager.HeroListP2;
+                    _playerGrid = GameManager.GridPlayerTwo;
                     _playerActionCount = _playerTwoActionCount;
                     break;
             }
@@ -637,9 +631,9 @@ namespace _Scripts.Refactor.PlayerScripts
             foreach (var action in ListOfActions)
             {
                 //wait till action is finished
-                yield return new WaitUntil(() => GameManager.Instance.HasActionEnded);
+                yield return new WaitUntil(() => GameManager.HasActionEnded);
                 //set action ended to false
-                GameManager.Instance.HasActionEnded = false;
+                GameManager.HasActionEnded = false;
 
                 yield return new WaitForSeconds(.5f);
 
@@ -722,7 +716,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                         _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                                             .SetCheckmark(true, Color.red);
 
-                                        GameManager.Instance.HasActionEnded = true;
+                                        GameManager.HasActionEnded = true;
                                     }
 
                                     break;
@@ -739,13 +733,13 @@ namespace _Scripts.Refactor.PlayerScripts
                                 switch (action.player)
                                 {
                                     case PlayerTurn.Player1:
-                                        GameManager.Instance.GridPlayerOne.Grid[
+                                        GameManager.GridPlayerOne.Grid[
                                                 action.selected_hero.XPositionGrid,
                                                 action.selected_hero.YPositionGrid]
                                             .GetComponent<GridTile>().isOccupied = false;
                                         break;
                                     case PlayerTurn.Player2:
-                                        GameManager.Instance.GridPlayerTwo.Grid[
+                                        GameManager.GridPlayerTwo.Grid[
                                                 action.selected_hero.XPositionGrid,
                                                 action.selected_hero.YPositionGrid]
                                             .GetComponent<GridTile>().isOccupied = false;
@@ -764,7 +758,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                                 //set new tile as occupied
                                 action.GridTile.isOccupied = true;
-                                action.GridTile.SetMovementRing(false);
+                                action.GridTile.SetMovementRing(false, GameManager.CurrentPlayerTurn);
 
                                 //set checkmark to green on action prefab
                                 _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
@@ -777,7 +771,7 @@ namespace _Scripts.Refactor.PlayerScripts
                                 _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                                     .SetCheckmark(true, Color.red);
 
-                                GameManager.Instance.HasActionEnded = true;
+                                GameManager.HasActionEnded = true;
                             }
 
                             break;
@@ -930,7 +924,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //set checkmark to green on action prefab
                     _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                         .SetCheckmark(true, Color.green);
-                    GameManager.Instance.HasActionEnded = true;
+                    GameManager.HasActionEnded = true;
 
                     //temp
                     yield return new WaitForSeconds(1f);
@@ -940,7 +934,7 @@ namespace _Scripts.Refactor.PlayerScripts
                     //set checkmark to red on action prefab
                     _actionIconsList[ListOfActions.IndexOf(action)].GetComponent<ActionPrefab>()
                         .SetCheckmark(true, Color.red);
-                    GameManager.Instance.HasActionEnded = true;
+                    GameManager.HasActionEnded = true;
                 }
             }
 
@@ -951,30 +945,32 @@ namespace _Scripts.Refactor.PlayerScripts
             yield return new WaitForSeconds(1f);
 
             //clear the field
-            StartCoroutine(GameManager.Instance.ClearKilledHeroes());
+            StartCoroutine(GameManager.ClearKilledHeroes());
         }
 
         private void IncrementActions(int value)
         {
-            switch (GameManager.Instance.CurrentPlayerTurn)
+            switch (GameManager.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     _playerOneActionCount += value;
 
                     DeselectHero();
 
-                    GameManager.Instance.PlayerOneActionsText.text =
+                    GameManager.PlayerOneActionsText.text =
                         "Actions: " + _playerOneActionCount + "/" + MaxNumberOfPlayerActions;
 
                     //check if player one has max actions
                     if (_playerOneActionCount == MaxNumberOfPlayerActions)
                     {
                         //disable all movement and targeting circles
-                        GameManager.Instance.GridPlayerOne.SetMovementRings(-1, -1);
-                        GameManager.Instance.GridPlayerTwo.SetMovementRings(-1, -1);
+                        GameManager.GridPlayerOne.SetMovementRings(-1, -1,
+                            GameManager.CurrentPlayerTurn);
+                        GameManager.GridPlayerTwo.SetMovementRings(-1, -1,
+                            GameManager.CurrentPlayerTurn);
 
                         //change turn to player 2
-                        GameManager.Instance.SetPlayerTurn(PlayerTurn.Player2);
+                        GameManager.SetPlayerTurn(PlayerTurn.Player2);
                     }
 
                     break;
@@ -984,14 +980,14 @@ namespace _Scripts.Refactor.PlayerScripts
 
                     DeselectHero();
 
-                    GameManager.Instance.PlayerTwoActionsText.text =
+                    GameManager.PlayerTwoActionsText.text =
                         "Actions: " + _playerTwoActionCount + "/" + MaxNumberOfPlayerActions;
 
                     //check if player two has max actions
                     if (_playerTwoActionCount == MaxNumberOfPlayerActions)
                     {
                         //change phase to resolve
-                        GameManager.Instance.SetCurrentPhase(Phase.ResolvePhase);
+                        GameManager.SetCurrentPhase(Phase.ResolvePhase);
                     }
 
                     break;
@@ -1058,10 +1054,10 @@ namespace _Scripts.Refactor.PlayerScripts
                 switch (action.player)
                 {
                     case PlayerTurn.Player1:
-                        actionIconsListSpriteRenderer.color = GameManager.Instance.ColorPlayer1;
+                        actionIconsListSpriteRenderer.color = GameManager.ColorPlayer1;
                         break;
                     case PlayerTurn.Player2:
-                        actionIconsListSpriteRenderer.color = GameManager.Instance.ColorPlayer2;
+                        actionIconsListSpriteRenderer.color = GameManager.ColorPlayer2;
                         break;
                 }
             }
@@ -1087,7 +1083,7 @@ namespace _Scripts.Refactor.PlayerScripts
             //local list, gets set based on player turn
             var listOfHeroes = new List<HeroView>();
 
-            switch (GameManager.Instance.CurrentPlayerTurn)
+            switch (GameManager.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if actions lower or equal to 0, if they are then no undo left
@@ -1095,9 +1091,9 @@ namespace _Scripts.Refactor.PlayerScripts
                         return;
 
                     _playerOneActionCount--; //lower actions amount
-                    GameManager.Instance.PlayerOneActionsText.text =
+                    GameManager.PlayerOneActionsText.text =
                         "Actions: " + _playerOneActionCount + "/" + MaxNumberOfPlayerActions; //set text
-                    listOfHeroes = GameManager.Instance.HeroListP1; //set local list    
+                    listOfHeroes = GameManager.HeroListP1; //set local list    
 
 
                     break;
@@ -1108,15 +1104,15 @@ namespace _Scripts.Refactor.PlayerScripts
                         return;
 
                     _playerTwoActionCount--;
-                    GameManager.Instance.PlayerTwoActionsText.text =
+                    GameManager.PlayerTwoActionsText.text =
                         "Actions: " + _playerTwoActionCount + "/" + MaxNumberOfPlayerActions;
-                    listOfHeroes = GameManager.Instance.HeroListP2;
+                    listOfHeroes = GameManager.HeroListP2;
                     break;
             }
 
             //remove last added action from the list based on whos turn it is
             //check if last action belongs to current player
-            if (ListOfActions[ListOfActions.Count - 1].player == GameManager.Instance.CurrentPlayerTurn)
+            if (ListOfActions[ListOfActions.Count - 1].player == GameManager.CurrentPlayerTurn)
             {
                 //reset checkmark and has action on hero
                 ListOfActions[ListOfActions.Count - 1].selected_hero.SetAction(false);
@@ -1137,7 +1133,7 @@ namespace _Scripts.Refactor.PlayerScripts
             //local list, gets set based on player turn
             var listOfHeroes = new List<HeroView>();
 
-            switch (GameManager.Instance.CurrentPlayerTurn)
+            switch (GameManager.CurrentPlayerTurn)
             {
                 case PlayerTurn.Player1:
                     //check if any actions for player, otherwise it will throw error
@@ -1147,9 +1143,9 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
 
                     _playerOneActionCount = 0; //reset actions amount
-                    GameManager.Instance.PlayerOneActionsText.text =
+                    GameManager.PlayerOneActionsText.text =
                         "Actions: " + _playerOneActionCount + "/" + MaxNumberOfPlayerActions; //set text
-                    listOfHeroes = GameManager.Instance.HeroListP1; //set local list                
+                    listOfHeroes = GameManager.HeroListP1; //set local list                
                     break;
 
                 case PlayerTurn.Player2:
@@ -1160,21 +1156,21 @@ namespace _Scripts.Refactor.PlayerScripts
                     }
 
                     _playerTwoActionCount = 0;
-                    GameManager.Instance.PlayerTwoActionsText.text =
+                    GameManager.PlayerTwoActionsText.text =
                         "Actions: " + _playerTwoActionCount + "/" + MaxNumberOfPlayerActions;
-                    listOfHeroes = GameManager.Instance.HeroListP2;
+                    listOfHeroes = GameManager.HeroListP2;
                     break;
             }
 
             //remove all actions from the list based on whos turn it is
-            ListOfActions.RemoveAll(item => item.player == GameManager.Instance.CurrentPlayerTurn);
+            ListOfActions.RemoveAll(item => item.player == GameManager.CurrentPlayerTurn);
 
             //remove icons from plan list
             foreach (var action in _actionIconsList)
             {
                 var _action = action.GetComponent<ActionPrefab>();
 
-                if (_action.player == GameManager.Instance.CurrentPlayerTurn)
+                if (_action.player == GameManager.CurrentPlayerTurn)
                 {
                     Destroy(action);
                 }

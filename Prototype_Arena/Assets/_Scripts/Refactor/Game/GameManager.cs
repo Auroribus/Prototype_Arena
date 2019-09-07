@@ -24,12 +24,15 @@ namespace _Scripts.Refactor.Game
         [SerializeField] private GridCreator _gridPrefab;
         [SerializeField] private HeroView _heroPrefab;
         [SerializeField] private HeroAbilities _heroAbilityGeneratorPrefab;
+        [SerializeField] private Player _playerControlPrefab;
         
         [Header("Anchors")]
         [SerializeField] private Transform _gridPlayerOneAnchor;
         [SerializeField] private Transform _gridPlayerTwoAnchor;
         [SerializeField] private Transform _draftPlayerOneAnchor;
         [SerializeField] private Transform _draftPlayerTwoAnchor;
+
+        private Player _playerControls;
         
         private FadingBannerView _fadingBannerView;
         private HeroInfoPanel _heroInfoPanel;
@@ -59,7 +62,7 @@ namespace _Scripts.Refactor.Game
         private int _currentTurnCount;
 
         private HeroAbilities _heroAbilityGenerator;
-        
+
         public GridCreator GridPlayerOne
         {
             get { return _gridPlayerOne; }
@@ -69,7 +72,7 @@ namespace _Scripts.Refactor.Game
         {
             get { return _gridPlayerTwo; }
         }
-
+        
         public Text PlayerOneDraftedText
         {
             get { return _playerOneDraftedText; }
@@ -89,15 +92,7 @@ namespace _Scripts.Refactor.Game
         {
             get { return _playerTwoActionsText; }
         }
-
-        public HeroAbilities HeroAbilityGenerator
-        {
-            get { return _heroAbilityGenerator; }
-        }
         
-        //static reference which can be accessed in all other scripts by calling GameManager.instance
-        public static GameManager Instance;
-
         [Header("Further clean up:")]
         //References to enums
         public Phase CurrentPhase = Phase.DraftPhase;
@@ -116,7 +111,6 @@ namespace _Scripts.Refactor.Game
         //temp spawn point for randomly spawning heros
         private Vector2 hero_spawnpoint;
     
-
         //bool to keep track if an action has ended so that resolving can continue
         public bool HasActionEnded;
 
@@ -124,20 +118,15 @@ namespace _Scripts.Refactor.Game
         public Color ColorPlayer1;
         public Color ColorPlayer2;
 
-        private void Awake()
-        {
-            //check if no instance already exists of game manager
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-        }
-
         // Use this for initialization
-        void Start () {
+        void Start ()
+        {
+            _playerControls = Instantiate(_playerControlPrefab);
+            _playerControls.GameManager = this;
             
             _heroInfoPanel = Instantiate(_heroInfoPanelPrefab);
             _fadingBannerView = Instantiate(_fadingBannerPrefab);
+            _fadingBannerView.GameManager = this;
 
             _gridPlayerOne = Instantiate(_gridPrefab, _gridPlayerOneAnchor);
             _gridPlayerTwo = Instantiate(_gridPrefab, _gridPlayerTwoAnchor);
@@ -154,6 +143,10 @@ namespace _Scripts.Refactor.Game
             _draftUi = Instantiate(_uiConfig.DraftUiPrefab);
             _resolveUi = Instantiate(_uiConfig.ResolveUiPrefab);
 
+            _draftUi.GameManager = this;
+            _menuUi.GameManager = this;
+            _planUi.GameManager = this;
+            
             _phaseText = _mainUi.PhaseText;
             _playerTurnText = _mainUi.PlayerTurnText;
             _turnNumberText = _mainUi.TurnNumberText;
@@ -167,12 +160,6 @@ namespace _Scripts.Refactor.Game
 
             _heroAbilityGenerator = Instantiate(_heroAbilityGeneratorPrefab);
             
-            _gridUi.gameObject.SetActive(false);
-            _endScreenUi.gameObject.SetActive(false);
-            _planUi.gameObject.SetActive(false);
-            _draftUi.gameObject.SetActive(false);
-            _resolveUi.gameObject.SetActive(false);
-
             //set first state
             SetCurrentGameState(GameState.Menu);
         }
@@ -233,6 +220,9 @@ namespace _Scripts.Refactor.Game
                     heroView.HeroStatsModel.SetInitiative(heroBases[random].Initiative);
                     heroView.GetComponentInChildren<SpriteRenderer>().sprite = heroBases[random].DraftSprite;
                     heroView.MainClass = heroBases[random].MainClass;
+                    heroView.GameManager = this;
+                    heroView.GridPlayerOne = _gridPlayerOne;
+                    heroView.GridPlayerTwo = _gridPlayerTwo;
 
                     HeroPool_P1[HeroPool_P1.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer1;
                     HeroPool_P1[HeroPool_P1.Count - 1].tag = "HeroP1";
@@ -257,6 +247,9 @@ namespace _Scripts.Refactor.Game
                     heroView.HeroStatsModel.SetInitiative(heroBases[random].Initiative);
                     heroView.GetComponentInChildren<SpriteRenderer>().sprite = heroBases[random].DraftSprite;
                     heroView.MainClass = heroBases[random].MainClass;
+                    heroView.GameManager = this;
+                    heroView.GridPlayerOne = _gridPlayerOne;
+                    heroView.GridPlayerTwo = _gridPlayerTwo;
 
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().color = ColorPlayer2;
                     HeroPool_P2[HeroPool_P2.Count - 1].GetComponentInChildren<SpriteRenderer>().flipX = true;
@@ -294,10 +287,8 @@ namespace _Scripts.Refactor.Game
             var column = 0;
 
             //instantiate heroes in the hero list in the grid system
-            foreach (var hero in HeroListP1)
+            foreach (var heroView in HeroListP1)
             {
-                var heroView = hero.GetComponent<HeroView>();
-
                 //check the class and select the column
                 switch (heroView.MainClass)
                 {
@@ -327,11 +318,11 @@ namespace _Scripts.Refactor.Game
                         var tile_y = _tile.pos_grid_y;
 
                         //remove unit from pool list                                                                      
-                        HeroPool_P1.Remove(hero);
+                        HeroPool_P1.Remove(heroView);
 
                         //place unit and set spawnpoint
                         hero_spawnpoint = _gridPlayerOne.Grid[tile_x, tile_y].transform.position;
-                        hero.transform.position = hero_spawnpoint;
+                        heroView.transform.position = hero_spawnpoint;
 
                         //disable drafted visual
                         heroView.SetDrafted(false);
@@ -348,10 +339,8 @@ namespace _Scripts.Refactor.Game
                 }
             }
 
-            foreach (var hero in HeroListP2)
+            foreach (var heroView in HeroListP2)
             {
-                var heroView = hero.GetComponent<HeroView>();
-
                 //check the class and select the column
                 switch (heroView.MainClass)
                 {
@@ -381,11 +370,11 @@ namespace _Scripts.Refactor.Game
                         var tile_y = _tile.pos_grid_y;
 
                         //remove unit from pool list                                                                      
-                        HeroPool_P2.Remove(hero);
+                        HeroPool_P2.Remove(heroView);
 
                         //place unit and set spawnpoint
                         hero_spawnpoint = _gridPlayerTwo.Grid[tile_x, tile_y].transform.position;
-                        hero.transform.position = hero_spawnpoint;
+                        heroView.transform.position = hero_spawnpoint;
 
                         //disable drafted visual
                         heroView.SetDrafted(false);
@@ -403,13 +392,13 @@ namespace _Scripts.Refactor.Game
             }
 
             //destroy pool lists
-            foreach(var g in HeroPool_P1)
+            foreach(var heroView in HeroPool_P1)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
-            foreach (var g in HeroPool_P2)
+            foreach (var heroView in HeroPool_P2)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
 
             HeroPool_P1.Clear();
@@ -419,43 +408,43 @@ namespace _Scripts.Refactor.Game
         private void ResetGame()
         {
             //destroy all heros
-            foreach (var g in HeroListP1)
+            foreach (var heroView in HeroListP1)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
-            foreach (var g in HeroListP2)
+            foreach (var heroView in HeroListP2)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
 
             //destroy all heroes in pools
-            foreach(var g in HeroPool_P1)
+            foreach(var heroView in HeroPool_P1)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
-            foreach(var g in HeroPool_P2)
+            foreach(var heroView in HeroPool_P2)
             {
-                Destroy(g);
+                Destroy(heroView.gameObject);
             }
 
             //Reset bools in grid tiles
             foreach (var g in _gridPlayerOne.Grid)
             {
                 g.GetComponent<GridTile>().isOccupied = false;
-                g.GetComponent<GridTile>().SetMovementRing(false);
+                g.GetComponent<GridTile>().SetMovementRing(false, CurrentPlayerTurn);
             }
             foreach (var g in _gridPlayerTwo.Grid)
             {
                 g.GetComponent<GridTile>().isOccupied = false;
-                g.GetComponent<GridTile>().SetMovementRing(false);
+                g.GetComponent<GridTile>().SetMovementRing(false, CurrentPlayerTurn);
             }
 
             //clear lists
             HeroListP1.Clear();
             HeroListP2.Clear();
             
-            Player.Instance.ClearActionIcons();
-            Player.Instance.ClearActionsList();
+            _playerControls.ClearActionIcons();
+            _playerControls.ClearActionsList();
                 
             //reset enums
             SetCurrentGameState(GameState.Game);
@@ -527,7 +516,7 @@ namespace _Scripts.Refactor.Game
                     break;
 
                 case Phase.DraftPhase:
-
+                    
                     //fade in/out animation ui
                     _fadingBannerView.SetAnimationUI(true, Phase.DraftPhase, CurrentPlayerTurn);
 
@@ -550,8 +539,8 @@ namespace _Scripts.Refactor.Game
                     break;
 
                 case Phase.PlanPhase:
-
-                    Player.Instance.ClearActionIcons();
+                    
+                    _playerControls.ClearActionIcons();
 
                     //check if turn is player 1s turn
                     SetPlayerTurn(CurrentPlayerTurn);
@@ -574,7 +563,7 @@ namespace _Scripts.Refactor.Game
                     PlayerOneActionsText.text = "Actions: 0/3";
                     PlayerTwoActionsText.text = "";
 
-                    Player.Instance.ResetPlayerActionCounts();
+                    _playerControls.ResetPlayerActionCounts();
 
                     foreach(var hero in HeroListP1)
                     {
@@ -620,7 +609,7 @@ namespace _Scripts.Refactor.Game
                     }
 
                     _phaseText.text = "Resolve Phase";
-                    StartCoroutine(Player.Instance.ResolveActions());
+                    StartCoroutine(_playerControls.ResolveActions());
                     break;
                 
                 default:
@@ -633,19 +622,19 @@ namespace _Scripts.Refactor.Game
 
         public IEnumerator ClearKilledHeroes()
         {
-            foreach(var hero in HeroListP1)
+            foreach(var heroView in HeroListP1)
             {
-                if(hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
+                if(heroView.HeroStatsModel.HealthPoints <= 0)
                 {
-                    Destroy(hero);
+                    Destroy(heroView.gameObject);
                 }
             }
 
-            foreach(var hero in HeroListP2)
+            foreach(var heroView in HeroListP2)
             {
-                if (hero.GetComponent<HeroView>().HeroStatsModel.HealthPoints <= 0)
+                if (heroView.HeroStatsModel.HealthPoints <= 0)
                 {
-                    Destroy(hero);
+                    Destroy(heroView.gameObject);
                 }
             }
 
@@ -730,7 +719,7 @@ namespace _Scripts.Refactor.Game
             SetCurrentPhase(Phase.PlanPhase);
 
             //reset visual plan list
-            Player.Instance.ClearActionIcons();
+            _playerControls.ClearActionIcons();
         }
 
         public void OnRestart()

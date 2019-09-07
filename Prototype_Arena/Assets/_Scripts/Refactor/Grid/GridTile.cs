@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace _Scripts.Refactor.Grid
 {
-    public class GridTile : MonoBehaviour {
-
+    public class GridTile : MonoBehaviour
+    {
         //References to child objects
         private Transform movement_ring;
-        public bool can_move_here = false;
+        public bool can_move_here;
 
         //bool to track if there is a unit on the tile or not
-        public bool isOccupied = false;
+        public bool isOccupied;
 
         public PlayerTurn player;
 
@@ -28,20 +28,15 @@ namespace _Scripts.Refactor.Grid
             box_collider.gameObject.SetActive(false);
         }
 
-        private void Update()
-        {
-        }
-
         //public function to set the rings attached to the tile
-        public void SetMovementRing(bool is_active)
+        public void SetMovementRing(bool isActive, PlayerTurn currentPlayerTurn)
         {
-            if (player == GameManager.Instance.CurrentPlayerTurn)
+            if (player == currentPlayerTurn)
             {
-                movement_ring.gameObject.SetActive(is_active);
-                can_move_here = is_active;
-                box_collider.gameObject.SetActive(is_active);
+                movement_ring.gameObject.SetActive(isActive);
+                can_move_here = isActive;
+                box_collider.gameObject.SetActive(isActive);
             }
         }
-    
     }
 }

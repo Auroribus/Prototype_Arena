@@ -1,4 +1,3 @@
-using System;
 using _Scripts.Refactor.Game;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +10,8 @@ namespace _Scripts.Refactor.UI
         [SerializeField] private Text _playerOneDraftedText;
         [SerializeField] private Text _playerTwoDraftedText;
 
+         public GameManager GameManager { private get; set; }
+        
         public Text PlayerOneDraftedText
         {
             get { return _playerOneDraftedText; }
@@ -21,9 +22,15 @@ namespace _Scripts.Refactor.UI
             get { return _playerTwoDraftedText; }
         }
 
+        public DraftUiView()
+        {
+            
+        }
+
         private void Start()
         {
-            _readyButton.onClick.AddListener(() => GameManager.Instance.OnDraftReady());
+            _readyButton.onClick.AddListener(() => GameManager.OnDraftReady());
+            gameObject.SetActive(false);
         }
     }
 }
