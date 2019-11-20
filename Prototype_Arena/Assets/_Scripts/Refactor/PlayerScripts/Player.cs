@@ -977,6 +977,7 @@ namespace _Scripts.Refactor.PlayerScripts
 
                 case PlayerTurn.Player2:
                     _playerTwoActionCount += value;
+                    
 
                     DeselectHero();
 
